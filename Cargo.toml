@@ -1,0 +1,6 @@
+[package]
+name = "crippled-god"
+version = "0.1.0"
+authors = ["Jesse Jones <jesse9jones@gmail.com>"]
+
+[dependencies]
