@@ -4,6 +4,8 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::Write;
 
+type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
+
 struct Square {
     symbol: char,
     back_color: termion::color::AnsiValue, // see https://github.com/jbnicolai/ansi-256-colors
@@ -31,7 +33,25 @@ const TERRAIN: &'static str = r#"
 #                           =                                #
 ##############################################################"#;
 
-// TODO: make sure rows have the same width
+fn fatal_err(message: &str) -> ! {
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+    write!(stdout, "{}\n", message);
+    write!(
+        stdout,
+        "{}{}\n",
+        termion::cursor::Restore,
+        termion::cursor::Show
+    );
+    panic!();
+}
+
+macro_rules! fatal_error_if
+{
+	($predicate:expr) => (if $predicate {fatal_err("")});
+	($predicate:expr, $msg:expr) => (if $predicate {fatal_err($msg)});
+	($predicate:expr, $fmt:expr, $($arg:tt)*) => (if $predicate {fatal_err(&format!($fmt, $($arg)*))});
+}
+
 fn build_map(text: &str) -> Vec<Vec<Square>> {
     let mut map = Vec::new();
 
@@ -39,9 +59,16 @@ fn build_map(text: &str) -> Vec<Vec<Square>> {
     let it = it.skip_while(|c| c.is_whitespace());
 
     let mut row = Vec::new();
+    let mut width = 0;
     for c in it {
         match c {
             '\n' => {
+                fatal_error_if!(
+                    width != 0 && width != row.len(),
+                    "row {}'s width doesn't match the widths of the earlier rows", // TODO: include the map origin
+                    map.len() + 1
+                );
+                width = row.len();
                 map.push(row);
                 row = Vec::new();
             }
@@ -80,12 +107,7 @@ fn build_map(text: &str) -> Vec<Vec<Square>> {
     map
 }
 
-fn render_map(
-    stdout: &mut termion::raw::RawTerminal<std::io::Stdout>, // TODO: use a type alias for this
-    map: &Vec<Vec<Square>>,
-    player_x: usize,
-    player_y: usize,
-) {
+fn render_map(stdout: &mut RawTerminal, map: &Vec<Vec<Square>>, player_x: usize, player_y: usize) {
     let mut y = 1; // terminal coordinates are 1-based
     for row in map.iter() {
         for (x, s) in row.iter().enumerate() {
@@ -113,8 +135,6 @@ fn render_map(
     stdout.flush().unwrap();
 }
 
-// TODO:
-// review TODOs
 fn main() {
     // let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
     // println!("width = {}, height = {}", width, height);
@@ -135,7 +155,9 @@ fn main() {
             termion::event::Key::Right => player_x += 1,
             termion::event::Key::Up => player_y -= 1,
             termion::event::Key::Down => player_y += 1,
-            _ => {}	// TODO: beep
+            _ => {
+                write!(stdout, "\x07");
+            }
         };
         render_map(&mut stdout, &map, player_x, player_y);
     }
