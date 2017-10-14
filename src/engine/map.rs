@@ -1,6 +1,11 @@
+//#[macro_use]
+use common;
+
 /// These are the X11 color names (from http://cng.seas.rochester.edu/CNG/docs/x11color.html).
 /// UIs are expected to handle these colors the best they can (terminals for example often
 /// don't support true color so some of these colors will map to the same screen color).
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[allow(dead_code)]
 pub enum Color {
     LightPink,
     Pink,
@@ -144,83 +149,63 @@ pub enum Color {
     Black,
 }
 
+pub struct Square {
+    pub symbol: char,
+    pub back_color: Color,
+    pub fore_color: Color,
+}
 
-// pub struct Square {
-//     symbol: char,
-//     back_color: Color,
-//     fore_color: Color,
-// }
+pub fn build_map(text: &str) -> Vec<Vec<Square>> {
+    let mut map = Vec::new();
 
-// fn fatal_err(message: &str) -> ! {
-//     let mut stdout = std::io::stdout().into_raw_mode().unwrap();
-//     let _ = write!(stdout, "{}\n", message);
-//     let _ = write!(
-//         stdout,
-//         "{}{}\n",
-//         termion::cursor::Restore,
-//         termion::cursor::Show
-//     );
-//     panic!();
-// }
+    let it = text.chars();
+    let it = it.skip_while(|c| c.is_whitespace());
 
-// macro_rules! fatal_error_if
-// {
-// 	($predicate:expr) => (if $predicate {fatal_err("")});
-// 	($predicate:expr, $msg:expr) => (if $predicate {fatal_err($msg)});
-// 	($predicate:expr, $fmt:expr, $($arg:tt)*) => (if $predicate {fatal_err(&format!($fmt, $($arg)*))});
-// }
+    let mut row = Vec::new();
+    let mut width = 0;
+    for c in it {
+        match c {
+            '\n' => {
+                fatal_error_if!(
+                    width != 0 && width != row.len(),
+                    "row {}'s width doesn't match the widths of the earlier rows", // TODO: include the map origin
+                    map.len() + 1
+                );
+                width = row.len();
+                map.push(row);
+                row = Vec::new();
+            }
+            '#' => {
+                row.push(Square {
+                    symbol: ' ',
+                    back_color: Color::SaddleBrown,
+                    fore_color: Color::Black,
+                })
+            }
+            '=' => {
+                row.push(Square {
+                    symbol: ' ',
+                    back_color: Color::Bisque,
+                    fore_color: Color::Black,
+                })
+            }
+            'w' => {
+                row.push(Square {
+                    symbol: ' ',
+                    back_color: Color::DodgerBlue,
+                    fore_color: Color::Black,
+                })
+            }
+            _ => {
+                row.push(Square {
+                    symbol: c,
+                    back_color: Color::LightGrey,
+                    fore_color: Color::Black,
+                })
+            }
+        }
+    }
+    map.push(row);
 
-// fn build_map(text: &str) -> Vec<Vec<Square>> {
-//     let mut map = Vec::new();
-
-//     let it = text.chars();
-//     let it = it.skip_while(|c| c.is_whitespace());
-
-//     let mut row = Vec::new();
-//     let mut width = 0;
-//     for c in it {
-//         match c {
-//             '\n' => {
-//                 fatal_error_if!(
-//                     width != 0 && width != row.len(),
-//                     "row {}'s width doesn't match the widths of the earlier rows", // TODO: include the map origin
-//                     map.len() + 1
-//                 );
-//                 width = row.len();
-//                 map.push(row);
-//                 row = Vec::new();
-//             }
-//             '#' => {
-//                 row.push(Square {
-//                     symbol: ' ',
-//                     back_color: termion::color::AnsiValue::rgb(1, 0, 0),
-//                     fore_color: termion::color::AnsiValue::grayscale(0),
-//                 })
-//             }
-//             '=' => {
-//                 row.push(Square {
-//                     symbol: ' ',
-//                     back_color: termion::color::AnsiValue::rgb(3, 1, 0),
-//                     fore_color: termion::color::AnsiValue::grayscale(0),
-//                 })
-//             }
-//             'w' => {
-//                 row.push(Square {
-//                     symbol: ' ',
-//                     back_color: termion::color::AnsiValue::rgb(0, 0, 4),
-//                     fore_color: termion::color::AnsiValue::grayscale(0),
-//                 })
-//             }
-//             _ => {
-//                 row.push(Square {
-//                     symbol: c,
-//                     back_color: termion::color::AnsiValue::grayscale(0),
-//                     fore_color: termion::color::AnsiValue::grayscale(0),
-//                 })
-//             }
-//         }
-//     }
-//     map.push(row);
-
-//     map
-// }
+    map
+}
