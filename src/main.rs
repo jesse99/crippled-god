@@ -4,52 +4,17 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::Write;
 
+#[macro_use]
+mod common;
+mod engine;
+mod game;
+
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 struct Square {
     symbol: char,
     back_color: termion::color::AnsiValue, // see https://github.com/jbnicolai/ansi-256-colors
     fore_color: termion::color::AnsiValue, // note that the Mac terminal doesn't support true color, aka termion::color::Rgb
-}
-
-const TERRAIN: &'static str = r#"
-##############################################################
-#                                                            #
-#                                                            #
-#                                                            #
-#                                              w             #
-#                                             www            #
-#                                            wwwww           #
-#                                              ww            #
-#                                                            #
-#============================                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-#                           =                                #
-##############################################################"#;
-
-fn fatal_err(message: &str) -> ! {
-    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
-    write!(stdout, "{}\n", message);
-    write!(
-        stdout,
-        "{}{}\n",
-        termion::cursor::Restore,
-        termion::cursor::Show
-    );
-    panic!();
-}
-
-macro_rules! fatal_error_if
-{
-	($predicate:expr) => (if $predicate {fatal_err("")});
-	($predicate:expr, $msg:expr) => (if $predicate {fatal_err($msg)});
-	($predicate:expr, $fmt:expr, $($arg:tt)*) => (if $predicate {fatal_err(&format!($fmt, $($arg)*))});
 }
 
 fn build_map(text: &str) -> Vec<Vec<Square>> {
@@ -121,7 +86,7 @@ fn render_map(stdout: &mut RawTerminal, map: &Vec<Vec<Square>>, player_x: usize,
             } else {
                 s.fore_color
             };
-            write!(
+            let _ = write!(
                 stdout,
                 "\n{}{}{}{}",
                 termion::cursor::Goto((x + 1) as u16, y as u16),
@@ -135,15 +100,28 @@ fn render_map(stdout: &mut RawTerminal, map: &Vec<Vec<Square>>, player_x: usize,
     stdout.flush().unwrap();
 }
 
+fn termion_fatal_hook(message: &str) {
+    let mut stdout = std::io::stdout();
+    let _ = write!(
+        stdout,
+        "{}{}\n",
+        termion::cursor::Restore,
+        termion::cursor::Show
+    );
+    let _ = write!(stdout, "fatal error: {}\n", message);
+}
+
 fn main() {
     // let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
     // println!("width = {}, height = {}", width, height);
 
+    common::set_fatal_hook(termion_fatal_hook);
+
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout().into_raw_mode().unwrap();
-    write!(stdout, "\n{}{}", termion::cursor::Hide, termion::clear::All);
+    let _ = write!(stdout, "\n{}{}", termion::cursor::Hide, termion::clear::All);
 
-    let map = build_map(TERRAIN);
+    let map = build_map(game::TERRAIN);
     let mut player_x = 5;
     let mut player_y = 5;
 
@@ -156,13 +134,13 @@ fn main() {
             termion::event::Key::Up => player_y -= 1,
             termion::event::Key::Down => player_y += 1,
             _ => {
-                write!(stdout, "\x07");
+                let _ = write!(stdout, "\x07");
             }
         };
         render_map(&mut stdout, &map, player_x, player_y);
     }
 
-    write!(
+    let _ = write!(
         stdout,
         "\n{}{}",
         termion::cursor::Restore,
