@@ -152,35 +152,29 @@ fn to_termion(color: engine::Color) -> termion::color::AnsiValue {
     }
 }
 
-pub fn render_map(
-    stdout: &mut RawTerminal,
-    map: &Vec<Vec<engine::Square>>,
-    player_x: usize,
-    player_y: usize,
-) {
-    let mut y = 1; // terminal coordinates are 1-based
-    for row in map.iter() {
-        for (x, s) in row.iter().enumerate() {
-            let c = if x == player_x && y == player_y + 1 {
+pub fn render_map(stdout: &mut RawTerminal, map: &engine::Map, player_x: usize, player_y: usize) {
+    for y in 0..map.height {
+        for x in 0..map.width {
+            let square = map.get_square(x, y);
+            let c = if x == player_x && y == player_y {
                 '@'
             } else {
-                s.symbol
+                square.symbol
             };
-            let fcolor = if x == player_x && y == player_y + 1 {
+            let fcolor = if x == player_x && y == player_y {
                 engine::Color::Black
             } else {
-                s.fore_color
+                square.fore_color
             };
             let _ = write!(
                 stdout,
                 "\n{}{}{}{}",
-                termion::cursor::Goto((x + 1) as u16, y as u16),
+                termion::cursor::Goto((x + 1) as u16, (y + 1) as u16), // termion uses 1-based coordinates
                 termion::color::Fg(to_termion(fcolor)),
-                termion::color::Bg(to_termion(s.back_color)),
+                termion::color::Bg(to_termion(square.back_color)),
                 c
             );
         }
-        y += 1;
     }
     stdout.flush().unwrap();
 }

@@ -16,7 +16,14 @@ pub fn fatal_err(message: &str) -> ! {
             println!("{}", message);
         }
     }
-    panic!();
+    panic!()
+}
+
+macro_rules! fatal_error
+{
+	() => (common::fatal_err(""));
+	($msg:expr) => (common::fatal_err($msg));
+	($fmt:expr, $($arg:tt)*) => (common::fatal_err(&format!($fmt, $($arg)*)));
 }
 
 macro_rules! fatal_error_if
