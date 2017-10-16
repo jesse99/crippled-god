@@ -175,16 +175,16 @@ impl Map {
         }
     }
 
-    // pub fn with_size(width: usize, height: usize, default: &Square) -> Self {
-    //     let mut squares = Vec::new();
-    //     squares.resize(width * height, *default); // TODO: use resize_default once that's stable?
-    //     Map {
-    //         width,
-    //         height,
-    //         default: *default,
-    //         squares,
-    //     }
-    // }
+    pub fn with_size(width: usize, height: usize, default: &Square) -> Self {
+        let mut squares = Vec::new();
+        squares.resize(width * height, *default); // TODO: use resize_default once that's stable?
+        Map {
+            width,
+            height,
+            default: *default,
+            squares,
+        }
+    }
 
     pub fn get_square(&self, x: usize, y: usize) -> &Square {
         match self.squares.get(x + y * self.width) {
@@ -201,20 +201,20 @@ impl Map {
         }
     }
 
-    // pub fn set_square(&mut self, x: usize, y: usize, s: &Square) {
-    //     match self.squares.get_mut(x + y * self.width) {
-    //         Some(old) => *old = *s,
-    //         None => {
-    //             fatal_error!(
-    //                 "({}, {}) is outside the map dimensions ({}, {})",
-    //                 x,
-    //                 y,
-    //                 self.width,
-    //                 self.height
-    //             )
-    //         }
-    //     };
-    // }
+    pub fn set_square(&mut self, x: usize, y: usize, s: &Square) {
+        match self.squares.get_mut(x + y * self.width) {
+            Some(old) => *old = *s,
+            None => {
+                fatal_error!(
+                    "({}, {}) is outside the map dimensions ({}, {})",
+                    x,
+                    y,
+                    self.width,
+                    self.height
+                )
+            }
+        };
+    }
 
     /// Like set_square except that the map is grown if (x, y) is out of range.
     pub fn force_square(&mut self, x: usize, y: usize, s: &Square) {
