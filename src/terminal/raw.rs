@@ -20,8 +20,8 @@ fn termion_fatal_hook(message: &str) {
     let _ = write!(stdout, "fatal error: {}\n", message);
 }
 
-pub fn run() {
-    // let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
+pub fn run(seed: usize) {
+    let (_, height) = termion::terminal_size().expect("couldn't get terminal size");
     // println!("width = {}, height = {}", width, height);
 
     common::set_fatal_hook(termion_fatal_hook);
@@ -30,7 +30,6 @@ pub fn run() {
     let mut stdout = std::io::stdout().into_raw_mode().unwrap();
     let _ = write!(stdout, "\n{}{}", termion::cursor::Hide, termion::clear::All);
 
-    let seed = 3; // TODO: use a random seed
     let mut rng = rand::StdRng::from_seed(&[seed]);
     let mut map = create_map(&mut rng);
     let mut player_x = 5;
@@ -54,9 +53,10 @@ pub fn run() {
 
     let _ = write!(
         stdout,
-        "\n{}{}",
+        "\n{}{}{}",
         termion::cursor::Restore,
-        termion::cursor::Show
+        termion::cursor::Show,
+		termion::cursor::Goto(1, height)
     );
     stdout.flush().unwrap();
 }
