@@ -39,10 +39,10 @@ pub fn run(seed: usize) {
     for c in stdin.keys() {
         match c.unwrap() {
             termion::event::Key::Char('q') => break,
-            termion::event::Key::Left => player_x -= 1,
-            termion::event::Key::Right => player_x += 1,
-            termion::event::Key::Up => player_y -= 1,
-            termion::event::Key::Down => player_y += 1,
+            termion::event::Key::Left => move_player(&map, &mut player_x, &mut player_y, -1, 0),
+            termion::event::Key::Right => move_player(&map, &mut player_x, &mut player_y, 1, 0),
+            termion::event::Key::Up => move_player(&map, &mut player_x, &mut player_y, 0, -1),
+            termion::event::Key::Down => move_player(&map, &mut player_x, &mut player_y, 0, 1),
             termion::event::Key::Ctrl('r') => map = create_map(&mut rng),
             _ => {
                 let _ = write!(stdout, "\x07");
@@ -65,4 +65,13 @@ fn create_map(rng: &mut rand::StdRng) -> engine::Map {
     let mut stdout = std::io::stdout();
     let _ = write!(stdout, "\n{}{}", termion::cursor::Hide, termion::clear::All);	// TODO: we should be re-painting the entire screen so don't think we need this
     engine::generate_open(rng)	// TODO: should move the player too
+}
+
+fn move_player(map: &engine::Map, x: &mut i32, y: &mut i32, dx: i32, dy: i32) {
+	if map.get_square(*x + dx, *y + dy).terrain.passable() {
+		*x += dx;
+		*y += dy;
+	} else {
+		let _ = write!(std::io::stdout(), "\x07");
+	}
 }

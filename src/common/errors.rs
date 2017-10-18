@@ -26,9 +26,9 @@ macro_rules! fatal_error
 	($fmt:expr, $($arg:tt)*) => (common::fatal_err(&format!($fmt, $($arg)*)));
 }
 
-macro_rules! fatal_error_if
-{
-	($predicate:expr) => (if $predicate {common::fatal_err("")});
-	($predicate:expr, $msg:expr) => (if $predicate {common::fatal_err($msg)});
-	($predicate:expr, $fmt:expr, $($arg:tt)*) => (if $predicate {common::fatal_err(&format!($fmt, $($arg)*))});
-}
+// macro_rules! fatal_error_if
+// {
+// 	($predicate:expr) => (if $predicate {common::fatal_err("")});
+// 	($predicate:expr, $msg:expr) => (if $predicate {common::fatal_err($msg)});
+// 	($predicate:expr, $fmt:expr, $($arg:tt)*) => (if $predicate {common::fatal_err(&format!($fmt, $($arg)*))});
+// }
