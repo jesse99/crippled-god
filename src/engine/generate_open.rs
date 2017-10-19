@@ -10,11 +10,17 @@ pub fn generate_open(rng: &mut rand::StdRng) -> map::Map {
     let width: i32 = rng.gen_range(20, 100);
     let height: i32 = rng.gen_range(20, 35);
 
-    let open = map::Square { terrain: game::Terrain::Ground };
+    let open = map::Square {
+        terrain: game::Terrain::Ground,
+        feature: None,
+    };
     let mut map = map::Map::with_size(width, height, &open);
 
     // add walls on the edges
-    let wall = map::Square { terrain: game::Terrain::Wall };
+    let wall = map::Square {
+        terrain: game::Terrain::Wall,
+        feature: None,
+    };
     for y in 0..height {
         map.set_square(0, y, &wall);
         for x in 0..width {
@@ -29,6 +35,10 @@ pub fn generate_open(rng: &mut rand::StdRng) -> map::Map {
         add_lake(&mut map, rng);
     }
 
+    // plop down some stairs
+    add_stair(&mut map, rng, game::Feature::DownStair);
+    add_stair(&mut map, rng, game::Feature::DownStair);
+
     debug!("generated open map:");
     debug!("\n{:?}", map);
 
@@ -41,7 +51,10 @@ fn add_lake(map: &mut map::Map, rng: &mut rand::StdRng) {
     let center_y = rng.gen_range(1, map.height) as f64;
     let diameter: i32 = rng.gen_range(2, 10);
 
-    let water = map::Square { terrain: game::Terrain::Water };
+    let water = map::Square {
+        terrain: game::Terrain::Water,
+        feature: None,
+    };
     for v in 0..diameter {
         let y = center_y - diameter as f64 / 2.0 + v as f64;
         if y > 1.0 && y + 1.0 < map.height as f64 {
@@ -59,4 +72,28 @@ fn add_lake(map: &mut map::Map, rng: &mut rand::StdRng) {
             }
         }
     }
+}
+
+fn add_stair(map: &mut map::Map, rng: &mut rand::StdRng, stair: game::Feature) {
+    let mut xs: Vec<i32> = (0..map.width).collect();
+    let mut ys: Vec<i32> = (0..map.height).collect();
+
+    rng.shuffle(&mut xs);
+    rng.shuffle(&mut ys);
+
+    while !xs.is_empty() && !ys.is_empty() {
+        let x = xs.pop().unwrap();
+        let y = ys.pop().unwrap();
+
+        let mut square = *map.get_square(x, y);
+        if let game::Terrain::Ground = square.terrain {
+            if let None = square.feature {
+                square.feature = Some(stair);
+                map.set_square(x, y, &square);
+                return;
+            }
+        }
+    }
+
+    error!("Couldn't add a stair");
 }

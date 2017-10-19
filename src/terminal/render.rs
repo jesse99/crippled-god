@@ -158,6 +158,9 @@ pub fn render_map(stdout: &mut RawTerminal, map: &engine::Map, player_x: i32, pl
         for x in 0..map.width {
             let square = map.get_square(x, y);
             let mut tile = square.terrain.render();
+            if let Some(f) = square.feature {
+                f.render(&mut tile);
+            }
             if x == player_x && y == player_y {
                 tile.symbol = '@';
                 tile.fg = game::Color::Black

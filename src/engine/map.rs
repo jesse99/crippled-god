@@ -6,6 +6,7 @@ use std::fmt;
 #[derive(Clone, Copy, Debug)]
 pub struct Square {
     pub terrain: game::Terrain,
+    pub feature: Option<game::Feature>,
 }
 
 pub struct Map {

@@ -1,6 +1,4 @@
 use std::fmt;
-// use super::Color;
-// use super::Tile;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Terrain {

@@ -68,10 +68,23 @@ fn create_map(rng: &mut rand::StdRng) -> engine::Map {
 }
 
 fn move_player(map: &engine::Map, x: &mut i32, y: &mut i32, dx: i32, dy: i32) {
-	if map.get_square(*x + dx, *y + dy).terrain.passable() {
+	if passable(map, *x + dx, *y + dy) {
 		*x += dx;
 		*y += dy;
 	} else {
 		let _ = write!(std::io::stdout(), "\x07");
+	}
+}
+
+fn passable(map: &engine::Map, x: i32, y: i32) -> bool {
+	let square = map.get_square(x, y);
+	if square.terrain.passable() {
+		if let Some(f) = square.feature {
+			f.passable()
+		} else {
+			true
+		}
+	} else {
+		false
 	}
 }
