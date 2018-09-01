@@ -1,12 +1,13 @@
 [package]
-name = "crippled-god"
+name = "crippled_god"
 version = "0.1.0"
 authors = ["Jesse Jones <jesse9jones@gmail.com>"]
 
 [dependencies]
-clap = "2.24.0"			# pretty nifty command line parser
-log = "0.3.0"			# logging frontend
-rand = "0.3.0"			# random number generator
-simplelog = "0.4.0"		# logging backend
+clap = "2.32.0"			# pretty nifty command line parser
+chrono = "0.4.0"		# datetime library
+log = "0.4.0"			# logging frontend
+rand = "0.5.0"			# random number generator
+simplelog = "0.5.0"		# logging backend
 termion = "1.5.0"		# terminal library
 time = "0.1.0"			# much better support for time than in std
