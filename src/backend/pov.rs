@@ -16,12 +16,22 @@ use std::collections::HashSet;
 /// * `radius` - Maximum distance that LOS can extend to.
 /// * `visit_tile` - Called for each visible cell.
 /// * `blocks_LOS` - Returns true if the cell blocks LOS.
-pub fn field_of_view<V, B>(start: Location, size: Size, radius: i32, visit_tile: V, blocks_LOS: B)
-where
-	V: Fn(Location),
+pub fn visit_visible_cells<V, B>(
+	start: Location,
+	size: Size,
+	radius: i32,
+	mut visit_tile: V,
+	blocks_LOS: B,
+) where
+	V: FnMut(Location),
 	B: Fn(Location) -> bool, // TODO: this will probably need to take a some sort of trait, race? character size?
 {
-	let mut visited = HashSet::new(); // TODO: don't use a cryptograhic hasher
+	// If the starting point cannot be seen then the character is presumbably blinded so visit nothing.
+	if blocks_LOS(start) {
+		return;
+	}
+
+	let mut visited = HashSet::new(); // TODO: don't use a cryptograhic hash
 	visit_tile(start);
 	visited.insert(start);
 
@@ -47,7 +57,7 @@ where
 		Location::new(1, 1),
 		max_extent_x,
 		max_extent_y,
-		&visit_tile,
+		&mut visit_tile,
 		&blocks_LOS,
 	);
 
@@ -58,7 +68,7 @@ where
 		Location::new(1, -1),
 		max_extent_x,
 		min_extent_y,
-		&visit_tile,
+		&mut visit_tile,
 		&blocks_LOS,
 	);
 
@@ -69,7 +79,7 @@ where
 		Location::new(-1, -1),
 		min_extent_x,
 		min_extent_y,
-		&visit_tile,
+		&mut visit_tile,
 		&blocks_LOS,
 	);
 
@@ -80,73 +90,68 @@ where
 		Location::new(-1, 1),
 		min_extent_x,
 		max_extent_y,
-		&visit_tile,
+		&mut visit_tile,
 		&blocks_LOS,
 	);
 }
 
 // ---- Private Items -------------------------------------------------------------------
-//#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy)]
 struct Line {
-	xi: i32,
-	yi: i32,
-	xf: i32,
-	yf: i32,
+	i: Location,
+	f: Location,
 }
 
 impl Line {
-	fn new(xi: i32, yi: i32, xf: i32, yf: i32) -> Line {
-		Line { xi, yi, xf, yf }
+	fn new(ix: i32, iy: i32, fx: i32, fy: i32) -> Line {
+		let i = Location::new(ix, iy);
+		let f = Location::new(fx, fy);
+		Line { i, f }
 	}
 
 	fn dx(&self) -> i32 {
-		self.xf - self.xi
+		self.f.x - self.i.x
 	}
 
 	fn dy(&self) -> i32 {
-		self.yf - self.yi
+		self.f.y - self.i.y
 	}
 
-	fn pBelow(&self, loc: Location) -> bool {
-		self.relativeSlope(loc.x, loc.y) > 0
+	fn below(&self, loc: Location) -> bool {
+		self.relative_slope(loc) > 0
 	}
 
-	fn pBelowOrCollinear(&self, x: i32, y: i32) -> bool {
-		self.relativeSlope(x, y) >= 0
+	fn below_or_collinear(&self, loc: Location) -> bool {
+		self.relative_slope(loc) >= 0
 	}
 
-	fn pAbove(&self, loc: Location) -> bool {
-		self.relativeSlope(x, y) < 0
+	fn above(&self, loc: Location) -> bool {
+		self.relative_slope(loc) < 0
 	}
 
-	fn pAboveOrCollinear(&self, loc: Location) -> bool {
-		self.relativeSlope(loc.x, loc.y) <= 0
+	fn above_or_collinear(&self, loc: Location) -> bool {
+		self.relative_slope(loc) <= 0
 	}
 
-	fn pCollinear(&self, x: i32, y: i32) -> bool {
-		self.relativeSlope(x, y) == 0
+	fn collinear_point(&self, x: i32, y: i32) -> bool {
+		self.relative_slope(Location::new(x, y)) == 0
 	}
 
-	fn lineCollinear(&self, line: &Line) -> bool {
-		self.pCollinear(line.xi, line.yi) && self.pCollinear(line.xf, line.yf)
+	fn collinear_line(&self, line: &Line) -> bool {
+		self.collinear_point(line.i.x, line.i.y) && self.collinear_point(line.f.x, line.f.y)
 	}
 
-	fn relativeSlope(&self, x: i32, y: i32) -> i32 {
-		(self.dy() * (self.xf - x)) - (self.dx() * (self.yf - y))
+	fn relative_slope(&self, loc: Location) -> i32 {
+		(self.dy() * (self.f.x - loc.x)) - (self.dx() * (self.f.y - loc.y))
 	}
 }
 
-struct ViewBump {
-	x: i32, // TODO: think this can be a Location
-	y: i32,
-	parent: Option<Box<ViewBump>>,
-}
-
+#[derive(Clone)]
 struct View {
 	shallow_line: Line,
 	steep_line: Line,
-	shallow_bump: Option<ViewBump>,
-	steep_bump: Option<ViewBump>,
+	shallow_bump: Vec<Location>,
+	steep_bump: Vec<Location>,
 }
 
 impl View {
@@ -154,8 +159,8 @@ impl View {
 		View {
 			shallow_line,
 			steep_line,
-			shallow_bump: None,
-			steep_bump: None,
+			shallow_bump: Vec::new(),
+			steep_bump: Vec::new(),
 		}
 	}
 }
@@ -166,10 +171,10 @@ fn check_quadrant<V, B>(
 	delta: Location,
 	extent_x: i32,
 	extent_y: i32,
-	visit_tile: &V,
+	visit_tile: &mut V,
 	blocks_LOS: &B,
 ) where
-	V: Fn(Location),
+	V: FnMut(Location),
 	B: Fn(Location) -> bool,
 {
 	let mut active_views = Vec::new();
@@ -227,12 +232,14 @@ fn visit_coord<V, B>(
 	delta: Location,
 	view_index: usize,
 	active_views: &mut Vec<View>,
-	visit_tile: &V,
+	visit_tile: &mut V,
 	blocks_LOS: &B,
 ) where
-	V: Fn(Location),
+	V: FnMut(Location),
 	B: Fn(Location) -> bool,
 {
+	let mut view_index = view_index;
+
 	// The top left and bottom right corners of the current coordinate.
 	let topLeft = Location::new(x, y + 1);
 	let bottom_right = Location::new(x + 1, y);
@@ -240,7 +247,7 @@ fn visit_coord<V, B>(
 	while view_index < active_views.len()
 		&& active_views[view_index]
 			.steep_line
-			.pBelowOrCollinear(bottom_right.x, bottom_right.y)
+			.below_or_collinear(bottom_right)
 	{
 		// The current coordinate is above the current view and is
 		// ignored.  The steeper fields may need it though.
@@ -250,7 +257,7 @@ fn visit_coord<V, B>(
 	if view_index == active_views.len()
 		|| active_views[view_index]
 			.shallow_line
-			.pAboveOrCollinear(topLeft)
+			.above_or_collinear(topLeft)
 	{
 		// Either the current coordinate is above all of the fields
 		// or it is below all of the fields.
@@ -278,18 +285,18 @@ fn visit_coord<V, B>(
 		return;
 	}
 
-	if active_views[view_index].shallow_line.pAbove(bottom_right)
-		&& active_views[view_index].steep_line.pBelow(topLeft)
+	if active_views[view_index].shallow_line.above(bottom_right)
+		&& active_views[view_index].steep_line.below(topLeft)
 	{
 		// The current coordinate is intersected by both lines in the
 		// current view.  The view is completely blocked.
 		active_views.remove(view_index);
-	} else if active_views[view_index].shallow_line.pAbove(bottom_right) {
+	} else if active_views[view_index].shallow_line.above(bottom_right) {
 		// The current coordinate is intersected by the shallow line of
 		// the current view.  The shallow line needs to be raised.
 		add_shallow_bump(topLeft, active_views, view_index);
 		check_view(active_views, view_index);
-	} else if active_views[view_index].steep_line.pBelow(topLeft) {
+	} else if active_views[view_index].steep_line.below(topLeft) {
 		// The current coordinate is intersected by the steep line of
 		// the current view.  The steep line needs to be lowered.
 		add_steep_bump(bottom_right, active_views, view_index);
@@ -300,13 +307,14 @@ fn visit_coord<V, B>(
 		// above and below the current coordinate.
 		let shallow_view_index = view_index;
 		view_index += 1;
-		let steep_view_index = view_index;
+		let mut steep_view_index = view_index;
 
-		active_views.insert(shallow_view_index, active_views[shallow_view_index]);
+		let copy = active_views[shallow_view_index].clone();
+		active_views.insert(shallow_view_index, copy);
 
 		add_steep_bump(bottom_right, active_views, shallow_view_index);
 		if !check_view(active_views, shallow_view_index) {
-			view_index -= 1;
+			//view_index -= 1;			// TODO: why did Python have this?
 			steep_view_index -= 1;
 		}
 
@@ -316,60 +324,44 @@ fn visit_coord<V, B>(
 }
 
 fn add_shallow_bump(loc: Location, active_views: &mut Vec<View>, view_index: usize) {
-	active_views[view_index].shallow_line.xf = loc.x;
-	active_views[view_index].shallow_line.yf = loc.y;
+	let view = &mut active_views[view_index];
 
-	let parent = if let Some(bump) = active_views[view_index].shallow_bump {
-		Some(Box::new(bump))
-	} else {
-		None
-	};
-	active_views[view_index].shallow_bump = Some(ViewBump {
-		x: loc.x,
-		y: loc.y,
-		parent,
-	});
+	view.shallow_line.f = loc;
+	view.shallow_bump.insert(0, loc);
 
-	let mut cur_bump = Box::new(active_views[view_index].steep_bump);
-	while let Some(*bump) = cur_bump {
-		if active_views[view_index].shallow_line.pAbove(bump) {
-			active_views[view_index].shallow_line.xi = bump.x;
-			active_views[view_index].shallow_line.yi = bump.y;
+	for bump in view.steep_bump.iter() {
+		if view.shallow_line.above(*bump) {
+			view.shallow_line.i = *bump;
 		}
-
-		cur_bump = *bump.parent;
 	}
 }
 
 fn add_steep_bump(loc: Location, active_views: &mut Vec<View>, view_index: usize) {
-	//     active_views[view_index].steep_line.xf = x
-	//     active_views[view_index].steep_line.yf = y
+	let view = &mut active_views[view_index];
 
-	//     active_views[view_index].steep_bump = ViewBump(x, y, \
-	//       active_views[view_index].steep_bump)
+	view.steep_line.f = loc;
+	view.steep_bump.insert(0, loc);
 
-	//     cur_bump = active_views[view_index].shallow_bump
-	//     while cur_bump is not None:
-	//         if active_views[view_index].steep_line.pBelow( \
-	//           cur_bump):
-	//             active_views[view_index].steep_line.xi = cur_bump.x
-	//             active_views[view_index].steep_line.yi = cur_bump.y
-
-	//         cur_bump = cur_bump.parent
+	for bump in view.shallow_bump.iter() {
+		if view.steep_line.below(*bump) {
+			view.steep_line.i = *bump;
+		}
+	}
 }
 
 // Removes the view in active_views at index view_index if
 //    - The two lines are coolinear
 //    - The lines pass through either extremity
 fn check_view(active_views: &mut Vec<View>, view_index: usize) -> bool {
-	//     shallow_line = active_views[view_index].shallow_line
-	//     steep_line = active_views[view_index].steep_line
+	let shallow_line = active_views[view_index].shallow_line;
+	let steep_line = active_views[view_index].steep_line;
 
-	//     if shallow_line.lineCollinear(steep_line) \
-	//       and ( shallow_line.pCollinear(0, 1) \
-	//        or shallow_line.pCollinear(1, 0) ):
-	//         del active_views[view_index]
-	//         return false
-	//     else:
-	//         return true
+	if shallow_line.collinear_line(&steep_line)
+		&& (shallow_line.collinear_point(0, 1) || shallow_line.collinear_point(1, 0))
+	{
+		active_views.remove(view_index);
+		false
+	} else {
+		true
+	}
 }

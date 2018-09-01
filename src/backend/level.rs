@@ -1,7 +1,9 @@
 use super::geography::Geography;
 use super::location::Location;
 use super::player::*;
+use super::pov::visit_visible_cells;
 use super::size::Size;
+use super::terrain::BlocksLOS;
 use super::terrain::Terrain;
 use super::vec2::Vec2;
 use rand;
@@ -116,26 +118,27 @@ impl Level {
 		visible: false,
 	};
 
-	// TODO: try implementing http://www.roguebasin.com/index.php?title=Permissive_Field_of_View_in_Python
-	fn can_see(&self, player: &Player, loc: Location) -> bool {
-		player.loc.distance(loc) < 10.0
-	}
-
 	fn toggle_cells(&mut self) {
-		let player = self.player.clone();
-
-		// The borrow checker won't allow us to grab references to self inside the apply
-		// loop below so we need to figure out what we need to do before we call apply.
+		// The borrow checker won't allow us to grab a mutable reference to cells in one closure and
+		// another reference in the second closure so we need to figure out what we need to do before
+		// we call apply.
 		let mut visible = HashMap::new(); // TODO: don't use a cryptograhic hasher
-		for (loc, _) in self.cells.iter() {
-			if self.can_see(&player, loc) {
+		{
+			let player = self.player.clone();
+			let visit = |loc| {
 				let terrain = self.geography.at(loc);
 				if self.player.is_at(loc) {
 					visible.insert(loc, (terrain, Character::Player(player.race)));
 				} else {
 					visible.insert(loc, (terrain, Character::None));
 				}
-			}
+			};
+			let blocks = |loc| {
+				let terrain = self.cells.get(loc).terrain;
+				terrain.blocks_LOS()
+			};
+			let radius = 10; // TODO: depends on race?
+			visit_visible_cells(player.loc, self.cells.size(), radius, visit, blocks);
 		}
 
 		self.cells.apply(|loc, cell| match visible.get(&loc) {

@@ -33,6 +33,11 @@ impl<T: Clone> Vec2<T> {
 		&self.elements[index as usize]
 	}
 
+	pub fn get_mut(&mut self, loc: Location) -> &mut T {
+		let index = loc.x + loc.y * self.size.width;
+		&mut self.elements[index as usize]
+	}
+
 	pub fn iter(&self) -> Vec2Iter<T> {
 		Vec2Iter {
 			index: 0,
