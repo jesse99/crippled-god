@@ -1,5 +1,6 @@
 //! The part of the terminal that shows the game's text output.
 use super::colors::*;
+use super::*;
 use backend;
 use std;
 use std::io::Write;
@@ -27,7 +28,7 @@ pub fn render_console(
 	let mut dy = 0;
 	let width = terminal_size.width as u16;
 	let height = terminal_size.height as u16;
-	for line in game.output.iter().rev() {
+	for line in game.output().iter().rev() {
 		// we need to go backwards because when lines wrap we don't know how many screen lines they will take
 		let strings = split_output(width as usize, line);
 		for sub_str in strings.iter().rev() {

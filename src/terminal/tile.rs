@@ -1,4 +1,4 @@
-use super::colors;
+use super::*;
 use backend;
 use termion;
 

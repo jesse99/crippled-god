@@ -1,23 +1,23 @@
-// use super::geography::Geography;
-use super::level::Level;
-// use super::location::Location;
-use super::player::*;
-// use super::pov::visit_visible_cells;
-// use super::size::Size;
-// use super::terrain::BlocksLOS;
-// use super::terrain::Terrain;
-// use super::vec2::Vec2;
+use super::vec2::*;
+use super::*;
 use rand;
 use rand::SeedableRng;
-// use std::collections::HashMap;
-// use std::fmt;
 use std::collections::VecDeque;
 
+pub enum Key {
+	UpArrow,
+	DownArrow,
+	LeftArrow,
+	RightArrow,
+	Char(char),
+}
+
 pub struct Game {
-	pub level: Level,
-	pub player: Player,
-	pub output: VecDeque<String>,
+	level: Level,
+	player: Player,
+	output: VecDeque<String>,
 	rng: rand::XorShiftRng,
+	running: bool,
 }
 
 impl Game {
@@ -57,11 +57,51 @@ impl Game {
 
 		let player = Player::new(Race::Human);
 		let level = Level::new(&player, &mut rng);
+		let running = true;
 		Game {
 			level,
 			player,
 			output,
+			running,
 			rng,
 		}
+	}
+
+	pub fn output(&self) -> &VecDeque<String> {
+		&self.output
+	}
+
+	pub fn running(&self) -> bool {
+		self.running
+	}
+
+	pub fn get_cells(&mut self, screen_size: Size) -> Vec2<Cell> {
+		self.level.get_cells(&self.player, screen_size)
+	}
+
+	/// Returns false if the key was not handled.
+	pub fn handle_key(&mut self, key: Key) -> bool {
+		match key {
+			Key::UpArrow => move_player(self, 0, -1),
+			Key::DownArrow => move_player(self, 0, 1),
+			Key::LeftArrow => move_player(self, -1, 0),
+			Key::RightArrow => move_player(self, 1, 0),
+			Key::Char('q') => {
+				self.running = false;
+				true
+			}
+			_ => false,
+		}
+	}
+}
+
+fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
+	let p = game.level.player_loc();
+	let loc = Location::new(p.x + dx, p.y + dy);
+	if game.player.can_move_to(&game.level, loc) {
+		game.level.move_player(&game.player, loc);
+		true
+	} else {
+		false
 	}
 }

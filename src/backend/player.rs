@@ -1,9 +1,4 @@
-// use super::geography::Geography;
-use super::level::Level;
-use super::location::Location;
-use super::terrain::*;
-// use rand;
-// use std::fmt;
+use super::*;
 
 #[derive(Clone, Copy)]
 pub enum Race {
@@ -13,7 +8,7 @@ pub enum Race {
 
 #[derive(Clone)]
 pub struct Player {
-	pub race: Race,
+	race: Race,
 }
 
 impl Player {
@@ -21,8 +16,12 @@ impl Player {
 		Player { race }
 	}
 
+	pub fn race(&self) -> Race {
+		self.race
+	}
+
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
-		let terrain = level.geography.at(loc);
+		let terrain = level.geography().at(loc);
 		let speed = self.race.speed(terrain);
 		speed > 0.0
 	}

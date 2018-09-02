@@ -1,12 +1,11 @@
+use super::console::*;
+use super::map::*;
 use backend;
 use std;
 use std::io::Write;
 use termion;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-
-use super::console::*;
-use super::map::*;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
@@ -24,17 +23,14 @@ pub fn run(seed: usize) {
 	stdout.flush().unwrap();
 	render_game(terminal_size, &mut stdout, &mut game);
 	for c in stdin.keys() {
-		match c.unwrap() {
-			termion::event::Key::Char('q') => break,
-			termion::event::Key::Left => move_player(&mut stdout, &mut game, -1, 0),
-			termion::event::Key::Right => move_player(&mut stdout, &mut game, 1, 0),
-			termion::event::Key::Up => move_player(&mut stdout, &mut game, 0, -1),
-			termion::event::Key::Down => move_player(&mut stdout, &mut game, 0, 1),
-			// termion::event::Key::Ctrl('r') => map = create_map(&mut rng),
-			_ => {
-				let _ = write!(stdout, "\x07");
-			}
-		};
+		let key = map_key(c.unwrap());
+		if !game.handle_key(key) {
+			let _ = write!(stdout, "\x07");
+		}
+
+		if !game.running() {
+			break;
+		}
 		render_game(terminal_size, &mut stdout, &mut game);
 	}
 
@@ -54,12 +50,13 @@ fn render_game(terminal_size: backend::Size, stdout: &mut RawTerminal, game: &mu
 	stdout.flush().unwrap();
 }
 
-fn move_player(stdout: &mut RawTerminal, game: &mut backend::Game, dx: i32, dy: i32) {
-	let p = game.level.player_loc;
-	let loc = backend::Location::new(p.x + dx, p.y + dy);
-	if game.player.can_move_to(&game.level, loc) {
-		game.level.move_player(&game.player, loc);
-	} else {
-		let _ = write!(stdout, "\x07");
+fn map_key(key: termion::event::Key) -> backend::Key {
+	match key {
+		termion::event::Key::Left => backend::Key::LeftArrow,
+		termion::event::Key::Right => backend::Key::RightArrow,
+		termion::event::Key::Up => backend::Key::UpArrow,
+		termion::event::Key::Down => backend::Key::DownArrow,
+		termion::event::Key::Char(ch) => backend::Key::Char(ch),
+		_ => backend::Key::Char('\x04'),
 	}
 }

@@ -3,8 +3,6 @@ use backend;
 use std;
 use std::io::Write;
 use termion;
-// use termion::input::TermRead;
-// use termion::raw::IntoRawMode;
 
 use super::console::*;
 use super::tile::*;
@@ -17,7 +15,7 @@ pub fn render_map(
 	game: &mut backend::Game,
 ) {
 	let map_size = backend::Size::new(terminal_size.width, terminal_size.height - NUM_OUTPUT_LINES);
-	let cells = game.level.get_cells(&game.player, map_size);
+	let cells = game.get_cells(map_size);
 
 	for (loc, cell) in cells.iter() {
 		let tile = Tile::new(cell);

@@ -1,6 +1,4 @@
-use super::location::Location;
-use super::size::Size;
-use super::terrain::Terrain;
+use super::*;
 use rand;
 use rand::Rng;
 use std::fmt;

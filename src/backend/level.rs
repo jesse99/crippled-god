@@ -1,14 +1,9 @@
-use super::geography::Geography;
-use super::location::Location;
-use super::player::*;
-use super::pov::visit_visible_cells;
-use super::size::Size;
-use super::terrain::BlocksLOS;
-use super::terrain::Terrain;
-use super::vec2::Vec2;
+use super::pov::*;
+use super::vec2::*;
+use super::*;
 use backend::terrain::MovementSpeed;
 use rand;
-use rand::SeedableRng;
+// use rand::SeedableRng;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -33,8 +28,8 @@ pub struct Cell {
 
 /// Contains all the info for a level in the game.
 pub struct Level {
-	pub geography: Geography,
-	pub player_loc: Location,
+	geography: Geography,
+	player_loc: Location,
 	cells: Vec2<Cell>,
 }
 
@@ -43,13 +38,21 @@ impl Level {
 		let geography = Geography::new();
 		let cells = Vec2::new(geography.size(), Level::DEFAULT_CELL);
 		let player_loc = geography
-			.find_loc_with(rng, |t| player.race.speed(t) > 0.0)
+			.find_loc_with(rng, |t| player.race().speed(t) > 0.0)
 			.expect("failed to find a location when new'ing the player");
 		Level {
 			geography,
 			player_loc,
 			cells,
 		}
+	}
+
+	pub fn geography(&self) -> &Geography {
+		&self.geography
+	}
+
+	pub fn player_loc(&self) -> Location {
+		self.player_loc
 	}
 
 	pub fn move_player(&mut self, player: &Player, loc: Location) {
@@ -61,6 +64,7 @@ impl Level {
 	/// arbitrarily large in which case the user will be able to see more of what he
 	/// saw earlier (tho that info may be outdated). It can also be arbitrarily small
 	/// though in that case the user may not be able to see all the Cells the player can.
+	/// Note that this is normally accessed through the Game method with the same name.
 	pub fn get_cells(&mut self, player: &Player, screen_size: Size) -> Vec2<Cell> {
 		self.toggle_cells(player);
 		self.screen_cells(screen_size)
@@ -104,7 +108,7 @@ impl Level {
 			let visit = |loc| {
 				let terrain = self.geography.at(loc);
 				if self.player_loc == loc {
-					visible.insert(loc, (terrain, Character::Player(player.race)));
+					visible.insert(loc, (terrain, Character::Player(player.race())));
 				} else {
 					visible.insert(loc, (terrain, Character::None));
 				}
