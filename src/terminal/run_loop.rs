@@ -7,7 +7,9 @@ use termion::raw::IntoRawMode;
 
 use super::tile::Tile;
 
-pub type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
+const NUM_OUTPUT_LINES: i32 = 8;
+
+type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub fn run(seed: usize) {
 	info!("running terminal with seed {}", seed);
@@ -17,12 +19,11 @@ pub fn run(seed: usize) {
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
 
-	// TODO: use terminal size to compute screen size
-	// let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
-	// println!("width = {}, height = {}", width, height);
+	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
+	let terminal_size = backend::Size::new(width as i32, height as i32);
 
 	stdout.flush().unwrap();
-	render_map(&mut stdout, &mut level);
+	render_map(terminal_size, &mut stdout, &mut level);
 	for c in stdin.keys() {
 		match c.unwrap() {
 			termion::event::Key::Char('q') => break,
@@ -35,7 +36,7 @@ pub fn run(seed: usize) {
 				let _ = write!(stdout, "\x07");
 			}
 		};
-		render_map(&mut stdout, &mut level);
+		render_map(terminal_size, &mut stdout, &mut level);
 		stdout.flush().unwrap();
 	}
 
@@ -59,8 +60,9 @@ fn move_player(stdout: &mut RawTerminal, level: &mut backend::Level, dx: i32, dy
 	}
 }
 
-fn render_map(stdout: &mut RawTerminal, level: &mut backend::Level) {
-	let screen_size = backend::Size::new(40, 30);
+fn render_map(terminal_size: backend::Size, stdout: &mut RawTerminal, level: &mut backend::Level) {
+	let screen_size =
+		backend::Size::new(terminal_size.width, terminal_size.height - NUM_OUTPUT_LINES);
 	let cells = level.get_cells(screen_size);
 
 	for (loc, cell) in cells.iter() {
