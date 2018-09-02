@@ -1,3 +1,4 @@
+mod game;
 mod geography;
 mod level;
 mod location;
@@ -7,6 +8,7 @@ mod size;
 mod terrain;
 mod vec2;
 
+pub use self::game::Game;
 pub use self::geography::Geography;
 pub use self::level::Cell;
 pub use self::level::Character;

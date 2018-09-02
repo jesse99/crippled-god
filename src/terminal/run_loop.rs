@@ -13,7 +13,7 @@ type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub fn run(seed: usize) {
 	info!("running terminal with seed {}", seed);
-	let mut level = backend::Level::new(seed);
+	let mut game = backend::Game::new(seed);
 
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
@@ -23,20 +23,20 @@ pub fn run(seed: usize) {
 	let terminal_size = backend::Size::new(width as i32, height as i32);
 
 	stdout.flush().unwrap();
-	render_map(terminal_size, &mut stdout, &mut level);
+	render_map(terminal_size, &mut stdout, &mut game);
 	for c in stdin.keys() {
 		match c.unwrap() {
 			termion::event::Key::Char('q') => break,
-			termion::event::Key::Left => move_player(&mut stdout, &mut level, -1, 0),
-			termion::event::Key::Right => move_player(&mut stdout, &mut level, 1, 0),
-			termion::event::Key::Up => move_player(&mut stdout, &mut level, 0, -1),
-			termion::event::Key::Down => move_player(&mut stdout, &mut level, 0, 1),
+			termion::event::Key::Left => move_player(&mut stdout, &mut game, -1, 0),
+			termion::event::Key::Right => move_player(&mut stdout, &mut game, 1, 0),
+			termion::event::Key::Up => move_player(&mut stdout, &mut game, 0, -1),
+			termion::event::Key::Down => move_player(&mut stdout, &mut game, 0, 1),
 			// termion::event::Key::Ctrl('r') => map = create_map(&mut rng),
 			_ => {
 				let _ = write!(stdout, "\x07");
 			}
 		};
-		render_map(terminal_size, &mut stdout, &mut level);
+		render_map(terminal_size, &mut stdout, &mut game);
 		stdout.flush().unwrap();
 	}
 
@@ -50,20 +50,20 @@ pub fn run(seed: usize) {
 	stdout.flush().unwrap();
 }
 
-fn move_player(stdout: &mut RawTerminal, level: &mut backend::Level, dx: i32, dy: i32) {
-	let p = level.player.loc;
+fn move_player(stdout: &mut RawTerminal, game: &mut backend::Game, dx: i32, dy: i32) {
+	let p = game.level.player_loc;
 	let loc = backend::Location::new(p.x + dx, p.y + dy);
-	if level.player.can_move_to(level, loc) {
-		level.move_player(loc);
+	if game.player.can_move_to(&game.level, loc) {
+		game.level.move_player(&game.player, loc);
 	} else {
 		let _ = write!(stdout, "\x07");
 	}
 }
 
-fn render_map(terminal_size: backend::Size, stdout: &mut RawTerminal, level: &mut backend::Level) {
+fn render_map(terminal_size: backend::Size, stdout: &mut RawTerminal, game: &mut backend::Game) {
 	let screen_size =
 		backend::Size::new(terminal_size.width, terminal_size.height - NUM_OUTPUT_LINES);
-	let cells = level.get_cells(screen_size);
+	let cells = game.level.get_cells(&game.player, screen_size);
 
 	for (loc, cell) in cells.iter() {
 		let tile = Tile::new(cell);

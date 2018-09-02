@@ -1,9 +1,9 @@
-use super::geography::Geography;
+// use super::geography::Geography;
 use super::level::Level;
 use super::location::Location;
 use super::terrain::*;
-use rand;
-use std::fmt;
+// use rand;
+// use std::fmt;
 
 #[derive(Clone, Copy)]
 pub enum Race {
@@ -14,19 +14,11 @@ pub enum Race {
 #[derive(Clone)]
 pub struct Player {
 	pub race: Race,
-	pub loc: Location,
 }
 
 impl Player {
-	pub fn new(race: Race, geography: &Geography, rng: &mut rand::XorShiftRng) -> Player {
-		let loc = geography
-			.find_loc_with(rng, |t| race.speed(t) > 0.0)
-			.expect("failed to find a location when new'ing the player");
-		Player { race, loc }
-	}
-
-	pub fn is_at(&self, loc: Location) -> bool {
-		self.loc == loc
+	pub fn new(race: Race) -> Player {
+		Player { race }
 	}
 
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
@@ -66,11 +58,5 @@ impl MovementSpeed for Race {
 impl MovementSpeed for Player {
 	fn speed(&self, terrain: Terrain) -> f32 {
 		self.race.speed(terrain)
-	}
-}
-
-impl fmt::Debug for Player {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "({}, {})", self.loc.x, self.loc.y)
 	}
 }

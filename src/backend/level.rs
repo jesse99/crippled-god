@@ -6,6 +6,7 @@ use super::size::Size;
 use super::terrain::BlocksLOS;
 use super::terrain::Terrain;
 use super::vec2::Vec2;
+use backend::terrain::MovementSpeed;
 use rand;
 use rand::SeedableRng;
 use std::collections::HashMap;
@@ -27,69 +28,49 @@ pub struct Cell {
 	pub character: Character,
 
 	/// True if the player can see the square
-	pub visible: bool, // i.e. can the player see this cell
+	pub visible: bool,
 }
 
 /// Contains all the info for a level in the game.
 pub struct Level {
 	pub geography: Geography,
-	pub player: Player,
-	rng: rand::XorShiftRng,
+	pub player_loc: Location,
 	cells: Vec2<Cell>,
 }
 
 impl Level {
-	pub fn new(seed: usize) -> Level {
-		let seed = [
-			((seed >> 24) & 0xFF) as u8,
-			((seed >> 16) & 0xFF) as u8,
-			((seed >> 8) & 0xFF) as u8,
-			(seed & 0xFF) as u8,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		];
-		let mut rng = rand::XorShiftRng::from_seed(seed);
-
+	pub fn new(player: &Player, rng: &mut rand::XorShiftRng) -> Level {
 		let geography = Geography::new();
-		let player = Player::new(Race::Human, &geography, &mut rng);
 		let cells = Vec2::new(geography.size(), Level::DEFAULT_CELL);
+		let player_loc = geography
+			.find_loc_with(rng, |t| player.race.speed(t) > 0.0)
+			.expect("failed to find a location when new'ing the player");
 		Level {
-			rng,
 			geography,
-			player,
+			player_loc,
 			cells,
 		}
 	}
 
-	pub fn move_player(&mut self, loc: Location) {
-		assert!(self.player.can_move_to(self, loc));
-		self.player.loc = loc;
+	pub fn move_player(&mut self, player: &Player, loc: Location) {
+		assert!(player.can_move_to(self, loc));
+		self.player_loc = loc;
 	}
 
 	/// screen_size is the number of Cells the renderer wants to render. This can be
 	/// arbitrarily large in which case the user will be able to see more of what he
 	/// saw earlier (tho that info may be outdated). It can also be arbitrarily small
 	/// though in that case the user may not be able to see all the Cells the player can.
-	pub fn get_cells(&mut self, screen_size: Size) -> Vec2<Cell> {
-		self.toggle_cells();
+	pub fn get_cells(&mut self, player: &Player, screen_size: Size) -> Vec2<Cell> {
+		self.toggle_cells(player);
 		self.screen_cells(screen_size)
 	}
 
 	// ---- Private Items ---------------------------------------------------------------
 	fn screen_cells(&self, screen_size: Size) -> Vec2<Cell> {
 		let mut cells = Vec2::new(screen_size, Level::DEFAULT_CELL);
-		let start_x = self.player.loc.x - screen_size.width / 2;
-		let start_y = self.player.loc.y - screen_size.height / 2;
+		let start_x = self.player_loc.x - screen_size.width / 2;
+		let start_y = self.player_loc.y - screen_size.height / 2;
 		for out_y in 0..screen_size.height {
 			for out_x in 0..screen_size.width {
 				let in_loc = Location::new(start_x + out_x, start_y + out_y);
@@ -114,16 +95,15 @@ impl Level {
 		visible: false,
 	};
 
-	fn toggle_cells(&mut self) {
+	fn toggle_cells(&mut self, player: &Player) {
 		// The borrow checker won't allow us to grab a mutable reference to cells in one closure and
 		// another reference in the second closure so we need to figure out what we need to do before
 		// we call apply.
 		let mut visible = HashMap::new(); // TODO: don't use a cryptograhic hasher
 		{
-			let player = self.player.clone();
 			let visit = |loc| {
 				let terrain = self.geography.at(loc);
-				if self.player.is_at(loc) {
+				if self.player_loc == loc {
 					visible.insert(loc, (terrain, Character::Player(player.race)));
 				} else {
 					visible.insert(loc, (terrain, Character::None));
@@ -134,7 +114,7 @@ impl Level {
 				terrain.blocks_los()
 			};
 			let radius = 10; // TODO: depends on race?
-			visit_visible_cells(player.loc, self.cells.size(), radius, visit, blocks);
+			visit_visible_cells(self.player_loc, self.cells.size(), radius, visit, blocks);
 		}
 
 		self.cells.apply(|loc, cell| match visible.get(&loc) {
@@ -163,7 +143,7 @@ impl fmt::Debug for Level {
 		for y in 0..self.geography.size().height {
 			for x in 0..self.geography.size().width {
 				let loc = Location::new(x, y);
-				if self.player.is_at(loc) {
+				if self.player_loc == loc {
 					write!(f, "@")?;
 				} else {
 					write!(f, "{:?}", self.geography.at(loc))?;
