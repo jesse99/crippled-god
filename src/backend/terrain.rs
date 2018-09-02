@@ -30,11 +30,11 @@ impl fmt::Debug for Terrain {
 }
 
 pub trait BlocksLOS {
-	fn blocks_LOS(&self) -> bool; // TODO: should probably take something like a race
+	fn blocks_los(&self) -> bool; // TODO: should probably take something like a race
 }
 
 impl BlocksLOS for Terrain {
-	fn blocks_LOS(&self) -> bool {
+	fn blocks_los(&self) -> bool {
 		match *self {
 			Terrain::Blank => true,
 			Terrain::DeepWater => false,

@@ -5,6 +5,7 @@
 // Aaron MacDonald.
 use super::location::Location;
 use super::size::Size;
+use super::vec2::Vec2;
 use std::collections::HashSet;
 
 /// Calls visit_tile for each cell that is visible from start.
@@ -15,19 +16,19 @@ use std::collections::HashSet;
 /// * `size` - How many cells to check. Typically the size of the level.
 /// * `radius` - Maximum distance that LOS can extend to.
 /// * `visit_tile` - Called for each visible cell.
-/// * `blocks_LOS` - Returns true if the cell blocks LOS.
+/// * `blocks_los` - Returns true if the cell blocks LOS.
 pub fn visit_visible_cells<V, B>(
 	start: Location,
 	size: Size,
 	radius: i32,
 	mut visit_tile: V,
-	blocks_LOS: B,
+	blocks_los: B,
 ) where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool, // TODO: this will probably need to take a some sort of trait, race? character size?
 {
 	// If the starting point cannot be seen then the character is presumbably blinded so visit nothing.
-	if blocks_LOS(start) {
+	if blocks_los(start) {
 		return;
 	}
 
@@ -58,7 +59,7 @@ pub fn visit_visible_cells<V, B>(
 		max_extent_x,
 		max_extent_y,
 		&mut visit_tile,
-		&blocks_LOS,
+		&blocks_los,
 	);
 
 	// Southeast quadrant
@@ -69,7 +70,7 @@ pub fn visit_visible_cells<V, B>(
 		max_extent_x,
 		min_extent_y,
 		&mut visit_tile,
-		&blocks_LOS,
+		&blocks_los,
 	);
 
 	// Southwest quadrant
@@ -80,7 +81,7 @@ pub fn visit_visible_cells<V, B>(
 		min_extent_x,
 		min_extent_y,
 		&mut visit_tile,
-		&blocks_LOS,
+		&blocks_los,
 	);
 
 	// Northwest quadrant
@@ -91,7 +92,7 @@ pub fn visit_visible_cells<V, B>(
 		min_extent_x,
 		max_extent_y,
 		&mut visit_tile,
-		&blocks_LOS,
+		&blocks_los,
 	);
 }
 
@@ -172,7 +173,7 @@ fn check_quadrant<V, B>(
 	extent_x: i32,
 	extent_y: i32,
 	visit_tile: &mut V,
-	blocks_LOS: &B,
+	blocks_los: &B,
 ) where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool,
@@ -214,7 +215,7 @@ fn check_quadrant<V, B>(
 				view_index,
 				&mut active_views,
 				visit_tile,
-				blocks_LOS,
+				blocks_los,
 			);
 
 			j += 1;
@@ -233,7 +234,7 @@ fn visit_coord<V, B>(
 	view_index: usize,
 	active_views: &mut Vec<View>,
 	visit_tile: &mut V,
-	blocks_LOS: &B,
+	blocks_los: &B,
 ) where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool,
@@ -241,7 +242,7 @@ fn visit_coord<V, B>(
 	let mut view_index = view_index;
 
 	// The top left and bottom right corners of the current coordinate.
-	let topLeft = Location::new(x, y + 1);
+	let top_left = Location::new(x, y + 1);
 	let bottom_right = Location::new(x + 1, y);
 
 	while view_index < active_views.len()
@@ -257,7 +258,7 @@ fn visit_coord<V, B>(
 	if view_index == active_views.len()
 		|| active_views[view_index]
 			.shallow_line
-			.above_or_collinear(topLeft)
+			.above_or_collinear(top_left)
 	{
 		// Either the current coordinate is above all of the fields
 		// or it is below all of the fields.
@@ -279,14 +280,14 @@ fn visit_coord<V, B>(
 		// 	println!("{?:}", loc);
 	}
 
-	if !blocks_LOS(loc) {
+	if !blocks_los(loc) {
 		// The current coordinate does not block sight and therefore
 		// has no effect on the view.
 		return;
 	}
 
 	if active_views[view_index].shallow_line.above(bottom_right)
-		&& active_views[view_index].steep_line.below(topLeft)
+		&& active_views[view_index].steep_line.below(top_left)
 	{
 		// The current coordinate is intersected by both lines in the
 		// current view.  The view is completely blocked.
@@ -294,9 +295,9 @@ fn visit_coord<V, B>(
 	} else if active_views[view_index].shallow_line.above(bottom_right) {
 		// The current coordinate is intersected by the shallow line of
 		// the current view.  The shallow line needs to be raised.
-		add_shallow_bump(topLeft, active_views, view_index);
+		add_shallow_bump(top_left, active_views, view_index);
 		check_view(active_views, view_index);
-	} else if active_views[view_index].steep_line.below(topLeft) {
+	} else if active_views[view_index].steep_line.below(top_left) {
 		// The current coordinate is intersected by the steep line of
 		// the current view.  The steep line needs to be lowered.
 		add_steep_bump(bottom_right, active_views, view_index);
@@ -318,7 +319,7 @@ fn visit_coord<V, B>(
 			steep_view_index -= 1;
 		}
 
-		add_shallow_bump(topLeft, active_views, steep_view_index);
+		add_shallow_bump(top_left, active_views, steep_view_index);
 		check_view(active_views, steep_view_index);
 	}
 }
@@ -363,5 +364,126 @@ fn check_view(active_views: &mut Vec<View>, view_index: usize) -> bool {
 		false
 	} else {
 		true
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	// Do we visit all cells when there are no obstructions and radius is large?
+	#[test]
+	fn test_full_empty() {
+		let size = Size::new(4, 4);
+		let radius = 10;
+		let original = Vec2::new(size, '.');
+		let actual = visit_cells(original, size, radius);
+
+		let expected = "\n....\n....\n..x.\n....";
+		assert_eq!(actual, expected);
+	}
+
+	// Do we visit a subset of the cells when there are no obstructions and radius is small?
+	#[test]
+	fn test_small_empty() {
+		let size = Size::new(7, 7);
+		let radius = 2;
+		let original = Vec2::new(size, '.');
+		let actual = visit_cells(original, size, radius);
+
+		let expected = "\n???????\n?.....?\n?.....?\n?..x..?\n?.....?\n?.....?\n???????";
+		assert_eq!(actual, expected);
+	}
+
+	// Does a full length wall block los?
+	#[test]
+	fn test_long_wall() {
+		let size = Size::new(7, 7);
+		let radius = 10;
+		let mut original = Vec2::new(size, '.');
+		for x in 0..size.width {
+			original.set(Location::new(x, 1), '#');
+		}
+		let actual = visit_cells(original, size, radius);
+
+		let expected = "\n???????\n#######\n.......\n...x...\n.......\n.......\n.......";
+		assert_eq!(actual, expected);
+	}
+
+	// Does a short wall block los?
+	#[test]
+	fn test_short_wall() {
+		let size = Size::new(8, 8);
+		let radius = 10;
+		let mut original = Vec2::new(size, '.');
+		for x in 3..size.width - 2 {
+			original.set(Location::new(x, 2), '#');
+		}
+		let actual = visit_cells(original, size, radius);
+
+		let expected =
+			"\n..?????.\n...???..\n...###..\n........\n....x...\n........\n........\n........";
+		assert_eq!(actual, expected);
+	}
+
+	// Does a pillar block los?
+	#[test]
+	fn test_pillar1() {
+		let size = Size::new(8, 8);
+		let radius = 10;
+		let mut original = Vec2::new(size, '.');
+		original.set(Location::new(size.width / 2, 2), '#');
+		let actual = visit_cells(original, size, radius);
+
+		let expected =
+			"\n....?...\n....?...\n....#...\n........\n....x...\n........\n........\n........";
+		assert_eq!(actual, expected);
+	}
+
+	// Does a pillar next to start block los?
+	#[test]
+	fn test_pillar2() {
+		let size = Size::new(8, 8);
+		let radius = 10;
+		let mut original = Vec2::new(size, '.');
+		original.set(Location::new(size.width / 2, 3), '#');
+		let actual = visit_cells(original, size, radius);
+
+		let expected =
+			"\n....?...\n....?...\n....?...\n....#...\n....x...\n........\n........\n........";
+		assert_eq!(actual, expected);
+	}
+
+	// Is everything blocked if nothing can be seen
+	#[test]
+	fn test_blinded() {
+		let size = Size::new(6, 6);
+		let radius = 10;
+		let original = Vec2::new(size, '#');
+		let actual = visit_cells(original, size, radius);
+
+		let expected = "\n??????\n??????\n??????\n??????\n??????\n??????";
+		assert_eq!(actual, expected);
+	}
+
+	fn visit_cells(old_cells: Vec2<char>, size: Size, radius: i32) -> String {
+		let mut new_cells = Vec2::new(size, '?');
+		let start = Location::new(size.width / 2, size.height / 2);
+
+		{
+			let visit = |loc| {
+				let value = if loc == start {
+					'x'
+				} else {
+					*old_cells.get(loc)
+				};
+				new_cells.set(loc, value);
+			};
+			let blocks = |loc| *old_cells.get(loc) == '#';
+
+			visit_visible_cells(start, size, radius, visit, blocks);
+		}
+
+		format!("{}", new_cells)
 	}
 }

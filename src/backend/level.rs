@@ -76,10 +76,6 @@ impl Level {
 		self.player.loc = loc;
 	}
 
-	// TODO:
-	// wire in a real visibibility check (probably should have a unit test for this)
-	// geography should use Vec2
-
 	/// screen_size is the number of Cells the renderer wants to render. This can be
 	/// arbitrarily large in which case the user will be able to see more of what he
 	/// saw earlier (tho that info may be outdated). It can also be arbitrarily small
@@ -134,8 +130,8 @@ impl Level {
 				}
 			};
 			let blocks = |loc| {
-				let terrain = self.cells.get(loc).terrain;
-				terrain.blocks_LOS()
+				let terrain = self.geography.at(loc);
+				terrain.blocks_los()
 			};
 			let radius = 10; // TODO: depends on race?
 			visit_visible_cells(player.loc, self.cells.size(), radius, visit, blocks);

@@ -3,6 +3,7 @@ use super::size::Size;
 use std::fmt;
 
 /// Two dimensional vector.
+#[derive(Clone)]
 pub struct Vec2<T> {
 	size: Size,
 	elements: Vec<T>,
@@ -33,6 +34,7 @@ impl<T: Clone> Vec2<T> {
 		&self.elements[index as usize]
 	}
 
+	#[allow(dead_code)]
 	pub fn get_mut(&mut self, loc: Location) -> &mut T {
 		let index = loc.x + loc.y * self.size.width;
 		&mut self.elements[index as usize]
@@ -83,6 +85,22 @@ impl<T: Clone + fmt::Debug> fmt::Debug for Vec2<T> {
 			for x in 0..self.size.width {
 				let loc = Location::new(x, y);
 				write!(f, "{:?}", self.get(loc))?;
+			}
+			if y + 1 < self.size.height {
+				write!(f, "\n")?;
+			}
+		}
+		write!(f, "")
+	}
+}
+
+impl<T: Clone + fmt::Display> fmt::Display for Vec2<T> {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "\n")?;
+		for y in 0..self.size.height {
+			for x in 0..self.size.width {
+				let loc = Location::new(x, y);
+				write!(f, "{}", self.get(loc))?;
 			}
 			if y + 1 < self.size.height {
 				write!(f, "\n")?;

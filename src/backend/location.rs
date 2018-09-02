@@ -12,22 +12,23 @@ impl Location {
 		Location { x, y }
 	}
 
-	pub fn left(&self) -> Location {
-		Location::new(self.x - 1, self.y)
-	}
+	// pub fn left(&self) -> Location {
+	// 	Location::new(self.x - 1, self.y)
+	// }
 
-	pub fn right(&self) -> Location {
-		Location::new(self.x + 1, self.y)
-	}
+	// pub fn right(&self) -> Location {
+	// 	Location::new(self.x + 1, self.y)
+	// }
 
-	pub fn up(&self) -> Location {
-		Location::new(self.x, self.y - 1)
-	}
+	// pub fn up(&self) -> Location {
+	// 	Location::new(self.x, self.y - 1)
+	// }
 
-	pub fn down(&self) -> Location {
-		Location::new(self.x, self.y + 1)
-	}
+	// pub fn down(&self) -> Location {
+	// 	Location::new(self.x, self.y + 1)
+	// }
 
+	#[allow(dead_code)]
 	pub fn distance(&self, rhs: Location) -> f64 {
 		let x1 = self.x as f64;
 		let y1 = self.y as f64;
