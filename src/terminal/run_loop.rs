@@ -5,9 +5,8 @@ use termion;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
-use super::tile::Tile;
-
-const NUM_OUTPUT_LINES: i32 = 8;
+use super::console::*;
+use super::map::*;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
@@ -23,7 +22,7 @@ pub fn run(seed: usize) {
 	let terminal_size = backend::Size::new(width as i32, height as i32);
 
 	stdout.flush().unwrap();
-	render_map(terminal_size, &mut stdout, &mut game);
+	render_game(terminal_size, &mut stdout, &mut game);
 	for c in stdin.keys() {
 		match c.unwrap() {
 			termion::event::Key::Char('q') => break,
@@ -36,8 +35,7 @@ pub fn run(seed: usize) {
 				let _ = write!(stdout, "\x07");
 			}
 		};
-		render_map(terminal_size, &mut stdout, &mut game);
-		stdout.flush().unwrap();
+		render_game(terminal_size, &mut stdout, &mut game);
 	}
 
 	let _ = write!(
@@ -50,6 +48,12 @@ pub fn run(seed: usize) {
 	stdout.flush().unwrap();
 }
 
+fn render_game(terminal_size: backend::Size, stdout: &mut RawTerminal, game: &mut backend::Game) {
+	render_map(terminal_size, stdout, game);
+	render_console(terminal_size, stdout, &game);
+	stdout.flush().unwrap();
+}
+
 fn move_player(stdout: &mut RawTerminal, game: &mut backend::Game, dx: i32, dy: i32) {
 	let p = game.level.player_loc;
 	let loc = backend::Location::new(p.x + dx, p.y + dy);
@@ -58,25 +62,4 @@ fn move_player(stdout: &mut RawTerminal, game: &mut backend::Game, dx: i32, dy: 
 	} else {
 		let _ = write!(stdout, "\x07");
 	}
-}
-
-fn render_map(terminal_size: backend::Size, stdout: &mut RawTerminal, game: &mut backend::Game) {
-	let screen_size =
-		backend::Size::new(terminal_size.width, terminal_size.height - NUM_OUTPUT_LINES);
-	let cells = game.level.get_cells(&game.player, screen_size);
-
-	for (loc, cell) in cells.iter() {
-		let tile = Tile::new(cell);
-		let x = (loc.x + 1) as u16; // termion is 1-based
-		let y = (loc.y + 1) as u16;
-		let _ = write!(
-			stdout,
-			"{}{}{}{}",
-			termion::cursor::Goto(x, y),
-			termion::color::Bg(tile.bg),
-			termion::color::Fg(tile.fg),
-			tile.symbol
-		);
-	}
-	stdout.flush().unwrap();
 }

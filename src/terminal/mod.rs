@@ -1,4 +1,6 @@
 mod colors;
+mod console;
+mod map;
 mod run_loop;
 mod tile;
 
