@@ -5,7 +5,6 @@
 // Aaron MacDonald.
 use super::location::Location;
 use super::size::Size;
-use super::vec2::Vec2;
 use std::collections::HashSet;
 
 /// Calls visit_tile for each cell that is visible from start.
@@ -315,7 +314,7 @@ fn visit_coord<V, B>(
 
 		add_steep_bump(bottom_right, active_views, shallow_view_index);
 		if !check_view(active_views, shallow_view_index) {
-			//view_index -= 1;			// TODO: why did Python have this?
+			//view_index -= 1;			// this was in the Python code but I think that was just a mistake
 			steep_view_index -= 1;
 		}
 
@@ -369,6 +368,7 @@ fn check_view(active_views: &mut Vec<View>, view_index: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
+	use super::super::vec2::Vec2;
 	use super::*;
 
 	// Do we visit all cells when there are no obstructions and radius is large?
@@ -454,7 +454,7 @@ mod tests {
 		assert_eq!(actual, expected);
 	}
 
-	// Is everything blocked if nothing can be seen
+	// Is everything blocked if nothing can be seen?
 	#[test]
 	fn test_blinded() {
 		let size = Size::new(6, 6);
