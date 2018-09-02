@@ -16,7 +16,7 @@ pub struct Game {
 	level: Level,
 	player: Player,
 	output: VecDeque<String>,
-	rng: rand::XorShiftRng,
+	// rng: rand::XorShiftRng,
 	running: bool,
 }
 
@@ -63,7 +63,7 @@ impl Game {
 			player,
 			output,
 			running,
-			rng,
+			// rng,
 		}
 	}
 

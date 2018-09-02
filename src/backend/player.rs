@@ -3,7 +3,7 @@ use super::*;
 #[derive(Clone, Copy)]
 pub enum Race {
 	Human,
-	Toblakai,
+	// Toblakai,
 }
 
 #[derive(Clone)]
@@ -37,19 +37,19 @@ impl MovementSpeed for Race {
 				}
 				Terrain::DeepWater => 0.0,
 				Terrain::Ground => 1.0,
-				Terrain::ShallowWater => 0.9,
+				// Terrain::ShallowWater => 0.9,
 				Terrain::Wall => 0.0,
 			},
-			Race::Toblakai => match terrain {
-				Terrain::Blank => {
-					assert!(false); // blank should only be used for rendering
-					0.0
-				}
-				Terrain::DeepWater => 0.0,
-				Terrain::Ground => 1.1,
-				Terrain::ShallowWater => 1.0,
-				Terrain::Wall => 0.0,
-			},
+			// Race::Toblakai => match terrain {
+			// 	Terrain::Blank => {
+			// 		assert!(false); // blank should only be used for rendering
+			// 		0.0
+			// 	}
+			// 	Terrain::DeepWater => 0.0,
+			// 	Terrain::Ground => 1.1,
+			// 	// Terrain::ShallowWater => 1.0,
+			// 	Terrain::Wall => 0.0,
+			// },
 		}
 	}
 }

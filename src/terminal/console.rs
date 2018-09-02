@@ -1,6 +1,6 @@
 //! The part of the terminal that shows the game's text output.
 use super::colors::*;
-use super::*;
+// use super::*;
 use backend;
 use std;
 use std::io::Write;
