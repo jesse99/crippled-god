@@ -1,0 +1,6 @@
+# Configuration file for The Crippled God.
+
+scroll_back = 100	# number of message lines to remember
+
+[terminal]
+num_lines = 8		# number of message lines to display in the main view

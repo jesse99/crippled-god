@@ -11,3 +11,4 @@ rand = "0.5.0"			# random number generator
 simplelog = "0.5.0"		# logging backend
 termion = "1.5.0"		# terminal library
 time = "0.1.0"			# much better support for time than in std
+toml = "0.4.0"			# TOML parser

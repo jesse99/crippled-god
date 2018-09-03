@@ -4,8 +4,6 @@ use rand;
 use rand::SeedableRng;
 use std::collections::VecDeque;
 
-const MAX_MESSAGES: usize = 100;
-
 pub enum Key {
 	UpArrow,
 	DownArrow,
@@ -15,6 +13,7 @@ pub enum Key {
 }
 
 pub struct Game {
+	config: Config,
 	level: Level,
 	player: Player,
 	output: VecDeque<String>,
@@ -57,16 +56,22 @@ impl Game {
 		output.push_back("This is line number 6".to_string());
 		output.push_back("Line 7: the quick brown fox jumped over the lazy dog and landed on the moon in a huff. It then rested for a spell and jumped not quite as high.".to_string());
 
+		let config = Config::new();
 		let player = Player::new(Race::Human);
 		let level = Level::new(&player, &mut rng);
 		let running = true;
 		Game {
+			config,
 			level,
 			player,
 			output,
 			running,
 			// rng,
 		}
+	}
+
+	pub fn config(&self) -> &Config {
+		&self.config
 	}
 
 	pub fn output(&self) -> &VecDeque<String> {
@@ -77,10 +82,11 @@ impl Game {
 		self.running
 	}
 
+	// TODO: COlor code these. Or maybe use a topic.
 	pub fn add_message(&mut self, message: &str) {
 		info!("{}", message);
 		self.output.push_back(message.to_string());
-		while self.output.len() > MAX_MESSAGES {
+		while self.output.len() > self.config.scroll_back {
 			self.output.pop_front();
 		}
 	}

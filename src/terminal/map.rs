@@ -4,7 +4,7 @@ use std;
 use std::io::Write;
 use termion;
 
-use super::console::*;
+// use super::console::*;
 use super::tile::*;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
@@ -14,7 +14,10 @@ pub fn render_map(
 	stdout: &mut RawTerminal,
 	game: &mut backend::Game,
 ) {
-	let map_size = backend::Size::new(terminal_size.width, terminal_size.height - NUM_OUTPUT_LINES);
+	let map_size = backend::Size::new(
+		terminal_size.width,
+		terminal_size.height - game.config().terminal.num_lines,
+	);
 	let cells = game.get_cells(map_size);
 
 	for (loc, cell) in cells.iter() {

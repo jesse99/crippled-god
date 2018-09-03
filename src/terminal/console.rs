@@ -6,8 +6,6 @@ use std;
 use std::io::Write;
 use termion;
 
-pub const NUM_OUTPUT_LINES: i32 = 8; // TODO: make this a config option
-
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub fn render_console(
@@ -34,7 +32,7 @@ pub fn render_console(
 		for sub_str in strings.iter().rev() {
 			render_line(width, height - dy, stdout, sub_str);
 			dy += 1;
-			if dy >= NUM_OUTPUT_LINES as u16 {
+			if dy >= game.config().terminal.num_lines as u16 {
 				return;
 			}
 		}
