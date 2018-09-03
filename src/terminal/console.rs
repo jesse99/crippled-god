@@ -26,11 +26,11 @@ pub fn render_console(
 	let mut dy = 0;
 	let width = terminal_size.width as u16;
 	let height = terminal_size.height as u16;
-	for line in game.output().iter().rev() {
+	for message in game.messages().iter().rev() {
 		// we need to go backwards because when lines wrap we don't know how many screen lines they will take
-		let strings = split_output(width as usize, line);
+		let strings = split_output(width as usize, &message.text);
 		for sub_str in strings.iter().rev() {
-			render_line(width, height - dy, stdout, sub_str);
+			render_line(width, height - dy, stdout, message.topic, sub_str);
 			dy += 1;
 			if dy >= game.config().terminal.num_lines as u16 {
 				return;
@@ -39,14 +39,25 @@ pub fn render_console(
 	}
 }
 
-fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, text: &str) {
+fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, topic: backend::Topic, text: &str) {
+	let color = to_termion(topic_to_color(topic));
 	let _ = write!(
 		stdout,
-		"{}{:width$}",
+		"{}{}{:width$}",
 		termion::cursor::Goto(1, y),
+		termion::color::Fg(color),
 		text,
 		width = width as usize
 	);
+}
+
+fn topic_to_color(topic: backend::Topic) -> Color {
+	match topic {
+		backend::Topic::Error => Color::Red,
+		backend::Topic::NonGamePlay => Color::Lime,
+		backend::Topic::Status => Color::AliceBlue,
+		backend::Topic::Warning => Color::Orange,
+	}
 }
 
 fn split_output(width: usize, line: &str) -> Vec<String> {

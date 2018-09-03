@@ -17,7 +17,7 @@ mod terminal;
 
 #[derive(Clone)]
 struct Options {
-	config_file: Option<String>, // TODO: probably should default this to a hidden file in the user's home directory
+	config_file: Option<String>, // TODO: maybe should search for this: home directory, current directory, a few directories up
 	log_file: String,
 	log_level: log::LevelFilter,
 	seed: usize,

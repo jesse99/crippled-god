@@ -12,11 +12,32 @@ pub enum Key {
 	Char(char),
 }
 
+/// Used with Message.
+#[derive(Clone, Copy)]
+pub enum Topic {
+	/// An operation could not be completed.
+	Error,
+
+	/// Something that doesn't affect the game.
+	NonGamePlay,
+
+	/// Something has affected the player.
+	Status,
+
+	/// An operation was not completely successful.
+	Warning,
+}
+
+pub struct Message {
+	pub topic: Topic,
+	pub text: String,
+}
+
 pub struct Game {
 	config: Config,
 	level: Level,
 	player: Player,
-	output: VecDeque<String>,
+	messages: VecDeque<Message>,
 	// rng: rand::XorShiftRng,
 	running: bool,
 }
@@ -43,10 +64,13 @@ impl Game {
 		];
 		let mut rng = rand::XorShiftRng::from_seed(seed);
 
-		let mut output = VecDeque::new();
+		let mut messages = VecDeque::new();
 		const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 		let greeting = format!("Welcome to the Crippled God version {}", VERSION);
-		output.push_back(greeting.to_string());
+		messages.push_back(Message {
+			topic: Topic::NonGamePlay,
+			text: greeting.to_string(),
+		});
 
 		let config = Config::default(config_file);
 		let player = Player::new(Race::Human);
@@ -56,7 +80,7 @@ impl Game {
 			config,
 			level,
 			player,
-			output,
+			messages,
 			running,
 			// rng,
 		};
@@ -68,20 +92,22 @@ impl Game {
 		&self.config
 	}
 
-	pub fn output(&self) -> &VecDeque<String> {
-		&self.output
+	pub fn messages(&self) -> &VecDeque<Message> {
+		&self.messages
 	}
 
 	pub fn running(&self) -> bool {
 		self.running
 	}
 
-	// TODO: COlor code these. Or maybe use a topic.
-	pub fn add_message(&mut self, message: &str) {
-		info!("{}", message);
-		self.output.push_back(message.to_string());
-		while self.output.len() > self.config.scroll_back {
-			self.output.pop_front();
+	pub fn add_message(&mut self, topic: Topic, text: &str) {
+		info!("{}", text);
+		self.messages.push_back(Message {
+			topic,
+			text: text.to_string(),
+		});
+		while self.messages.len() > self.config.scroll_back {
+			self.messages.pop_front();
 		}
 	}
 
@@ -112,12 +138,12 @@ impl Game {
 		let errors = self.config.reload();
 		if errors.is_empty() {
 			match self.config.config_path.clone() {
-				Some(path) => self.add_message(&format!("Loaded {}", path)),
-				None => self.add_message("No config file"),
+				Some(path) => self.add_message(Topic::NonGamePlay, &format!("Loaded {}", path)),
+				None => self.add_message(Topic::Warning, "No config file"),
 			}
 		} else {
 			for err in errors.iter() {
-				self.add_message(&format!("config error: {}", err));
+				self.add_message(Topic::Error, &format!("config error: {}", err));
 			}
 		}
 	}
@@ -129,7 +155,7 @@ fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
 	if game.player.can_move_to(&game.level, loc) {
 		game.level.move_player(&game.player, loc);
 		if let Terrain::ShallowWater = game.level.geography().at(loc) {
-			game.add_message("You splash through the water.")
+			game.add_message(Topic::Status, "You splash through the water.")
 		}
 		true
 	} else {
