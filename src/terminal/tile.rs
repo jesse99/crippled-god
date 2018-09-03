@@ -70,7 +70,7 @@ impl ToBackColor for backend::Terrain {
 			backend::Terrain::DeepWater => colors::Color::LightBlue,
 			backend::Terrain::Ground => colors::Color::Black,
 			backend::Terrain::Wall => colors::Color::Black,
-			// backend::Terrain::ShallowWater => colors::Color::LightBlue,
+			backend::Terrain::ShallowWater => colors::Color::LightBlue,
 		}
 	}
 }
@@ -82,7 +82,7 @@ impl ToForeColor for backend::Terrain {
 			backend::Terrain::DeepWater => colors::Color::Blue,
 			backend::Terrain::Ground => colors::Color::LightSlateGray,
 			backend::Terrain::Wall => colors::Color::Chocolate,
-			// backend::Terrain::ShallowWater => colors::Color::Blue,
+			backend::Terrain::ShallowWater => colors::Color::Blue,
 		}
 	}
 }
@@ -94,7 +94,7 @@ impl VisibleSymbol for backend::Terrain {
 			backend::Terrain::DeepWater => 'w',
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => '#',
-			// backend::Terrain::ShallowWater => '~',
+			backend::Terrain::ShallowWater => '~',
 		}
 	}
 }
@@ -106,7 +106,7 @@ impl HiddenSymbol for backend::Terrain {
 			backend::Terrain::DeepWater => self.visible_symbol(),
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => self.visible_symbol(),
-			// backend::Terrain::ShallowWater => self.visible_symbol(),
+			backend::Terrain::ShallowWater => self.visible_symbol(),
 		}
 	}
 }

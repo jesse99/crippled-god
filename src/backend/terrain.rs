@@ -6,7 +6,7 @@ pub enum Terrain {
 	Blank,
 	DeepWater,
 	Ground,
-	// ShallowWater,
+	ShallowWater,
 	Wall,
 }
 
@@ -23,7 +23,7 @@ impl fmt::Debug for Terrain {
 			Terrain::Blank => write!(f, "?"),
 			Terrain::DeepWater => write!(f, "w"),
 			Terrain::Ground => write!(f, "."),
-			// Terrain::ShallowWater => write!(f, "~"),
+			Terrain::ShallowWater => write!(f, "~"),
 			Terrain::Wall => write!(f, "#"),
 		}
 	}
@@ -39,7 +39,7 @@ impl BlocksLOS for Terrain {
 			Terrain::Blank => true,
 			Terrain::DeepWater => false,
 			Terrain::Ground => false,
-			// Terrain::ShallowWater => false,
+			Terrain::ShallowWater => false,
 			Terrain::Wall => true,
 		}
 	}

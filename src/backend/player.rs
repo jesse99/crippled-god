@@ -37,7 +37,7 @@ impl MovementSpeed for Race {
 				}
 				Terrain::DeepWater => 0.0,
 				Terrain::Ground => 1.0,
-				// Terrain::ShallowWater => 0.9,
+				Terrain::ShallowWater => 0.9,
 				Terrain::Wall => 0.0,
 			},
 			// Race::Toblakai => match terrain {
@@ -47,7 +47,7 @@ impl MovementSpeed for Race {
 			// 	}
 			// 	Terrain::DeepWater => 0.0,
 			// 	Terrain::Ground => 1.1,
-			// 	// Terrain::ShallowWater => 1.0,
+			// 	Terrain::ShallowWater => 1.0,
 			// 	Terrain::Wall => 0.0,
 			// },
 		}

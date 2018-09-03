@@ -4,6 +4,8 @@ use rand;
 use rand::SeedableRng;
 use std::collections::VecDeque;
 
+const MAX_MESSAGES: usize = 100;
+
 pub enum Key {
 	UpArrow,
 	DownArrow,
@@ -75,6 +77,14 @@ impl Game {
 		self.running
 	}
 
+	pub fn add_message(&mut self, message: &str) {
+		info!("{}", message);
+		self.output.push_back(message.to_string());
+		while self.output.len() > MAX_MESSAGES {
+			self.output.pop_front();
+		}
+	}
+
 	pub fn get_cells(&mut self, screen_size: Size) -> Vec2<Cell> {
 		self.level.get_cells(&self.player, screen_size)
 	}
@@ -100,6 +110,9 @@ fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
 	let loc = Location::new(p.x + dx, p.y + dy);
 	if game.player.can_move_to(&game.level, loc) {
 		game.level.move_player(&game.player, loc);
+		if let Terrain::ShallowWater = game.level.geography().at(loc) {
+			game.add_message("You splash through the water.")
+		}
 		true
 	} else {
 		false

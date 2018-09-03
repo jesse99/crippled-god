@@ -30,11 +30,11 @@ impl Geography {
 		// Add a little lake in the middle.
 		let x = width / 2;
 		let y = height / 2 - 1;
-		terrain[x + y * width] = Terrain::DeepWater;
+		terrain[x + y * width] = Terrain::ShallowWater;
 		terrain[x - 1 + (y + 1) * width] = Terrain::DeepWater;
 		terrain[x + (y + 1) * width] = Terrain::DeepWater;
-		terrain[x + 1 + (y + 1) * width] = Terrain::DeepWater;
-		terrain[x + (y + 2) * width] = Terrain::DeepWater;
+		terrain[x + 1 + (y + 1) * width] = Terrain::ShallowWater;
+		terrain[x + (y + 2) * width] = Terrain::ShallowWater;
 
 		// Add a short wall.
 		let y = 8;
