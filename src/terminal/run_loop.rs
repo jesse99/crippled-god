@@ -9,9 +9,9 @@ use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn run(seed: usize) {
+pub fn run(config_file: Option<String>, seed: usize) {
 	info!("running terminal with seed {}", seed);
-	let mut game = backend::Game::new(seed);
+	let mut game = backend::Game::new(config_file, seed);
 
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
@@ -39,7 +39,7 @@ pub fn run(seed: usize) {
 		"{}{}{}",
 		termion::cursor::Restore,
 		termion::cursor::Show,
-		termion::cursor::Goto(1, 20)
+		termion::cursor::Goto(1, 1)
 	);
 	stdout.flush().unwrap();
 }

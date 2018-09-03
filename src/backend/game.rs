@@ -22,7 +22,7 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new(seed: usize) -> Game {
+	pub fn new(config_file: Option<String>, seed: usize) -> Game {
 		let seed = [
 			((seed >> 24) & 0xFF) as u8,
 			((seed >> 16) & 0xFF) as u8,
@@ -48,26 +48,20 @@ impl Game {
 		let greeting = format!("Welcome to the Crippled God version {}", VERSION);
 		output.push_back(greeting.to_string());
 
-		output.push_back("This is line number 1".to_string());
-		output.push_back("This is line number 2".to_string());
-		output.push_back("This is line number 3".to_string());
-		output.push_back("This is line number 4".to_string());
-		output.push_back("This is line number 5".to_string());
-		output.push_back("This is line number 6".to_string());
-		output.push_back("Line 7: the quick brown fox jumped over the lazy dog and landed on the moon in a huff. It then rested for a spell and jumped not quite as high.".to_string());
-
-		let config = Config::new();
+		let config = Config::default(config_file);
 		let player = Player::new(Race::Human);
 		let level = Level::new(&player, &mut rng);
 		let running = true;
-		Game {
+		let mut game = Game {
 			config,
 			level,
 			player,
 			output,
 			running,
 			// rng,
-		}
+		};
+		game.reload_config();
+		game
 	}
 
 	pub fn config(&self) -> &Config {
@@ -102,11 +96,29 @@ impl Game {
 			Key::DownArrow => move_player(self, 0, 1),
 			Key::LeftArrow => move_player(self, -1, 0),
 			Key::RightArrow => move_player(self, 1, 0),
+			Key::Char('^') => {
+				self.reload_config();
+				true
+			}
 			Key::Char('q') => {
 				self.running = false;
 				true
 			}
 			_ => false,
+		}
+	}
+
+	fn reload_config(&mut self) {
+		let errors = self.config.reload();
+		if errors.is_empty() {
+			match self.config.config_path.clone() {
+				Some(path) => self.add_message(&format!("Loaded {}", path)),
+				None => self.add_message("No config file"),
+			}
+		} else {
+			for err in errors.iter() {
+				self.add_message(&format!("config error: {}", err));
+			}
 		}
 	}
 }
