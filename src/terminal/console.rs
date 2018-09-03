@@ -35,7 +35,7 @@ pub fn render_console(
 			render_line(width, height - dy, stdout, sub_str);
 			dy += 1;
 			if dy >= NUM_OUTPUT_LINES as u16 {
-				break;
+				return;
 			}
 		}
 	}
