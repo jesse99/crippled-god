@@ -4,7 +4,7 @@ use super::*;
 use backend::terrain::MovementSpeed;
 use rand;
 // use rand::SeedableRng;
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 use std::fmt;
 
 /// Set if the player or an NPC is within a Cell on the Level.
@@ -104,7 +104,7 @@ impl Level {
 		// The borrow checker won't allow us to grab a mutable reference to cells in one closure and
 		// another reference in the second closure so we need to figure out what we need to do before
 		// we call apply.
-		let mut visible = HashMap::new(); // TODO: don't use a cryptograhic hasher
+		let mut visible = FnvHashMap::default();
 		{
 			let visit = |loc| {
 				let terrain = self.geography.at(loc);

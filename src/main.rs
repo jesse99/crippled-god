@@ -1,6 +1,7 @@
 extern crate chrono;
 #[macro_use]
 extern crate clap;
+extern crate fnv;
 #[macro_use]
 extern crate log;
 extern crate rand;

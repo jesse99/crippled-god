@@ -4,6 +4,7 @@ use rand;
 use rand::SeedableRng;
 use std::collections::VecDeque;
 
+#[derive(Debug)]
 pub enum Key {
 	UpArrow,
 	DownArrow,
@@ -88,6 +89,11 @@ impl Game {
 		};
 		game.reload_config();
 		game
+	}
+
+	pub fn with_saved(mut self) -> Game {
+		self.running = true;
+		self
 	}
 
 	pub fn config(&self) -> &Config {

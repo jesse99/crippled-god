@@ -26,6 +26,7 @@ pub fn run(config_file: Result<String, String>, seed: usize) {
 	render_game(terminal_size, &mut stdout, &mut game);
 	for c in stdin.keys() {
 		let key = map_key(c.unwrap());
+		info!("pressed {:?}", key);
 		if !game.handle_key(key) {
 			let _ = write!(stdout, "\x07");
 			stdout.flush().unwrap();

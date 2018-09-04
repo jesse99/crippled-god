@@ -30,14 +30,13 @@ pub fn load_game() -> Result<backend::Game, String> {
 	let mut path = env::current_dir().map_err(|e| e.to_string())?;
 	path.push(SAVE_FILE_NAME);
 
-	let mut file = File::open(path).map_err(|e| e.to_string())?;
-
 	let mut contents = String::new();
+	let mut file = File::open(path).map_err(|e| e.to_string())?;
 	file.read_to_string(&mut contents)
 		.map_err(|e| e.to_string())?;
 
 	let game: backend::Game = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
-	Ok(game)
+	Ok(game.with_saved())
 }
 
 pub fn save_game(stdout: &mut RawTerminal, game: &backend::Game) {

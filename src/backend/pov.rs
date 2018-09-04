@@ -3,9 +3,8 @@
 // but here we are using the Precise Permissive Field of View algorithm based on the Python
 // code at http://www.roguebasin.com/index.php?title=Permissive_Field_of_View_in_Python by
 // Aaron MacDonald.
-use super::location::Location;
-use super::size::Size;
-use std::collections::HashSet;
+use super::*;
+use fnv::FnvHashSet;
 
 /// Calls visit_tile for each cell that is visible from start.
 ///
@@ -31,7 +30,7 @@ pub fn visit_visible_cells<V, B>(
 		return;
 	}
 
-	let mut visited = HashSet::new(); // TODO: don't use a cryptograhic hash
+	let mut visited = FnvHashSet::default();
 	visit_tile(start);
 	visited.insert(start);
 
@@ -166,7 +165,7 @@ impl View {
 }
 
 fn check_quadrant<V, B>(
-	visited: &mut HashSet<Location>,
+	visited: &mut FnvHashSet<Location>,
 	start: Location,
 	delta: Location,
 	extent_x: i32,
@@ -225,7 +224,7 @@ fn check_quadrant<V, B>(
 }
 
 fn visit_coord<V, B>(
-	visited: &mut HashSet<Location>,
+	visited: &mut FnvHashSet<Location>,
 	start: Location,
 	x: i32,
 	y: i32,
