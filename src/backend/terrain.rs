@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Terrain {
 	/// This is used for rendering (for a Cell the user hasn't ever seen).
 	Blank,

@@ -13,7 +13,7 @@ pub enum Key {
 }
 
 /// Used with Message.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Topic {
 	/// An operation could not be completed.
 	Error,
@@ -28,11 +28,13 @@ pub enum Topic {
 	Warning,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Message {
 	pub topic: Topic,
 	pub text: String,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Game {
 	config: Config,
 	level: Level,

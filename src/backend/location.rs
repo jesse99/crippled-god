@@ -1,7 +1,7 @@
 use std::fmt;
 
 /// Note that (0, 0) is the top left of the level.
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Deserialize, Serialize)]
 pub struct Location {
 	pub x: i32,
 	pub y: i32,

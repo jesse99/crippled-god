@@ -1,13 +1,14 @@
 use std::fs::File;
-// use std::io;
 use std::io::prelude::*;
 use toml;
 
 // TODO: Add key bindings
+#[derive(Deserialize, Serialize)]
 pub struct TerminalConfig {
 	pub num_lines: i32,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Config {
 	pub scroll_back: usize,
 	pub terminal: TerminalConfig,

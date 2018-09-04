@@ -1,12 +1,12 @@
 use super::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Race {
 	Human,
 	// Toblakai,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Player {
 	race: Race,
 }

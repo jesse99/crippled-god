@@ -1,9 +1,8 @@
-use super::location::Location;
-use super::size::Size;
+use super::*;
 use std::fmt;
 
 /// Two dimensional vector.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Vec2<T> {
 	size: Size,
 	elements: Vec<T>,

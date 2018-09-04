@@ -8,14 +8,14 @@ use std::collections::HashMap;
 use std::fmt;
 
 /// Set if the player or an NPC is within a Cell on the Level.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Character {
 	Player(Race),
 	None,
 }
 
 /// Used to render a location within the Level.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Cell {
 	/// If visible is set then terrain and character will be up to date. Otherwise terrain will be blank if
 	/// the user has never seen the Cell and whatever he saw last if he has seen the Cell.
@@ -27,6 +27,7 @@ pub struct Cell {
 }
 
 /// Contains all the info for a level in the game.
+#[derive(Deserialize, Serialize)]
 pub struct Level {
 	geography: Geography,
 	player_loc: Location,

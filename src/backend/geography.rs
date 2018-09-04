@@ -5,6 +5,7 @@ use std::fmt;
 
 /// This is the background for a level. Features (like stairs), NPCs, and the player are maintained
 /// as seperate data structures.
+#[derive(Deserialize, Serialize)]
 pub struct Geography {
 	size: Size,
 	terrain: Vec<Terrain>,
