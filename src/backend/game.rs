@@ -43,7 +43,7 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new(config_file: Option<String>, seed: usize) -> Game {
+	pub fn new(config_file: Result<String, String>, seed: usize) -> Game {
 		let seed = [
 			((seed >> 24) & 0xFF) as u8,
 			((seed >> 16) & 0xFF) as u8,
@@ -138,8 +138,8 @@ impl Game {
 		let errors = self.config.reload();
 		if errors.is_empty() {
 			match self.config.config_path.clone() {
-				Some(path) => self.add_message(Topic::NonGamePlay, &format!("Loaded {}", path)),
-				None => self.add_message(Topic::Warning, "No config file"),
+				Ok(path) => self.add_message(Topic::NonGamePlay, &format!("Loaded {}", path)),
+				Err(err) => self.add_message(Topic::Warning, &err),
 			}
 		} else {
 			for err in errors.iter() {

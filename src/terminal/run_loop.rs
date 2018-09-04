@@ -9,7 +9,7 @@ use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn run(config_file: Option<String>, seed: usize) {
+pub fn run(config_file: Result<String, String>, seed: usize) {
 	info!("running terminal with seed {}", seed);
 	let mut game = backend::Game::new(config_file, seed);
 

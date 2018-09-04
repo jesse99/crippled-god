@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use toml;
 
+// TODO: Add key bindings
 pub struct TerminalConfig {
 	pub num_lines: i32,
 }
@@ -10,7 +11,7 @@ pub struct TerminalConfig {
 pub struct Config {
 	pub scroll_back: usize,
 	pub terminal: TerminalConfig,
-	pub config_path: Option<String>,
+	pub config_path: Result<String, String>,
 }
 
 impl TerminalConfig {
@@ -20,7 +21,7 @@ impl TerminalConfig {
 }
 
 impl Config {
-	pub fn default(config_path: Option<String>) -> Config {
+	pub fn default(config_path: Result<String, String>) -> Config {
 		Config {
 			scroll_back: 100,
 			terminal: TerminalConfig::new(),
@@ -35,16 +36,17 @@ impl Config {
 		}
 	}
 
+	// This returns a Result so that we can use ? to handle errors.
 	fn do_reload(&mut self) -> Result<(), Vec<String>> {
-		if let Some(path) = self.config_path.clone() {
-			let contents = read_file(&path)?;
-			let table = parse_string(&contents)?;
-			let errors = self.process_game(table);
-			if !errors.is_empty() {
-				return Err(errors);
+		match self.config_path.clone() {
+			Ok(path) => {
+				let contents = read_file(&path)?;
+				let table = parse_string(&contents)?;
+				let errors = self.process_game(table);
+				Err(errors)
 			}
+			Err(err) => Err(vec![err]),
 		}
-		Ok(())
 	}
 
 	fn process_game(&mut self, table: toml::value::Table) -> Vec<String> {

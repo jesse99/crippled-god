@@ -9,6 +9,7 @@ extern crate termion;
 extern crate time;
 extern crate toml;
 
+use std::env;
 use std::process;
 use std::str::FromStr;
 
@@ -17,7 +18,6 @@ mod terminal;
 
 #[derive(Clone)]
 struct Options {
-	config_file: Option<String>, // TODO: maybe should search for this: home directory, current directory, a few directories up
 	log_file: String,
 	log_level: log::LevelFilter,
 	seed: usize,
@@ -26,7 +26,6 @@ struct Options {
 impl Options {
 	fn new() -> Self {
 		Options {
-			config_file: None,
 			log_file: "crippled-god.log".to_string(),
 			log_level: log::LevelFilter::Info,
 			seed: time::get_time().nsec as usize,
@@ -44,8 +43,7 @@ fn parse_options() -> Options {
 
 	// see https://docs.rs/clap/2.32.0/clap/ for syntax
 	let usage = format!(
-        "--config-file=[PATH] 'Path to a setting file'
-        --log-file=[PATH] 'Where to put the log file [{default_log_file}]'
+        "--log-file=[PATH] 'Where to put the log file [{default_log_file}]'
         --log-level=[LEVEL] 'Default log level: error, warn, info, debug, or trace [{default_level}]'
         --seed=[N] 'Random number generator seed [random]'",
         default_log_file = options.log_file,
@@ -58,10 +56,6 @@ fn parse_options() -> Options {
 		.about("Rogue-like based on the Malazan Books of the Fallen.")
 		.args_from_usage(&usage)
 		.get_matches();
-
-	if matches.is_present("config-file") {
-		options.config_file = Some(matches.value_of("config-file").unwrap().to_string());
-	}
 
 	if matches.is_present("log-file") {
 		options.log_file = matches.value_of("log-file").unwrap().to_string();
@@ -82,6 +76,26 @@ fn parse_options() -> Options {
 	options
 }
 
+fn find_config_path() -> Result<String, String> {
+	let file_name = "crippled-god.toml";
+	if let Ok(ref mut path) = env::current_dir() {
+		path.push(file_name);
+		if path.as_path().is_file() {
+			return Ok(path.to_str().unwrap().to_string());
+		}
+	}
+	if let Some(ref mut path) = env::home_dir() {
+		path.push(file_name);
+		if path.as_path().is_file() {
+			return Ok(path.to_str().unwrap().to_string());
+		}
+	}
+	Err(format!(
+		"Couldn't find {} in the working or home directories.",
+		file_name
+	))
+}
+
 fn main() {
 	let options = parse_options();
 	match std::fs::File::create(&options.log_file) {
@@ -97,7 +111,7 @@ fn main() {
 			let local = chrono::Local::now();
 			info!("on {}", local.to_rfc2822());
 
-			terminal::run(options.config_file, options.seed);
+			terminal::run(find_config_path(), options.seed);
 		}
 		Err(err) => options_err(&format!("Couldn't create log file: {}", err)),
 	}
