@@ -30,35 +30,18 @@ pub struct Cell {
 #[derive(Deserialize, Serialize)]
 pub struct Level {
 	geography: Geography,
-	player_loc: Location,
 	cells: Vec2<Cell>,
 }
 
 impl Level {
-	pub fn new(player: &Player, rng: &mut rand::XorShiftRng) -> Level {
+	pub fn new() -> Level {
 		let geography = Geography::new();
 		let cells = Vec2::new(geography.size(), Level::DEFAULT_CELL);
-		let player_loc = geography
-			.find_loc_with(rng, |t| player.race().speed(t) > 0.0)
-			.expect("failed to find a location when new'ing the player");
-		Level {
-			geography,
-			player_loc,
-			cells,
-		}
+		Level { geography, cells }
 	}
 
 	pub fn geography(&self) -> &Geography {
 		&self.geography
-	}
-
-	pub fn player_loc(&self) -> Location {
-		self.player_loc
-	}
-
-	pub fn move_player(&mut self, player: &Player, loc: Location) {
-		assert!(player.can_move_to(self, loc));
-		self.player_loc = loc;
 	}
 
 	/// screen_size is the number of Cells the renderer wants to render. This can be
@@ -68,14 +51,14 @@ impl Level {
 	/// Note that this is normally accessed through the Game method with the same name.
 	pub fn get_cells(&mut self, player: &Player, screen_size: Size) -> Vec2<Cell> {
 		self.toggle_cells(player);
-		self.screen_cells(screen_size)
+		self.screen_cells(player, screen_size)
 	}
 
 	// ---- Private Items ---------------------------------------------------------------
-	fn screen_cells(&self, screen_size: Size) -> Vec2<Cell> {
+	fn screen_cells(&self, player: &Player, screen_size: Size) -> Vec2<Cell> {
 		let mut cells = Vec2::new(screen_size, Level::DEFAULT_CELL);
-		let start_x = self.player_loc.x - screen_size.width / 2;
-		let start_y = self.player_loc.y - screen_size.height / 2;
+		let start_x = player.loc().x - screen_size.width / 2;
+		let start_y = player.loc().y - screen_size.height / 2;
 		for out_y in 0..screen_size.height {
 			for out_x in 0..screen_size.width {
 				let in_loc = Location::new(start_x + out_x, start_y + out_y);
@@ -108,7 +91,7 @@ impl Level {
 		{
 			let visit = |loc| {
 				let terrain = self.geography.at(loc);
-				if self.player_loc == loc {
+				if player.loc() == loc {
 					visible.insert(loc, (terrain, Character::Player(player.race())));
 				} else {
 					visible.insert(loc, (terrain, Character::None));
@@ -119,7 +102,7 @@ impl Level {
 				terrain.blocks_los()
 			};
 			let radius = 10; // TODO: depends on race?
-			visit_visible_cells(self.player_loc, self.cells.size(), radius, visit, blocks);
+			visit_visible_cells(player.loc(), self.cells.size(), radius, visit, blocks);
 		}
 
 		self.cells.apply(|loc, cell| match visible.get(&loc) {
@@ -148,11 +131,7 @@ impl fmt::Debug for Level {
 		for y in 0..self.geography.size().height {
 			for x in 0..self.geography.size().width {
 				let loc = Location::new(x, y);
-				if self.player_loc == loc {
-					write!(f, "@")?;
-				} else {
-					write!(f, "{:?}", self.geography.at(loc))?;
-				}
+				write!(f, "{:?}", self.geography.at(loc))?;
 			}
 			if y + 1 < self.geography.size().height {
 				write!(f, "\n")?;

@@ -1,4 +1,5 @@
 use super::*;
+use rand;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Race {
@@ -9,21 +10,34 @@ pub enum Race {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Player {
 	race: Race,
+	loc: Location,
 }
 
 impl Player {
-	pub fn new(race: Race) -> Player {
-		Player { race }
+	pub fn new(race: Race, geography: &Geography, rng: &mut rand::XorShiftRng) -> Player {
+		let loc = geography
+			.find_loc_with(rng, |t| race.speed(t) > 0.0)
+			.expect("failed to find a location when new'ing the player");
+		Player { race, loc }
 	}
 
 	pub fn race(&self) -> Race {
 		self.race
 	}
 
+	pub fn loc(&self) -> Location {
+		self.loc
+	}
+
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.geography().at(loc);
 		let speed = self.race.speed(terrain);
 		speed > 0.0
+	}
+
+	pub fn move_to(&mut self, level: &Level, loc: Location) {
+		assert!(self.can_move_to(level, loc));
+		self.loc = loc;
 	}
 }
 

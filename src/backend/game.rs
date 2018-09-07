@@ -76,8 +76,8 @@ impl Game {
 		});
 
 		let config = Config::default(config_file);
-		let player = Player::new(Race::Human);
-		let level = Level::new(&player, &mut rng);
+		let level = Level::new();
+		let player = Player::new(Race::Human, level.geography(), &mut rng);
 		let running = true;
 		let mut game = Game {
 			config,
@@ -158,10 +158,10 @@ impl Game {
 }
 
 fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
-	let p = game.level.player_loc();
+	let p = game.player.loc();
 	let loc = Location::new(p.x + dx, p.y + dy);
 	if game.player.can_move_to(&game.level, loc) {
-		game.level.move_player(&game.player, loc);
+		game.player.move_to(&game.level, loc);
 		if let Terrain::ShallowWater = game.level.geography().at(loc) {
 			game.add_message(Topic::Status, "You splash through the water.")
 		}

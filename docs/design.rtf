@@ -4,7 +4,29 @@
 {\*\expandedcolortbl;;\csgenericrgb\c784\c784\c784;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f0\fs48 \cf2 for now just encode game play elements using rust\
+\f0\fs48 \cf2 * Fields of dumb data structs are typically public. \
+* Fields that should be mediated by a method (e.g. to preserve invariants) are private.\
+\
+Key types:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\b \cf2 Game 
+\b0 - Top level type exposed by the backend.\
+
+\b Player - 
+\b0 Level independent player state.\
+
+\b Level - 
+\b0 Encapsulates the geography and visible cells.\
+
+\b Geography - 
+\b0 2D vector of terrain.\
+
+\b Config - 
+\b0 Typed values loaded from toml comfiguration file.\
+\
+\
+for now just encode game play elements using rust\
 later could use something like lua\
 	allows non-technical people to make changes\
 	would allow changes to be made w/o restarting the game\
@@ -16,6 +38,5 @@ then switch to a web server\
 	and NPC descriptions\
 \
 \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\b \cf2 	}
+\b 	}
