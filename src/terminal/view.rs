@@ -20,10 +20,10 @@ impl View {
 					let symbol = '@'; // TODO: use player.race
 					View { symbol, fg, bg }
 				}
-				backend::CharacterType::NPC(_) => {
+				backend::CharacterType::NPC(species) => {
 					let bg = colors::to_termion(tile.terrain.back_color());
-					let fg = colors::to_termion(colors::Color::White);
-					let symbol = 'm'; // TODO: use species
+					let fg = colors::to_termion(species.fore_color());
+					let symbol = species.visible_symbol();
 					View { symbol, fg, bg }
 				}
 				backend::CharacterType::None => {
@@ -41,10 +41,10 @@ impl View {
 					let symbol = '@'; // TODO: use player.race
 					View { symbol, fg, bg }
 				}
-				backend::CharacterType::NPC(_) => {
+				backend::CharacterType::NPC(species) => {
 					let bg = colors::to_termion(colors::Color::LightGrey);
-					let fg = colors::to_termion(colors::Color::White);
-					let symbol = 'm'; // TODO: use species
+					let fg = colors::to_termion(colors::Color::DarkGray);
+					let symbol = species.visible_symbol();
 					View { symbol, fg, bg }
 				}
 				backend::CharacterType::None => {
@@ -99,6 +99,15 @@ impl ToForeColor for backend::Terrain {
 	}
 }
 
+impl ToForeColor for backend::Species {
+	fn fore_color(&self) -> colors::Color {
+		match self {
+			backend::Species::Ay => colors::Color::BurlyWood,
+			backend::Species::Bison => colors::Color::Chocolate,
+		}
+	}
+}
+
 impl VisibleSymbol for backend::Terrain {
 	fn visible_symbol(&self) -> char {
 		match self {
@@ -119,6 +128,15 @@ impl HiddenSymbol for backend::Terrain {
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => self.visible_symbol(),
 			backend::Terrain::ShallowWater => self.visible_symbol(),
+		}
+	}
+}
+
+impl VisibleSymbol for backend::Species {
+	fn visible_symbol(&self) -> char {
+		match self {
+			backend::Species::Ay => 'a',
+			backend::Species::Bison => 'b',
 		}
 	}
 }

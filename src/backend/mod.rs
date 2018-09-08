@@ -14,6 +14,7 @@ pub use self::config::*;
 pub use self::game::*;
 pub use self::level::*;
 pub use self::location::*;
+pub use self::npc::*;
 pub use self::player::*;
 pub use self::size::*;
 pub use self::terrain::*;

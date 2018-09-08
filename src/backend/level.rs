@@ -21,8 +21,8 @@ pub enum CharacterType {
 /// Used to render a location within the Level.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Tile {
-	/// If visible is set then terrain and character will be up to date. Otherwise terrain will be blank if
-	/// the user has never seen the Tile and whatever he saw last if he has seen the Tile.
+	/// If visible is set then terrain and character will be up to date. Otherwise terrain will be
+	/// blank if the user has never seen the Tile and whatever he saw last if he has seen the Tile.
 	pub terrain: Terrain,
 	pub character: CharacterType,
 
@@ -83,6 +83,25 @@ impl Level {
 			.find_loc_with(rng, |t| race.speed(t) > 0.0)
 			.expect("failed to find a location when new'ing the player");
 		level.set_player(loc, player);
+
+		// Add some NPCs.
+		for _ in 0..5 {
+			let species = Species::Ay;
+			let npc = NPC::new(species);
+			let loc = level
+				.find_loc_with(rng, |t| species.speed(t) > 0.0)
+				.expect("failed to find a location when new'ing an Ay");
+			level.set_npc(loc, npc);
+		}
+
+		for _ in 0..5 {
+			let species = Species::Bison;
+			let npc = NPC::new(species);
+			let loc = level
+				.find_loc_with(rng, |t| species.speed(t) > 0.0)
+				.expect("failed to find a location when new'ing a Bison");
+			level.set_npc(loc, npc);
+		}
 
 		level
 	}
@@ -163,6 +182,11 @@ impl Level {
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::Player(player);
 		self.player_loc = loc;
+	}
+
+	fn set_npc(&mut self, loc: Location, npc: NPC) {
+		let cell = self.cells.get_mut(loc);
+		cell.character = Character::NPC(npc);
 	}
 
 	// Returns the subset of tiles that are rendered on the screen.
