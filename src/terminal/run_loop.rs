@@ -16,26 +16,30 @@ pub fn run(config_file: Result<String, String>, seed: usize) {
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
+	stdout.flush().unwrap();
 
 	let mut game = create_game(&mut stdout, config_file, seed);
 
 	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 	let terminal_size = backend::Size::new(width as i32, height as i32);
 
-	stdout.flush().unwrap();
-	render_game(terminal_size, &mut stdout, &mut game);
-	for c in stdin.keys() {
-		let key = map_key(c.unwrap());
-		info!("pressed {:?}", key);
-		if !game.handle_key(key) {
-			let _ = write!(stdout, "\x07");
-			stdout.flush().unwrap();
-		}
-
-		if !game.running() {
-			break;
-		}
+	let mut key_iter = stdin.keys();
+	loop {
 		render_game(terminal_size, &mut stdout, &mut game);
+		if game.players_time_slice() {
+			if let Some(c) = key_iter.next() {
+				let key = map_key(c.unwrap());
+				//info!("pressed {:?}", key);
+				if !game.handle_key(key) {
+					let _ = write!(stdout, "\x07");
+					stdout.flush().unwrap();
+				}
+
+				if !game.running() {
+					break;
+				}
+			}
+		}
 	}
 	save_game(&mut stdout, &game);
 

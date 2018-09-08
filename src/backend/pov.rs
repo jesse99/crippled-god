@@ -6,16 +6,16 @@
 use super::*;
 use fnv::FnvHashSet;
 
-/// Calls visit_tile for each cell that is visible from start.
+/// Calls visit_tile for each tile that is visible from start.
 ///
 /// # Arguments
 ///
 /// * `start` - Where to start checking for visiblr cells from. Typically the position of a character.
 /// * `size` - How many cells to check. Typically the size of the level.
 /// * `radius` - Maximum distance that LOS can extend to.
-/// * `visit_tile` - Called for each visible cell.
-/// * `blocks_los` - Returns true if the cell blocks LOS.
-pub fn visit_visible_cells<V, B>(
+/// * `visit_tile` - Called for each visible tile.
+/// * `blocks_los` - Returns true if the tile blocks LOS.
+pub fn visit_visible_tiles<V, B>(
 	start: Location,
 	size: Size,
 	radius: i32,
@@ -376,7 +376,7 @@ mod tests {
 		let size = Size::new(4, 4);
 		let radius = 10;
 		let original = Vec2::new(size, '.');
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected = "\n....\n....\n..x.\n....";
 		assert_eq!(actual, expected);
@@ -388,7 +388,7 @@ mod tests {
 		let size = Size::new(7, 7);
 		let radius = 2;
 		let original = Vec2::new(size, '.');
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected = "\n???????\n?.....?\n?.....?\n?..x..?\n?.....?\n?.....?\n???????";
 		assert_eq!(actual, expected);
@@ -403,7 +403,7 @@ mod tests {
 		for x in 0..size.width {
 			original.set(Location::new(x, 1), '#');
 		}
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected = "\n???????\n#######\n.......\n...x...\n.......\n.......\n.......";
 		assert_eq!(actual, expected);
@@ -418,7 +418,7 @@ mod tests {
 		for x in 3..size.width - 2 {
 			original.set(Location::new(x, 2), '#');
 		}
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected =
 			"\n..?????.\n...???..\n...###..\n........\n....x...\n........\n........\n........";
@@ -432,7 +432,7 @@ mod tests {
 		let radius = 10;
 		let mut original = Vec2::new(size, '.');
 		original.set(Location::new(size.width / 2, 2), '#');
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected =
 			"\n....?...\n....?...\n....#...\n........\n....x...\n........\n........\n........";
@@ -446,7 +446,7 @@ mod tests {
 		let radius = 10;
 		let mut original = Vec2::new(size, '.');
 		original.set(Location::new(size.width / 2, 3), '#');
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected =
 			"\n....?...\n....?...\n....?...\n....#...\n....x...\n........\n........\n........";
@@ -459,13 +459,13 @@ mod tests {
 		let size = Size::new(6, 6);
 		let radius = 10;
 		let original = Vec2::new(size, '#');
-		let actual = visit_cells(original, size, radius);
+		let actual = visit_tiles(original, size, radius);
 
 		let expected = "\n??????\n??????\n??????\n??????\n??????\n??????";
 		assert_eq!(actual, expected);
 	}
 
-	fn visit_cells(old_cells: Vec2<char>, size: Size, radius: i32) -> String {
+	fn visit_tiles(old_cells: Vec2<char>, size: Size, radius: i32) -> String {
 		let mut new_cells = Vec2::new(size, '?');
 		let start = Location::new(size.width / 2, size.height / 2);
 
@@ -480,7 +480,7 @@ mod tests {
 			};
 			let blocks = |loc| *old_cells.get(loc) == '#';
 
-			visit_visible_cells(start, size, radius, visit, blocks);
+			visit_visible_tiles(start, size, radius, visit, blocks);
 		}
 
 		format!("{}", new_cells)

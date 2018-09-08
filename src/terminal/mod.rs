@@ -4,6 +4,6 @@ mod map;
 mod persist;
 mod prompt;
 mod run_loop;
-mod tile;
+mod view;
 
 pub use self::run_loop::*;

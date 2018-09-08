@@ -39,7 +39,6 @@ pub struct Message {
 pub struct Game {
 	config: Config,
 	level: Level,
-	player: Player,
 	messages: VecDeque<Message>,
 	// rng: rand::XorShiftRng,
 	running: bool,
@@ -76,13 +75,11 @@ impl Game {
 		});
 
 		let config = Config::default(config_file);
-		let level = Level::new();
-		let player = Player::new(Race::Human, level.geography(), &mut rng);
+		let level = Level::new(&mut rng);
 		let running = true;
 		let mut game = Game {
 			config,
 			level,
-			player,
 			messages,
 			running,
 			// rng,
@@ -119,8 +116,15 @@ impl Game {
 		}
 	}
 
-	pub fn get_cells(&mut self, screen_size: Size) -> Vec2<Cell> {
-		self.level.get_cells(&self.player, screen_size)
+	pub fn get_tiles(&mut self, screen_size: Size) -> Vec2<Tile> {
+		self.level.get_tiles(screen_size)
+	}
+
+	/// If it's the player's turn to move then this just returns true.
+	/// Otherwise it calls execute on the next Scheduled object which
+	/// is ready.
+	pub fn players_time_slice(&mut self) -> bool {
+		true
 	}
 
 	/// Returns false if the key was not handled.
@@ -158,11 +162,11 @@ impl Game {
 }
 
 fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
-	let p = game.player.loc();
+	let p = game.level.player_loc();
 	let loc = Location::new(p.x + dx, p.y + dy);
-	if game.player.can_move_to(&game.level, loc) {
-		game.player.move_to(&game.level, loc);
-		if let Terrain::ShallowWater = game.level.geography().at(loc) {
+	if game.level.player().can_move_to(&game.level, loc) {
+		game.level.move_player(loc);
+		if let Terrain::ShallowWater = game.level.get_terrain(loc) {
 			game.add_message(Topic::Status, "You splash through the water.")
 		}
 		true

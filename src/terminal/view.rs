@@ -3,43 +3,55 @@ use backend;
 use termion;
 
 /// Visual representation of terrain, items, and characters on a position within the map.
-pub struct Tile {
+pub struct View {
 	pub symbol: char,
 	pub fg: termion::color::AnsiValue,
 	pub bg: termion::color::AnsiValue,
 	// TODO: might want to add support for styles, see https://docs.rs/termion/1.5.1/termion/style/index.html
 }
 
-impl Tile {
-	pub fn new(cell: &backend::Cell) -> Tile {
-		if cell.visible {
-			match cell.character {
-				backend::Character::Player(_) => {
-					let bg = colors::to_termion(cell.terrain.back_color());
+impl View {
+	pub fn new(tile: &backend::Tile) -> View {
+		if tile.visible {
+			match tile.character {
+				backend::CharacterType::Player(_) => {
+					let bg = colors::to_termion(tile.terrain.back_color());
 					let fg = colors::to_termion(colors::Color::White);
 					let symbol = '@'; // TODO: use player.race
-					Tile { symbol, fg, bg }
+					View { symbol, fg, bg }
 				}
-				backend::Character::None => {
-					let bg = colors::to_termion(cell.terrain.back_color());
-					let fg = colors::to_termion(cell.terrain.fore_color());
-					let symbol = cell.terrain.visible_symbol();
-					Tile { symbol, fg, bg }
+				backend::CharacterType::NPC(_) => {
+					let bg = colors::to_termion(tile.terrain.back_color());
+					let fg = colors::to_termion(colors::Color::White);
+					let symbol = 'm'; // TODO: use species
+					View { symbol, fg, bg }
+				}
+				backend::CharacterType::None => {
+					let bg = colors::to_termion(tile.terrain.back_color());
+					let fg = colors::to_termion(tile.terrain.fore_color());
+					let symbol = tile.terrain.visible_symbol();
+					View { symbol, fg, bg }
 				}
 			}
 		} else {
-			match cell.character {
-				backend::Character::Player(_) => {
+			match tile.character {
+				backend::CharacterType::Player(_) => {
 					let bg = colors::to_termion(colors::Color::LightGrey);
 					let fg = colors::to_termion(colors::Color::White);
 					let symbol = '@'; // TODO: use player.race
-					Tile { symbol, fg, bg }
+					View { symbol, fg, bg }
 				}
-				backend::Character::None => {
+				backend::CharacterType::NPC(_) => {
+					let bg = colors::to_termion(colors::Color::LightGrey);
+					let fg = colors::to_termion(colors::Color::White);
+					let symbol = 'm'; // TODO: use species
+					View { symbol, fg, bg }
+				}
+				backend::CharacterType::None => {
 					let bg = colors::to_termion(colors::Color::LightGrey);
 					let fg = colors::to_termion(colors::Color::DarkGray);
-					let symbol = cell.terrain.hidden_symbol();
-					Tile { symbol, fg, bg }
+					let symbol = tile.terrain.hidden_symbol();
+					View { symbol, fg, bg }
 				}
 			}
 		}
