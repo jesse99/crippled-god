@@ -80,7 +80,7 @@ impl Level {
 		let race = Race::Human;
 		let player = Player::new(race);
 		let loc = level
-			.find_loc_with(rng, |t| race.speed(t) > 0.0)
+			.rand_loc_for_char(rng, |t| race.speed(t) > 0.0)
 			.expect("failed to find a location when new'ing the player");
 		level.set_player(loc, player);
 
@@ -89,7 +89,7 @@ impl Level {
 			let species = Species::Ay;
 			let npc = NPC::new(species);
 			let loc = level
-				.find_loc_with(rng, |t| species.speed(t) > 0.0)
+				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
 				.expect("failed to find a location when new'ing an Ay");
 			level.set_npc(loc, npc);
 		}
@@ -98,7 +98,7 @@ impl Level {
 			let species = Species::Bison;
 			let npc = NPC::new(species);
 			let loc = level
-				.find_loc_with(rng, |t| species.speed(t) > 0.0)
+				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
 				.expect("failed to find a location when new'ing a Bison");
 			level.set_npc(loc, npc);
 		}
@@ -142,7 +142,11 @@ impl Level {
 	}
 
 	/// Returns a randomized location that satisfies the predicate.
-	pub fn find_loc_with<T>(&self, rng: &mut rand::XorShiftRng, predicate: T) -> Option<Location>
+	pub fn rand_loc_for_char<T>(
+		&self,
+		rng: &mut rand::XorShiftRng,
+		predicate: T,
+	) -> Option<Location>
 	where
 		T: Fn(Terrain) -> bool,
 	{
@@ -154,9 +158,12 @@ impl Level {
 			let x = i % size.width;
 			let y = i / size.width;
 			let loc = Location::new(x, y);
-			let terrain = self.cells.get(loc).terrain;
-			if predicate(terrain) {
-				return Some(loc);
+			let cell = self.cells.get(loc);
+			if let Character::None = cell.character {
+				let terrain = cell.terrain;
+				if predicate(terrain) {
+					return Some(loc);
+				}
 			}
 		}
 		return None;
