@@ -38,7 +38,9 @@ impl Scheduled for NPC {
 		self.ready_time + 1000
 	}
 
-	fn execute(&mut self, level: &mut Level) {}
+	fn execute(&mut self, level: &mut Level, loc: Location) -> Option<Location> {
+		None
+	}
 }
 
 impl MovementSpeed for Species {

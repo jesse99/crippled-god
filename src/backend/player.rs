@@ -48,8 +48,9 @@ impl Scheduled for Player {
 		self.ready_time
 	}
 
-	fn execute(&mut self, level: &mut Level) {
+	fn execute(&mut self, level: &mut Level, loc: Location) -> Option<Location> {
 		assert!(false, "execute shouldn't be called on the player");
+		None
 	}
 }
 

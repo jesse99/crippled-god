@@ -13,8 +13,9 @@ pub trait Scheduled {
 	/// Returns the time at which execute should be called.
 	fn ready_time(&self) -> Time;
 
-	/// Does some action and updates ready_time accordingly.
-	fn execute(&mut self, level: &mut Level);
+	/// Does some action and updates ready_time accordingly. Returns the new location or None if
+	/// self should not be re-added to the level.
+	fn execute(&mut self, level: &mut Level, loc: Location) -> Option<Location>;
 }
 
 impl Time {

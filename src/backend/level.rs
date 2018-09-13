@@ -87,7 +87,7 @@ impl Level {
 		let loc = level
 			.rand_loc_for_char(rng, |t| race.speed(t) > 0.0)
 			.expect("failed to find a location when new'ing the player");
-		level.set_player(loc, player);
+		level.add_player(loc, player);
 
 		// Add some NPCs.
 		for _ in 0..5 {
@@ -96,7 +96,7 @@ impl Level {
 			let loc = level
 				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
 				.expect("failed to find a location when new'ing an Ay");
-			level.set_npc(loc, npc);
+			level.add_npc(loc, npc);
 		}
 
 		for _ in 0..5 {
@@ -105,7 +105,7 @@ impl Level {
 			let loc = level
 				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
 				.expect("failed to find a location when new'ing a Bison");
-			level.set_npc(loc, npc);
+			level.add_npc(loc, npc);
 		}
 
 		level
@@ -215,32 +215,12 @@ impl Level {
 				assert!(npc.ready_time() >= game_time);
 				npc.ready_time() == game_time
 			})
-			.map(|loc| *loc)
+			.map(|loc| *loc)	// need the map and the collect to appease the borrow checker
 			.collect();
 		for loc in locs {
 			let mut npc = self.remove_npc(loc);
-			let new_loc = Location::new(0, 0);
-			npc.execute(self);
-			self.set_npc(new_loc, npc);
-
-			// if let Some(new_loc) = npc.execute(self) {
-			// 	self.set_npc(new_loc, npc);
-			// }
-
-			// let npc = self.npc_mut(loc);
-			// npc.execute(self);
-		}
-	}
-
-	fn remove_npc(&mut self, loc: Location) -> NPC {
-		let mut tmp = Character::None;
-		let old_cell = self.cells.get_mut(loc);
-		mem::swap(&mut old_cell.character, &mut tmp);
-		match tmp {
-			Character::NPC(c) => c,
-			_ => {
-				assert!(false, "{:?} doesn't contain an npc", tmp);
-				panic!()
+			if let Some(new_loc) = npc.execute(self, loc) {
+				self.add_npc(new_loc, npc);
 			}
 		}
 	}
@@ -293,16 +273,29 @@ impl Level {
 		cell.terrain = terrain;
 	}
 
-	fn set_player(&mut self, loc: Location, player: Player) {
+	fn add_player(&mut self, loc: Location, player: Player) {
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::Player(player);
 		self.player_loc = loc;
 	}
 
-	fn set_npc(&mut self, loc: Location, npc: NPC) {
+	fn add_npc(&mut self, loc: Location, npc: NPC) {
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::NPC(npc);
 		self.npc_locs.insert(loc);
+	}
+
+	fn remove_npc(&mut self, loc: Location) -> NPC {
+		let mut tmp = Character::None;
+		let old_cell = self.cells.get_mut(loc);
+		mem::swap(&mut old_cell.character, &mut tmp);
+		match tmp {
+			Character::NPC(c) => c,
+			_ => {
+				assert!(false, "{:?} doesn't contain an npc", tmp);
+				panic!()
+			}
+		}
 	}
 
 	// Returns the subset of tiles that are rendered on the screen.
