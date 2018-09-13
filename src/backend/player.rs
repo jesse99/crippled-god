@@ -1,19 +1,24 @@
+use super::scheduled::*;
 use super::*;
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Race {
 	Human,
 	// Toblakai,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Player {
 	race: Race,
+	ready_time: Time,
 }
 
 impl Player {
+	const MOVEMENT_SPEED: i64 = 5;
+
 	pub fn new(race: Race) -> Player {
-		Player { race }
+		let ready_time = Time::zero();
+		Player { race, ready_time }
 	}
 
 	pub fn race(&self) -> Race {
@@ -24,6 +29,27 @@ impl Player {
 		let terrain = level.get_terrain(loc);
 		let speed = self.race.speed(terrain);
 		speed > 0.0
+	}
+
+	/// Used for normal movement, i.e. not something like a teleport.
+	pub fn on_moved(&mut self, terrain: Terrain, dx: i32, dy: i32) {
+		let speed = self.race.speed(terrain);
+		let scaling = if dx != 0 && dy != 0 {
+			1.414 * speed
+		} else {
+			speed
+		};
+		self.ready_time = self.ready_time + (scaling * (Player::MOVEMENT_SPEED as f32)) as i64;
+	}
+}
+
+impl Scheduled for Player {
+	fn ready_time(&self) -> Time {
+		self.ready_time
+	}
+
+	fn execute(&mut self, level: &mut Level) {
+		assert!(false, "execute shouldn't be called on the player");
 	}
 }
 

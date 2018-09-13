@@ -1,3 +1,4 @@
+use super::scheduled::*;
 use super::vec2::*;
 use super::*;
 use rand;
@@ -41,6 +42,7 @@ pub struct Game {
 	level: Level,
 	messages: VecDeque<Message>,
 	// rng: rand::XorShiftRng,
+	game_time: Time,
 	running: bool,
 }
 
@@ -76,11 +78,13 @@ impl Game {
 
 		let config = Config::default(config_file);
 		let level = Level::new(&mut rng);
+		let game_time = Time::zero();
 		let running = true;
 		let mut game = Game {
 			config,
 			level,
 			messages,
+			game_time,
 			running,
 			// rng,
 		};
@@ -124,7 +128,18 @@ impl Game {
 	/// Otherwise it calls execute on the next Scheduled object which
 	/// is ready.
 	pub fn players_time_slice(&mut self) -> bool {
-		true
+		let player_time = self.level.player().ready_time();
+		match self.level.other_ready_time() {
+			Some(other_time) if other_time < player_time => {
+				self.game_time = other_time;
+				self.level.execute_others(self.game_time);
+				false
+			}
+			_ => {
+				self.game_time = player_time;
+				true
+			}
+		}
 	}
 
 	/// Returns false if the key was not handled.

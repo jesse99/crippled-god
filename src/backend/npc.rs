@@ -1,19 +1,25 @@
+use super::scheduled::*;
 use super::*;
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Species {
 	Ay,    // giant wolf
 	Bison, // large herbivore	TODO: is there a better name for this?
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NPC {
 	species: Species,
+	ready_time: Time,
 }
 
 impl NPC {
 	pub fn new(species: Species) -> NPC {
-		NPC { species }
+		let ready_time = Time::zero();
+		NPC {
+			species,
+			ready_time,
+		}
 	}
 
 	pub fn species(&self) -> Species {
@@ -25,6 +31,14 @@ impl NPC {
 		let speed = self.speed(terrain);
 		speed > 0.0
 	}
+}
+
+impl Scheduled for NPC {
+	fn ready_time(&self) -> Time {
+		self.ready_time + 1000
+	}
+
+	fn execute(&mut self, level: &mut Level) {}
 }
 
 impl MovementSpeed for Species {

@@ -1,5 +1,6 @@
 use super::npc::*;
 use super::pov::*;
+use super::scheduled::*;
 use super::vec2::*;
 use super::*;
 use backend::terrain::MovementSpeed;
@@ -7,6 +8,7 @@ use rand;
 use rand::Rng;
 // use rand::SeedableRng;
 use fnv::FnvHashMap;
+use fnv::FnvHashSet;
 use std::fmt;
 use std::mem;
 
@@ -36,6 +38,7 @@ pub struct Level {
 	cells: Vec2<Cell>,
 	tiles: Vec2<Tile>,
 	player_loc: Location,
+	npc_locs: FnvHashSet<Location>,
 }
 
 impl Level {
@@ -43,10 +46,12 @@ impl Level {
 		let size = Size::new(64, 32);
 		let cells = Vec2::new(size, Level::DEFAULT_CELL);
 		let tiles = Vec2::new(size, Level::DEFAULT_TILE);
+		let npc_locs = FnvHashSet::default();
 		let mut level = Level {
 			cells,
 			tiles,
 			player_loc: Location::new(0, 0),
+			npc_locs,
 		};
 
 		// Add walls around the outside
@@ -106,10 +111,6 @@ impl Level {
 		level
 	}
 
-	// pub fn npcs(&self) -> &Vec<NPC> {
-	// 	&self.npcs
-	// }
-
 	pub fn player(&self) -> &Player {
 		let cell = self.cells.get(self.player_loc);
 		match cell.character {
@@ -121,20 +122,118 @@ impl Level {
 		}
 	}
 
+	pub fn player_mut(&mut self) -> &mut Player {
+		let cell = self.cells.get_mut(self.player_loc);
+		match cell.character {
+			Character::Player(ref mut p) => p,
+			_ => {
+				assert!(false);
+				panic!()
+			}
+		}
+	}
+
 	pub fn player_loc(&self) -> Location {
 		self.player_loc
 	}
 
-	pub fn move_player(&mut self, loc: Location) {
+	pub fn move_player(&mut self, new_loc: Location) {
+		let old_loc = self.player_loc;
 		let mut tmp = Character::None;
 		{
 			let old_cell = self.cells.get_mut(self.player_loc);
 			mem::swap(&mut old_cell.character, &mut tmp);
 		}
 
-		let new_cell = self.cells.get_mut(loc);
-		mem::swap(&mut tmp, &mut new_cell.character);
-		self.player_loc = loc;
+		let terrain = {
+			let new_cell = self.cells.get_mut(new_loc);
+			mem::swap(&mut tmp, &mut new_cell.character);
+			new_cell.terrain
+		};
+		self.player_loc = new_loc;
+		self.player_mut()
+			.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+	}
+
+	pub fn npc(&self, loc: Location) -> &NPC {
+		let cell = self.cells.get(loc);
+		match cell.character {
+			Character::NPC(ref c) => c,
+			_ => {
+				assert!(false);
+				panic!()
+			}
+		}
+	}
+
+	pub fn npc_mut(&mut self, loc: Location) -> &mut NPC {
+		let cell = self.cells.get_mut(loc);
+		match cell.character {
+			Character::NPC(ref mut c) => c,
+			_ => {
+				assert!(false);
+				panic!()
+			}
+		}
+	}
+
+	pub fn npc_moved(&mut self, old_loc: Location, new_loc: Location) {
+		let mut tmp = Character::None;
+		{
+			let old_cell = self.cells.get_mut(old_loc);
+			mem::swap(&mut old_cell.character, &mut tmp);
+		}
+
+		let terrain = {
+			let new_cell = self.cells.get_mut(new_loc);
+			mem::swap(&mut tmp, &mut new_cell.character);
+			new_cell.terrain
+		};
+
+		self.npc_locs.remove(&old_loc);
+		self.npc_locs.insert(new_loc);
+		self.player_mut()
+			.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+	}
+
+	/// Returns the next time at which a monster or device is ready to execute, i.e. everything but
+	/// the player.
+	pub fn other_ready_time(&self) -> Option<Time> {
+		let times = self.npc_locs.iter().map(|loc| self.npc(*loc).ready_time());
+		times.min()
+	}
+
+	// Normally scheduling would happen with a priority queue but that would require something like
+	// Rc which gets annoying. So we simply store one reference and brute force scheduling which
+	// should be fine given our relatively small levels.
+	pub fn execute_others(&mut self, game_time: Time) {
+		let locs: Vec<Location> = self
+			.npc_locs
+			.iter()
+			.filter(|loc| {
+				let npc = self.npc(**loc);
+				assert!(npc.ready_time() >= game_time);
+				npc.ready_time() == game_time
+			})
+			.map(|loc| *loc)
+			.collect();
+		for loc in locs {
+			let npc = self.npc_mut(loc);
+			npc.execute(self);
+		}
+	}
+
+	fn remove_npc(&mut self, loc: Location) -> NPC {
+		let mut tmp = Character::None;
+		let old_cell = self.cells.get_mut(loc);
+		mem::swap(&mut old_cell.character, &mut tmp);
+		match tmp {
+			Character::NPC(c) => c,
+			_ => {
+				assert!(false, "{:?} doesn't contain an npc", tmp);
+				panic!()
+			}
+		}
 	}
 
 	pub fn get_terrain(&self, loc: Location) -> Terrain {
@@ -194,6 +293,7 @@ impl Level {
 	fn set_npc(&mut self, loc: Location, npc: NPC) {
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::NPC(npc);
+		self.npc_locs.insert(loc);
 	}
 
 	// Returns the subset of tiles that are rendered on the screen.
@@ -269,7 +369,7 @@ impl Level {
 }
 
 /// Set if the player or an NPC is within a Tile on the Level.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 enum Character {
 	Player(Player),
 	NPC(NPC),
