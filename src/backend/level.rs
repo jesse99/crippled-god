@@ -13,7 +13,7 @@ use std::fmt;
 use std::mem;
 
 /// Set if the player or an NPC is within a Tile on the Level.
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum CharacterType {
 	Player(Race),
 	NPC(Species),
@@ -116,7 +116,7 @@ impl Level {
 		match cell.character {
 			Character::Player(ref p) => p,
 			_ => {
-				assert!(false);
+				assert!(false, "{:?} does not contain a player", cell);
 				panic!()
 			}
 		}
@@ -127,7 +127,7 @@ impl Level {
 		match cell.character {
 			Character::Player(ref mut p) => p,
 			_ => {
-				assert!(false);
+				assert!(false, "{:?} does not contain a player", cell);
 				panic!()
 			}
 		}
@@ -155,12 +155,21 @@ impl Level {
 			.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
 	}
 
+	pub fn empty(&self, loc: Location) -> bool {
+		let cell = self.cells.get(loc);
+		match cell.character {
+			Character::NPC(_) => false,
+			Character::Player(_) => false,
+			Character::None => true,
+		}
+	}
+
 	pub fn npc(&self, loc: Location) -> &NPC {
 		let cell = self.cells.get(loc);
 		match cell.character {
 			Character::NPC(ref c) => c,
 			_ => {
-				assert!(false);
+				assert!(false, "{:?} does not contain an npc", cell);
 				panic!()
 			}
 		}
@@ -171,7 +180,7 @@ impl Level {
 		match cell.character {
 			Character::NPC(ref mut c) => c,
 			_ => {
-				assert!(false);
+				assert!(false, "{:?} does not contain an npc", cell);
 				panic!()
 			}
 		}
@@ -289,6 +298,7 @@ impl Level {
 		let mut tmp = Character::None;
 		let old_cell = self.cells.get_mut(loc);
 		mem::swap(&mut old_cell.character, &mut tmp);
+		self.npc_locs.remove(&loc);
 		match tmp {
 			Character::NPC(c) => c,
 			_ => {
@@ -379,7 +389,7 @@ enum Character {
 }
 
 /// Level has a 2D array of these.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 struct Cell {
 	terrain: Terrain,
 	character: Character,

@@ -29,7 +29,7 @@ impl NPC {
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.get_terrain(loc);
 		let speed = self.speed(terrain);
-		speed > 0.0
+		speed > 0.0 && level.empty(loc)
 	}
 }
 
