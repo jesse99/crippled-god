@@ -218,8 +218,17 @@ impl Level {
 			.map(|loc| *loc)
 			.collect();
 		for loc in locs {
-			let npc = self.npc_mut(loc);
+			let mut npc = self.remove_npc(loc);
+			let new_loc = Location::new(0, 0);
 			npc.execute(self);
+			self.set_npc(new_loc, npc);
+
+			// if let Some(new_loc) = npc.execute(self) {
+			// 	self.set_npc(new_loc, npc);
+			// }
+
+			// let npc = self.npc_mut(loc);
+			// npc.execute(self);
 		}
 	}
 
