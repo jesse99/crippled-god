@@ -106,15 +106,14 @@ impl Game {
 		self.level.get_tiles(screen_size)
 	}
 
-	/// If it's the player's turn to move then this just returns true.
-	/// Otherwise it calls execute on the next Scheduled object which
-	/// is ready.
+	/// If it's the player's turn to move then this just returns true. Otherwise it calls execute
+	/// on the next Scheduled object which is ready.
 	pub fn players_time_slice(&mut self) -> bool {
 		let player_time = self.level.player().ready_time();
 		match self.level.other_ready_time() {
 			Some(other_time) if other_time < player_time => {
 				self.game_time = other_time;
-				self.level.execute_others(self.game_time);
+				self.level.execute_others(self.game_time, &mut self.rng);
 				false
 			}
 			_ => {
@@ -127,10 +126,16 @@ impl Game {
 	/// Returns false if the key was not handled.
 	pub fn handle_key(&mut self, key: Key) -> bool {
 		match key {
-			Key::UpArrow => move_player(self, 0, -1),
-			Key::DownArrow => move_player(self, 0, 1),
-			Key::LeftArrow => move_player(self, -1, 0),
-			Key::RightArrow => move_player(self, 1, 0),
+			Key::UpArrow | Key::Char('8') => move_player(self, 0, -1),
+			Key::DownArrow | Key::Char('2') => move_player(self, 0, 1),
+			Key::LeftArrow | Key::Char('4') => move_player(self, -1, 0),
+			Key::RightArrow | Key::Char('6') => move_player(self, 1, 0),
+
+			Key::Char('7') => move_player(self, -1, -1),
+			Key::Char('9') => move_player(self, 1, -1),
+			Key::Char('1') => move_player(self, -1, 1),
+			Key::Char('3') => move_player(self, 1, 1),
+
 			Key::Char('^') => {
 				self.reload_config();
 				true

@@ -103,7 +103,7 @@ impl ToForeColor for backend::Species {
 	fn fore_color(&self) -> colors::Color {
 		match self {
 			backend::Species::Ay => colors::Color::BurlyWood,
-			backend::Species::Bison => colors::Color::Chocolate,
+			backend::Species::Bhederin => colors::Color::Chocolate,
 		}
 	}
 }
@@ -136,7 +136,7 @@ impl VisibleSymbol for backend::Species {
 	fn visible_symbol(&self) -> char {
 		match self {
 			backend::Species::Ay => 'a',
-			backend::Species::Bison => 'b',
+			backend::Species::Bhederin => 'b',
 		}
 	}
 }

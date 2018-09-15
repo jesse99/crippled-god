@@ -10,11 +10,10 @@ pub enum Terrain {
 	Wall,
 }
 
-pub trait MovementSpeed {
-	/// This is a multipler applied to the default movement speed, e.g. if 0.8
-	/// is returned for ShallowWater then the character speed is 20% slowe than
-	/// normal.
-	fn speed(&self, terrain: Terrain) -> f32;
+pub trait MovementDelay {
+	/// Amount of time it takes a character to move through the terrain. If INFINITY then the
+	/// character can't move through the terrain.
+	fn delay(&self, terrain: Terrain) -> f32;
 }
 
 impl fmt::Debug for Terrain {

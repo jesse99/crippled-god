@@ -1,4 +1,6 @@
 use std::fmt;
+use std::ops::Add;
+use std::ops::Sub;
 
 /// Note that (0, 0) is the top left of the level.
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Deserialize, Serialize)]
@@ -10,6 +12,10 @@ pub struct Location {
 impl Location {
 	pub fn new(x: i32, y: i32) -> Location {
 		Location { x, y }
+	}
+
+	pub fn zero() -> Location {
+		Location { x: 0, y: 0 }
 	}
 
 	// pub fn left(&self) -> Location {
@@ -37,6 +43,22 @@ impl Location {
 		let dx = x1 - x2;
 		let dy = y1 - y2;
 		(dx * dx + dy * dy).sqrt()
+	}
+}
+
+impl Add<Location> for Location {
+	type Output = Location;
+
+	fn add(self, other: Location) -> Location {
+		Location::new(self.x + other.x, self.y + other.y)
+	}
+}
+
+impl Sub<Location> for Location {
+	type Output = Location;
+
+	fn sub(self, other: Location) -> Location {
+		Location::new(self.x - other.x, self.y - other.y)
 	}
 }
 

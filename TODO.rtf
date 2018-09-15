@@ -4,15 +4,15 @@
 {\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red36\green38\blue41;\red161\green33\blue108;
 \red104\green26\blue29;\red43\green39\blue19;\red2\green2\blue2;\red140\green83\blue65;\red38\green38\blue38;
 \red245\green245\blue245;\red254\green228\blue200;\red60\green60\blue59;\red130\green130\blue130;\red17\green17\blue17;
-\red203\green0\blue77;\red60\green60\blue59;\red9\green76\blue116;\red117\green66\blue151;\red240\green240\blue240;
-\red9\green80\blue208;\red0\green0\blue0;\red52\green92\blue158;\red185\green20\blue31;\red95\green124\blue3;
-\red123\green126\blue121;\red242\green242\blue242;}
+\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red240\green240\blue240;
+\red9\green80\blue208;\red0\green0\blue0;\red51\green136\blue141;\red95\green124\blue3;\red242\green242\blue242;
+}
 {\*\expandedcolortbl;;\csgray\c0;\cssrgb\c18824\c20000\c21176;\csgenericrgb\c63137\c12941\c42353;
 \cssrgb\c49020\c15294\c15294;\cssrgb\c22353\c20000\c9412;\csgenericrgb\c784\c784\c784;\csgenericrgb\c54902\c32549\c25490;\cssrgb\c20000\c20000\c20000;
 \cssrgb\c96863\c96863\c96863;\cssrgb\c100000\c91449\c82330;\cssrgb\c30196\c30196\c29804;\cssrgb\c58039\c58039\c58039;\cssrgb\c8627\c8627\c8627;
-\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c95294\c95294\c95294;
-\cssrgb\c0\c41176\c85098;\cssrgb\c0\c0\c0;\cssrgb\c25882\c44314\c68235;\cssrgb\c78431\c15686\c16078;\cssrgb\c44314\c54902\c0;
-\cssrgb\c55686\c56471\c54902;\cssrgb\c96078\c96078\c96078;}
+\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c95294\c95294\c95294;
+\cssrgb\c0\c41176\c85098;\cssrgb\c0\c0\c0;\cssrgb\c24314\c60000\c62353;\cssrgb\c44314\c54902\c0;\cssrgb\c96078\c96078\c96078;
+}
 \deftab720
 \pard\pardeftab720\sl300\partightenfactor0
 
@@ -60,23 +60,18 @@ feature\
 	altar\
 	fountain\
 	\
+\pard\pardeftab720\sl420\partightenfactor0
 
 \f0\fs28 \cf15 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec15 pub\cf16 \strokec16  \cf15 \strokec15 trait\cf16 \strokec16  Scheduled \{\
-\pard\pardeftab720\sl420\partightenfactor0
-\cf16 \'a0\'a0\'a0\'a0\cf15 \strokec15 fn\cf16 \strokec16  \cf17 \strokec17 ready_time\cf16 \strokec16 (&\cf18 \strokec18 self\cf16 \strokec16 ) -> Tim\cb19 e;\cb1 \
-\'a0\'a0\'a0\'a0\cf15 \strokec15 fn\cf16 \strokec16  \cf17 \strokec17 execute\cf16 \strokec16 (&\cf15 \strokec15 mut\cf16 \strokec16  \cf18 \strokec18 self\cf16 \cb19 \strokec16 );\cb1 \
-\}\
+\outl0\strokewidth0 \strokec15 \'a0\'a0\'a0\'a0\cf16 \strokec16 pub\cf15 \strokec15  \cf16 \strokec16 fn\cf15 \strokec15  \cf17 \strokec17 is_visible\cf15 \strokec15 (&\cf18 \strokec18 self\cf15 \strokec15 , start_loc: Location, loc: Location) -> \cf16 \strokec16 bool\cf15 \cb19 \strokec15  \{\cb1 \
 \
-\'a0\'a0\'a0\'a0\cf15 \strokec15 pub\cf16 \strokec16  \cf15 \strokec15 fn\cf16 \strokec16  \cf17 \strokec17 npc_moved\cf16 \strokec16 (&\cf15 \strokec15 mut\cf16 \strokec16  \cf18 \strokec18 self\cf16 \strokec16 , old_loc: Location, new_loc: Location)\cb19  \{\cb1 \
 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
 \f2\b\fs48 \cf7 capital one
 \b0 \
-https://docs.rs/random/0.12.2/src/random/xorshift.rs.html#12\kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-\
+\kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
 \fs32 \cf20 \expnd0\expndtw0\kerning0
@@ -92,6 +87,7 @@ https://docs.rs/random/0.12.2/src/random/xorshift.rs.html#12\kerning1\expnd0\exp
 	- give it some simple AI, maybe aggressive, dijkstra maps help here\
 	- threads may help with AI\
 	- will need some sort of time system (look at basic articles)\
+* Might be nice to be able to look at a log for a character\
 * 7 Add simple combat\
 * 7 Might want options to control stuff like printing misses.\
 * 9 Add items\
@@ -139,17 +135,14 @@ pick Intelligence\
 phials recharge as you gain experience (so only need one)\
 \
 \
-\
 \pard\pardeftab720\sl380\partightenfactor0
 
-\f0\fs32 \cf21 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec21  \cf18 \strokec18 fn\cf21 \strokec21  shuffle<T>(\cf22 \strokec22 &mut\cf21 \strokec21  \cf23 \strokec23 self\cf21 \strokec21 , values: \cf22 \strokec22 &mut\cf21 \strokec21  [T]) \{\
-        \cf18 \strokec18 let\cf21 \strokec21  \cf22 \strokec22 mut\cf21 \strokec21  i = values.len();\
-        \cf18 \strokec18 while\cf21 \strokec21  i >= \cf24 \strokec24 2\cf21 \strokec21  \{\
-            \cf25 \strokec25 // invariant: elements with index >= i have been locked in place.\cf21 \strokec21 \
-            i -= \cf24 \strokec24 1\cf21 \strokec21 ;\
-            \cf25 \strokec25 // lock element i in place.\cf21 \strokec21 \
-            values.swap(i, \cf23 \strokec23 self\cf21 \strokec21 .gen_range(\cf24 \strokec24 0\cf21 \strokec21 , i + \cf24 \strokec24 1\cf21 \strokec21 ));\
-        \}\
-    \}\cb26 \
+\f0\fs32 \cf18 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec18 use\cf21 \strokec21  std::panic;\
+\
+panic::set_hook(Box::new(|\cf18 \strokec18 _\cf21 \strokec21 | \{\
+    \cf22 \strokec22 println!\cf21 \strokec21 (\cf23 \strokec23 "Custom panic hook"\cf21 \strokec21 );\
+\}));\
+\
+\cf18 \strokec18 let\cf21 \strokec21  \cf18 \strokec18 _\cf21 \strokec21  = panic::take_hook();\cb24 \
 }

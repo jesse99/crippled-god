@@ -1,5 +1,7 @@
+use super::rng::*;
 use super::scheduled::*;
 use super::*;
+use std::f32;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Race {
@@ -27,19 +29,24 @@ impl Player {
 
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.get_terrain(loc);
-		let speed = self.race.speed(terrain);
-		speed > 0.0 && level.empty(loc)
+		let delay = self.race.delay(terrain);
+		delay < f32::INFINITY && level.empty(loc)
 	}
 
 	/// Used for normal movement, i.e. not something like a teleport.
 	pub fn on_moved(&mut self, terrain: Terrain, dx: i32, dy: i32) {
-		let speed = self.race.speed(terrain);
-		let scaling = if dx != 0 && dy != 0 {
-			1.414 * speed
+		let delay = self.race.delay(terrain);
+		let delay = if dx != 0 && dy != 0 {
+			1.414 * delay
 		} else {
-			speed
+			delay
 		};
-		self.ready_time = self.ready_time + (scaling * (Player::MOVEMENT_SPEED as f32)) as i64;
+		assert!(delay > 0.0);
+		self.ready_time = self.ready_time + delay as i64;
+		// info!(
+		// 	"player moved by {},{} and will be ready at {}",
+		// 	dx, dy, self.ready_time
+		// );
 	}
 }
 
@@ -48,24 +55,24 @@ impl Scheduled for Player {
 		self.ready_time
 	}
 
-	fn execute(&mut self, level: &mut Level, loc: Location) -> Option<Location> {
+	fn execute(&mut self, level: &mut Level, loc: Location, rng: &mut RNG) -> Option<Location> {
 		assert!(false, "execute shouldn't be called on the player");
 		None
 	}
 }
 
-impl MovementSpeed for Race {
-	fn speed(&self, terrain: Terrain) -> f32 {
+impl MovementDelay for Race {
+	fn delay(&self, terrain: Terrain) -> f32 {
 		match self {
 			Race::Human => match terrain {
 				Terrain::Blank => {
 					assert!(false); // blank should only be used for rendering
-					0.0
+					f32::INFINITY
 				}
-				Terrain::DeepWater => 0.0,
-				Terrain::Ground => 1.0,
-				Terrain::ShallowWater => 0.9,
-				Terrain::Wall => 0.0,
+				Terrain::DeepWater => f32::INFINITY,
+				Terrain::Ground => 5.0,
+				Terrain::ShallowWater => 0.9 * 5.0,
+				Terrain::Wall => f32::INFINITY,
 			},
 			// Race::Toblakai => match terrain {
 			// 	Terrain::Blank => {
@@ -81,8 +88,8 @@ impl MovementSpeed for Race {
 	}
 }
 
-impl MovementSpeed for Player {
-	fn speed(&self, terrain: Terrain) -> f32 {
-		self.race.speed(terrain)
+impl MovementDelay for Player {
+	fn delay(&self, terrain: Terrain) -> f32 {
+		self.race.delay(terrain)
 	}
 }

@@ -12,6 +12,18 @@ use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
+fn restore() {
+	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+	let _ = write!(
+		stdout,
+		"{}{}{}",
+		termion::cursor::Restore,
+		termion::cursor::Show,
+		termion::cursor::Goto(1, 1)
+	);
+	stdout.flush().unwrap();
+}
+
 pub fn run(config_file: Result<String, String>, seed: u64) {
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
@@ -28,9 +40,10 @@ pub fn run(config_file: Result<String, String>, seed: u64) {
 		render_game(terminal_size, &mut stdout, &mut game);
 		if game.players_time_slice() {
 			if let Some(c) = key_iter.next() {
-				let key = map_key(c.unwrap());
-				//info!("pressed {:?}", key);
+				let cc = c.unwrap();
+				let key = map_key(cc);
 				if !game.handle_key(key) {
+					warn!("user pressed {:?}", cc);
 					let _ = write!(stdout, "\x07");
 					stdout.flush().unwrap();
 				}
@@ -42,15 +55,7 @@ pub fn run(config_file: Result<String, String>, seed: u64) {
 		}
 	}
 	save_game(&mut stdout, &game);
-
-	let _ = write!(
-		stdout,
-		"{}{}{}",
-		termion::cursor::Restore,
-		termion::cursor::Show,
-		termion::cursor::Goto(1, 1)
-	);
-	stdout.flush().unwrap();
+	restore();
 }
 
 fn create_game(

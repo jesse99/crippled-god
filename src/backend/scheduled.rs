@@ -1,4 +1,6 @@
+use super::rng::*;
 use super::*;
+use std::fmt;
 use std::ops::Add;
 use std::ops::Sub;
 
@@ -15,7 +17,7 @@ pub trait Scheduled {
 
 	/// Does some action and updates ready_time accordingly. Returns the new location or None if
 	/// self should not be re-added to the level.
-	fn execute(&mut self, level: &mut Level, loc: Location) -> Option<Location>;
+	fn execute(&mut self, level: &mut Level, loc: Location, rng: &mut RNG) -> Option<Location>;
 }
 
 impl Time {
@@ -41,5 +43,11 @@ impl Sub<i64> for Time {
 		Time {
 			value: self.value - other,
 		}
+	}
+}
+
+impl fmt::Display for Time {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}s", self.value)
 	}
 }

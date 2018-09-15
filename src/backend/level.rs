@@ -4,10 +4,11 @@ use super::rng::*;
 use super::scheduled::*;
 use super::vec2::*;
 use super::*;
-use backend::terrain::MovementSpeed;
+use backend::terrain::MovementDelay;
 // use rand::SeedableRng;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
+use std::f32;
 use std::fmt;
 use std::mem;
 
@@ -84,7 +85,7 @@ impl Level {
 		let race = Race::Human;
 		let player = Player::new(race);
 		let loc = level
-			.rand_loc_for_char(rng, |t| race.speed(t) > 0.0)
+			.rand_loc_for_char(rng, |t| race.delay(t) < f32::INFINITY)
 			.expect("failed to find a location when new'ing the player");
 		level.add_player(loc, player);
 
@@ -93,16 +94,16 @@ impl Level {
 			let species = Species::Ay;
 			let npc = NPC::new(species);
 			let loc = level
-				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
+				.rand_loc_for_char(rng, |t| species.delay(t) < f32::INFINITY)
 				.expect("failed to find a location when new'ing an Ay");
 			level.add_npc(loc, npc);
 		}
 
 		for _ in 0..5 {
-			let species = Species::Bison;
+			let species = Species::Bhederin;
 			let npc = NPC::new(species);
 			let loc = level
-				.rand_loc_for_char(rng, |t| species.speed(t) > 0.0)
+				.rand_loc_for_char(rng, |t| species.delay(t) < f32::INFINITY)
 				.expect("failed to find a location when new'ing a Bison");
 			level.add_npc(loc, npc);
 		}
@@ -210,13 +211,15 @@ impl Level {
 	/// the player.
 	pub fn other_ready_time(&self) -> Option<Time> {
 		let times = self.npc_locs.iter().map(|loc| self.npc(*loc).ready_time());
-		times.min()
+		let time = times.min();
+		info!("next NPC will be ready at {:?}", time);
+		time
 	}
 
 	// Normally scheduling would happen with a priority queue but that would require something like
 	// Rc which gets annoying. So we simply store one reference and brute force scheduling which
 	// should be fine given our relatively small levels.
-	pub fn execute_others(&mut self, game_time: Time) {
+	pub fn execute_others(&mut self, game_time: Time, rng: &mut RNG) {
 		let locs: Vec<Location> = self
 			.npc_locs
 			.iter()
@@ -229,7 +232,7 @@ impl Level {
 			.collect();
 		for loc in locs {
 			let mut npc = self.remove_npc(loc);
-			if let Some(new_loc) = npc.execute(self, loc) {
+			if let Some(new_loc) = npc.execute(self, loc, rng) {
 				self.add_npc(new_loc, npc);
 			}
 		}
@@ -377,6 +380,26 @@ impl Level {
 			}
 			None => tile.visible = false,
 		})
+	}
+
+	/// Returns true if loc is visible from start_loc,
+	pub fn is_visible(&self, start_loc: Location, loc: Location) -> bool {
+		let mut visible = false;
+		{
+			let visit = |l| {
+				if l == loc {
+					visible = true;
+				}
+			};
+			let blocks = |l| {
+				let terrain = self.get_terrain(l);
+				terrain.blocks_los()
+			};
+			let radius = 10; // TODO: depends on race?
+			visit_visible_tiles(start_loc, self.tiles.size(), radius, visit, blocks);
+		}
+
+		visible
 	}
 }
 
