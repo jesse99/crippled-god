@@ -1,8 +1,7 @@
+use super::rng::*;
 use super::scheduled::*;
 use super::vec2::*;
 use super::*;
-use rand;
-use rand::SeedableRng;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -41,32 +40,14 @@ pub struct Game {
 	config: Config,
 	level: Level,
 	messages: VecDeque<Message>,
-	// rng: rand::XorShiftRng,
+	rng: RNG,
 	game_time: Time,
 	running: bool,
 }
 
 impl Game {
-	pub fn new(config_file: Result<String, String>, seed: usize) -> Game {
-		let seed = [
-			((seed >> 24) & 0xFF) as u8,
-			((seed >> 16) & 0xFF) as u8,
-			((seed >> 8) & 0xFF) as u8,
-			(seed & 0xFF) as u8,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		];
-		let mut rng = rand::XorShiftRng::from_seed(seed);
+	pub fn new(config_file: Result<String, String>, seed: u64) -> Game {
+		let mut rng = RNG::new(seed);
 
 		let mut messages = VecDeque::new();
 		const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -84,6 +65,7 @@ impl Game {
 			config,
 			level,
 			messages,
+			rng,
 			game_time,
 			running,
 			// rng,

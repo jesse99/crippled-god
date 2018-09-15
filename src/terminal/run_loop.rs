@@ -12,7 +12,7 @@ use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn run(config_file: Result<String, String>, seed: usize) {
+pub fn run(config_file: Result<String, String>, seed: u64) {
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
@@ -56,7 +56,7 @@ pub fn run(config_file: Result<String, String>, seed: usize) {
 fn create_game(
 	stdout: &mut RawTerminal,
 	config_file: Result<String, String>,
-	seed: usize,
+	seed: u64,
 ) -> backend::Game {
 	if has_saved_game() {
 		let choices = vec![

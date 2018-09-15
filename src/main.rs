@@ -4,7 +4,6 @@ extern crate clap;
 extern crate fnv;
 #[macro_use]
 extern crate log;
-extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -25,7 +24,7 @@ mod terminal;
 struct Options {
 	log_file: String,
 	log_level: log::LevelFilter,
-	seed: usize,
+	seed: u64,
 }
 
 impl Options {
@@ -33,7 +32,7 @@ impl Options {
 		Options {
 			log_file: "crippled-god.log".to_string(),
 			log_level: log::LevelFilter::Info,
-			seed: time::get_time().nsec as usize,
+			seed: time::get_time().nsec as u64,
 		}
 	}
 }
@@ -74,7 +73,7 @@ fn parse_options() -> Options {
 	}
 
 	if matches.is_present("seed") {
-		options.seed = value_t!(matches, "seed", usize)
+		options.seed = value_t!(matches, "seed", u64)
 			.unwrap_or_else(|_e| options_err("--seed should be an unsigned int"));
 	}
 

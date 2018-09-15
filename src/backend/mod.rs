@@ -5,6 +5,7 @@ mod location;
 mod npc;
 mod player;
 mod pov;
+mod rng;
 mod scheduled;
 mod size;
 mod terrain;

@@ -5,12 +5,14 @@
 \red104\green26\blue29;\red43\green39\blue19;\red2\green2\blue2;\red140\green83\blue65;\red38\green38\blue38;
 \red245\green245\blue245;\red254\green228\blue200;\red60\green60\blue59;\red130\green130\blue130;\red17\green17\blue17;
 \red203\green0\blue77;\red60\green60\blue59;\red9\green76\blue116;\red117\green66\blue151;\red240\green240\blue240;
-}
+\red9\green80\blue208;\red0\green0\blue0;\red52\green92\blue158;\red185\green20\blue31;\red95\green124\blue3;
+\red123\green126\blue121;\red242\green242\blue242;}
 {\*\expandedcolortbl;;\csgray\c0;\cssrgb\c18824\c20000\c21176;\csgenericrgb\c63137\c12941\c42353;
 \cssrgb\c49020\c15294\c15294;\cssrgb\c22353\c20000\c9412;\csgenericrgb\c784\c784\c784;\csgenericrgb\c54902\c32549\c25490;\cssrgb\c20000\c20000\c20000;
 \cssrgb\c96863\c96863\c96863;\cssrgb\c100000\c91449\c82330;\cssrgb\c30196\c30196\c29804;\cssrgb\c58039\c58039\c58039;\cssrgb\c8627\c8627\c8627;
 \cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c95294\c95294\c95294;
-}
+\cssrgb\c0\c41176\c85098;\cssrgb\c0\c0\c0;\cssrgb\c25882\c44314\c68235;\cssrgb\c78431\c15686\c16078;\cssrgb\c44314\c54902\c0;
+\cssrgb\c55686\c56471\c54902;\cssrgb\c96078\c96078\c96078;}
 \deftab720
 \pard\pardeftab720\sl300\partightenfactor0
 
@@ -71,10 +73,19 @@ feature\
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f2\fs48 \cf7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-* 6 It\'92s alive:\
-	- make sure player can\'92t move into NPC cell\
-	- move_player needs to somehow set player\'92s ready_time\
+\f2\b\fs48 \cf7 capital one
+\b0 \
+https://docs.rs/random/0.12.2/src/random/xorshift.rs.html#12\kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\
+\pard\pardeftab720\partightenfactor0
+
+\fs32 \cf20 \expnd0\expndtw0\kerning0
+\ul \ulc20 https://blog.rust-lang.org/2018/09/13/Rust-1.29.html\
+\pard\pardeftab720\partightenfactor0
+
+\fs48 \cf7 \kerning1\expnd0\expndtw0 \ulnone * 6 It\'92s alive:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf7 	- move_player needs to somehow set player\'92s ready_time\
 		use MovementSpeed to scale time\
 	- players_time_slice needs to go through all candidates and give time\
 	  to any npc that is ready, then reset game_time\
@@ -126,4 +137,19 @@ train dodge until 20\
 pick Intelligence\
 \
 phials recharge as you gain experience (so only need one)\
+\
+\
+\
+\pard\pardeftab720\sl380\partightenfactor0
+
+\f0\fs32 \cf21 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec21  \cf18 \strokec18 fn\cf21 \strokec21  shuffle<T>(\cf22 \strokec22 &mut\cf21 \strokec21  \cf23 \strokec23 self\cf21 \strokec21 , values: \cf22 \strokec22 &mut\cf21 \strokec21  [T]) \{\
+        \cf18 \strokec18 let\cf21 \strokec21  \cf22 \strokec22 mut\cf21 \strokec21  i = values.len();\
+        \cf18 \strokec18 while\cf21 \strokec21  i >= \cf24 \strokec24 2\cf21 \strokec21  \{\
+            \cf25 \strokec25 // invariant: elements with index >= i have been locked in place.\cf21 \strokec21 \
+            i -= \cf24 \strokec24 1\cf21 \strokec21 ;\
+            \cf25 \strokec25 // lock element i in place.\cf21 \strokec21 \
+            values.swap(i, \cf23 \strokec23 self\cf21 \strokec21 .gen_range(\cf24 \strokec24 0\cf21 \strokec21 , i + \cf24 \strokec24 1\cf21 \strokec21 ));\
+        \}\
+    \}\cb26 \
 }

@@ -1,11 +1,10 @@
 use super::npc::*;
 use super::pov::*;
+use super::rng::*;
 use super::scheduled::*;
 use super::vec2::*;
 use super::*;
 use backend::terrain::MovementSpeed;
-use rand;
-use rand::Rng;
 // use rand::SeedableRng;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
@@ -42,7 +41,7 @@ pub struct Level {
 }
 
 impl Level {
-	pub fn new(rng: &mut rand::XorShiftRng) -> Level {
+	pub fn new(rng: &mut RNG) -> Level {
 		let size = Size::new(64, 32);
 		let cells = Vec2::new(size, Level::DEFAULT_CELL);
 		let tiles = Vec2::new(size, Level::DEFAULT_TILE);
@@ -138,6 +137,7 @@ impl Level {
 	}
 
 	pub fn move_player(&mut self, new_loc: Location) {
+		assert!(self.empty(new_loc));
 		let old_loc = self.player_loc;
 		let mut tmp = Character::None;
 		{
@@ -187,6 +187,7 @@ impl Level {
 	}
 
 	pub fn npc_moved(&mut self, old_loc: Location, new_loc: Location) {
+		assert!(self.empty(new_loc));
 		let mut tmp = Character::None;
 		{
 			let old_cell = self.cells.get_mut(old_loc);
@@ -239,11 +240,7 @@ impl Level {
 	}
 
 	/// Returns a randomized location that satisfies the predicate.
-	pub fn rand_loc_for_char<T>(
-		&self,
-		rng: &mut rand::XorShiftRng,
-		predicate: T,
-	) -> Option<Location>
+	pub fn rand_loc_for_char<T>(&self, rng: &mut RNG, predicate: T) -> Option<Location>
 	where
 		T: Fn(Terrain) -> bool,
 	{
@@ -283,18 +280,21 @@ impl Level {
 	}
 
 	fn add_player(&mut self, loc: Location, player: Player) {
+		assert!(self.empty(loc));
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::Player(player);
 		self.player_loc = loc;
 	}
 
 	fn add_npc(&mut self, loc: Location, npc: NPC) {
+		assert!(self.empty(loc));
 		let cell = self.cells.get_mut(loc);
 		cell.character = Character::NPC(npc);
 		self.npc_locs.insert(loc);
 	}
 
 	fn remove_npc(&mut self, loc: Location) -> NPC {
+		assert!(!self.empty(loc));
 		let mut tmp = Character::None;
 		let old_cell = self.cells.get_mut(loc);
 		mem::swap(&mut old_cell.character, &mut tmp);
