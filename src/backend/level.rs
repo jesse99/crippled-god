@@ -1,5 +1,4 @@
 use super::npc::*;
-use super::pov::*;
 use super::rng::*;
 use super::scheduled::*;
 use super::vec2::*;
@@ -354,7 +353,7 @@ impl Level {
 		// we call apply.
 		let mut visible = FnvHashMap::default();
 		{
-			let pov = pov::POV {
+			let mut pov = pov::POV {
 				start: self.player_loc,
 				size: self.tiles.size(),
 				radius: 10, // TODO: depends on race?
@@ -376,7 +375,7 @@ impl Level {
 				},
 			};
 
-			visit_visible_tiles(pov);
+			pov.visit();
 		}
 
 		self.tiles.apply(|loc, tile| match visible.get(&loc) {
@@ -393,7 +392,7 @@ impl Level {
 	pub fn is_visible(&self, start_loc: Location, loc: Location) -> bool {
 		let mut visible = false;
 		{
-			let pov = pov::POV {
+			let mut pov = pov::POV {
 				start: start_loc,
 				size: self.tiles.size(),
 				radius: 10, // TODO: depends on race?
@@ -408,7 +407,7 @@ impl Level {
 				},
 			};
 
-			visit_visible_tiles(pov);
+			pov.visit();
 		}
 
 		visible
