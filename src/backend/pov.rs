@@ -6,91 +6,99 @@
 use super::*;
 use fnv::FnvHashSet;
 
-/// Calls visit_tile for each tile that is visible from start.
-///
-/// # Arguments
-///
-/// * `start` - Where to start checking for visiblr cells from. Typically the position of a character.
-/// * `size` - How many cells to check. Typically the size of the level.
-/// * `radius` - Maximum distance that LOS can extend to.
-/// * `visit_tile` - Called for each visible tile.
-/// * `blocks_los` - Returns true if the tile blocks LOS.
-pub fn visit_visible_tiles<V, B>(
-	start: Location,
-	size: Size,
-	radius: i32,
-	mut visit_tile: V,
-	blocks_los: B,
-) where
+pub struct POV<V, B>
+where
+	V: FnMut(Location),
+	B: Fn(Location) -> bool,
+{
+	/// Where to start checking for visible cells from. Typically the position of a character.
+	pub start: Location,
+
+	/// How many cells to check. Typically the size of the level.
+	pub size: Size,
+
+	/// Maximum distance that LOS can extend to.
+	pub radius: i32,
+
+	/// Called for each visible tile.
+	pub visit_tile: V,
+
+	/// Returns true if the tile blocks LOS.
+	pub blocks_los: B,
+}
+
+/// Calls pov.visit_tile for each tile that is visible from start.
+pub fn visit_visible_tiles<V, B>(mut pov: POV<V, B>)
+where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool, // TODO: this will probably need to take a some sort of trait, race? character size?
 {
 	// If the starting point cannot be seen then the character is presumbably blinded so visit nothing.
-	if blocks_los(start) {
+	if (pov.blocks_los)(pov.start) {
 		return;
 	}
 
 	let mut visited = FnvHashSet::default();
-	visit_tile(start);
-	visited.insert(start);
+	(pov.visit_tile)(pov.start);
+	visited.insert(pov.start);
 
 	// Get the dimensions of the actual field of view, making sure not to go off the map or beyond the radius.
-	let min_extent_x = if start.x < radius { start.x } else { radius };
-	let max_extent_x = if size.width - start.x - 1 < radius {
-		size.width - start.x - 1
+	let min_extent_x = if pov.start.x < pov.radius {
+		pov.start.x
 	} else {
-		radius
+		pov.radius
+	};
+	let max_extent_x = if pov.size.width - pov.start.x - 1 < pov.radius {
+		pov.size.width - pov.start.x - 1
+	} else {
+		pov.radius
 	};
 
-	let min_extent_y = if start.y < radius { start.y } else { radius };
-	let max_extent_y = if size.height - start.y - 1 < radius {
-		size.height - start.y - 1
+	let min_extent_y = if pov.start.y < pov.radius {
+		pov.start.y
 	} else {
-		radius
+		pov.radius
+	};
+	let max_extent_y = if pov.size.height - pov.start.y - 1 < pov.radius {
+		pov.size.height - pov.start.y - 1
+	} else {
+		pov.radius
 	};
 
 	// Northeast quadrant
 	check_quadrant(
 		&mut visited,
-		start,
+		&mut pov,
 		Location::new(1, 1),
 		max_extent_x,
 		max_extent_y,
-		&mut visit_tile,
-		&blocks_los,
 	);
 
 	// Southeast quadrant
 	check_quadrant(
 		&mut visited,
-		start,
+		&mut pov,
 		Location::new(1, -1),
 		max_extent_x,
 		min_extent_y,
-		&mut visit_tile,
-		&blocks_los,
 	);
 
 	// Southwest quadrant
 	check_quadrant(
 		&mut visited,
-		start,
+		&mut pov,
 		Location::new(-1, -1),
 		min_extent_x,
 		min_extent_y,
-		&mut visit_tile,
-		&blocks_los,
 	);
 
 	// Northwest quadrant
 	check_quadrant(
 		&mut visited,
-		start,
+		&mut pov,
 		Location::new(-1, 1),
 		min_extent_x,
 		max_extent_y,
-		&mut visit_tile,
-		&blocks_los,
 	);
 }
 
@@ -166,12 +174,10 @@ impl View {
 
 fn check_quadrant<V, B>(
 	visited: &mut FnvHashSet<Location>,
-	start: Location,
+	pov: &mut POV<V, B>,
 	delta: Location,
 	extent_x: i32,
 	extent_y: i32,
-	visit_tile: &mut V,
-	blocks_los: &B,
 ) where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool,
@@ -204,17 +210,7 @@ fn check_quadrant<V, B>(
 		while j != max_j + 1 && view_index < active_views.len() {
 			let x = i - j;
 			let y = j;
-			visit_coord(
-				visited,
-				start,
-				x,
-				y,
-				delta,
-				view_index,
-				&mut active_views,
-				visit_tile,
-				blocks_los,
-			);
+			visit_coord(visited, pov, x, y, delta, view_index, &mut active_views);
 
 			j += 1;
 		}
@@ -225,14 +221,12 @@ fn check_quadrant<V, B>(
 
 fn visit_coord<V, B>(
 	visited: &mut FnvHashSet<Location>,
-	start: Location,
+	pov: &mut POV<V, B>,
 	x: i32,
 	y: i32,
 	delta: Location,
 	view_index: usize,
 	active_views: &mut Vec<View>,
-	visit_tile: &mut V,
-	blocks_los: &B,
 ) where
 	V: FnMut(Location),
 	B: Fn(Location) -> bool,
@@ -270,15 +264,15 @@ fn visit_coord<V, B>(
 	let real_x = x * delta.x;
 	let real_y = y * delta.y;
 
-	let loc = Location::new(start.x + real_x, start.y + real_y);
+	let loc = Location::new(pov.start.x + real_x, pov.start.y + real_y);
 	if !visited.contains(&loc) {
 		visited.insert(loc);
-		visit_tile(loc);
+		(pov.visit_tile)(loc);
 		// } else {
 		// 	println!("{?:}", loc);
 	}
 
-	if !blocks_los(loc) {
+	if !(pov.blocks_los)(loc) {
 		// The current coordinate does not block sight and therefore
 		// has no effect on the view.
 		return;

@@ -354,24 +354,29 @@ impl Level {
 		// we call apply.
 		let mut visible = FnvHashMap::default();
 		{
-			let visit = |loc| {
-				let cell = self.cells.get(loc);
-				match cell.character {
-					Character::Player(ref p) => {
-						visible.insert(loc, (cell.terrain, CharacterType::Player(p.race())))
-					}
-					Character::NPC(ref c) => {
-						visible.insert(loc, (cell.terrain, CharacterType::NPC(c.species())))
-					}
-					Character::None => visible.insert(loc, (cell.terrain, CharacterType::None)),
-				};
+			let pov = pov::POV {
+				start: self.player_loc,
+				size: self.tiles.size(),
+				radius: 10, // TODO: depends on race?
+				visit_tile: |loc| {
+					let cell = self.cells.get(loc);
+					match cell.character {
+						Character::Player(ref p) => {
+							visible.insert(loc, (cell.terrain, CharacterType::Player(p.race())))
+						}
+						Character::NPC(ref c) => {
+							visible.insert(loc, (cell.terrain, CharacterType::NPC(c.species())))
+						}
+						Character::None => visible.insert(loc, (cell.terrain, CharacterType::None)),
+					};
+				},
+				blocks_los: |loc| {
+					let terrain = self.get_terrain(loc);
+					terrain.blocks_los()
+				},
 			};
-			let blocks = |loc| {
-				let terrain = self.get_terrain(loc);
-				terrain.blocks_los()
-			};
-			let radius = 10; // TODO: depends on race?
-			visit_visible_tiles(self.player_loc, self.tiles.size(), radius, visit, blocks);
+
+			visit_visible_tiles(pov);
 		}
 
 		self.tiles.apply(|loc, tile| match visible.get(&loc) {
@@ -388,17 +393,22 @@ impl Level {
 	pub fn is_visible(&self, start_loc: Location, loc: Location) -> bool {
 		let mut visible = false;
 		{
-			let visit = |l| {
-				if l == loc {
-					visible = true;
-				}
+			let pov = pov::POV {
+				start: start_loc,
+				size: self.tiles.size(),
+				radius: 10, // TODO: depends on race?
+				visit_tile: |l| {
+					if l == loc {
+						visible = true;
+					}
+				},
+				blocks_los: |l| {
+					let terrain = self.get_terrain(l);
+					terrain.blocks_los()
+				},
 			};
-			let blocks = |l| {
-				let terrain = self.get_terrain(l);
-				terrain.blocks_los()
-			};
-			let radius = 10; // TODO: depends on race?
-			visit_visible_tiles(start_loc, self.tiles.size(), radius, visit, blocks);
+
+			visit_visible_tiles(pov);
 		}
 
 		visible
