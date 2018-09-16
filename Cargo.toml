@@ -6,6 +6,7 @@ authors = ["Jesse Vorisek <jesse.vorisek@gmail.com>"]
 [dependencies]
 clap = "2.32.0"			# pretty nifty command line parser
 chrono = "0.4.0"		# datetime library
+dirs = "1.0.0"			# access to home, cache, and config directories
 fnv = "1.0.0"			# deterministic hasher
 log = "0.4.0"			# logging frontend
 serde = "1.0.0"			# persistence library

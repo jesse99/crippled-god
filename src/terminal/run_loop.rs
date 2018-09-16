@@ -33,7 +33,7 @@ pub fn run(config_file: Result<String, String>, seed: u64) {
 	let mut game = create_game(&mut stdout, config_file, seed);
 
 	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
-	let terminal_size = backend::Size::new(width as i32, height as i32);
+	let terminal_size = backend::Size::new(i32::from(width), i32::from(height));
 
 	let mut key_iter = stdin.keys();
 	loop {
@@ -76,7 +76,7 @@ fn create_game(
 				"Don’t load the saved game (and overwrite the old game with a new game).",
 			),
 		];
-		if prompt(stdout, choices) == 0 {
+		if prompt(stdout, &choices) == 0 {
 			match load_game() {
 				Ok(game) => {
 					return game;

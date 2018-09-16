@@ -4,6 +4,7 @@ use termion;
 // In general we work with the X11 colors instead of AnsiColors because the X11 colors are
 // a lot nicer to deal with.
 #[allow(dead_code)]
+#[derive(Clone, Copy)]
 pub enum Color {
 	LightPink,
 	Pink,

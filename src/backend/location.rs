@@ -35,11 +35,11 @@ impl Location {
 	// }
 
 	#[allow(dead_code)]
-	pub fn distance(&self, rhs: Location) -> f64 {
-		let x1 = self.x as f64;
-		let y1 = self.y as f64;
-		let x2 = rhs.x as f64;
-		let y2 = rhs.y as f64;
+	pub fn distance(self, rhs: Location) -> f64 {
+		let x1 = f64::from(self.x);
+		let y1 = f64::from(self.y);
+		let x2 = f64::from(rhs.x);
+		let y2 = f64::from(rhs.y);
 		let dx = x1 - x2;
 		let dy = y1 - y2;
 		(dx * dx + dy * dy).sqrt()

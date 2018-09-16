@@ -72,21 +72,21 @@ impl<'a, T> Iterator for Vec2Iter<'a, T> {
 			let val = self.vector.elements.get(i);
 			Some((loc, val.unwrap()))
 		} else {
-			return None;
+			None
 		}
 	}
 }
 
 impl<T: Clone + fmt::Debug> fmt::Debug for Vec2<T> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "\n")?;
+		writeln!(f)?;
 		for y in 0..self.size.height {
 			for x in 0..self.size.width {
 				let loc = Location::new(x, y);
 				write!(f, "{:?}", self.get(loc))?;
 			}
 			if y + 1 < self.size.height {
-				write!(f, "\n")?;
+				writeln!(f)?;
 			}
 		}
 		write!(f, "")
@@ -95,14 +95,14 @@ impl<T: Clone + fmt::Debug> fmt::Debug for Vec2<T> {
 
 impl<T: Clone + fmt::Display> fmt::Display for Vec2<T> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "\n")?;
+		writeln!(f)?;
 		for y in 0..self.size.height {
 			for x in 0..self.size.width {
 				let loc = Location::new(x, y);
 				write!(f, "{}", self.get(loc))?;
 			}
 			if y + 1 < self.size.height {
-				write!(f, "\n")?;
+				writeln!(f)?;
 			}
 		}
 		write!(f, "")

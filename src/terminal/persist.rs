@@ -14,7 +14,7 @@ use termion;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-const SAVE_FILE_NAME: &'static str = "crippled-god.json";
+const SAVE_FILE_NAME: &str = "crippled-god.json";
 
 pub fn has_saved_game() -> bool {
 	match env::current_dir() {

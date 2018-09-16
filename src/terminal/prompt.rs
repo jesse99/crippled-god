@@ -33,7 +33,7 @@ impl Choice {
 }
 
 /// Asks the user to select from one of several choices. Returns the index of the chosen choice.
-pub fn prompt(stdout: &mut RawTerminal, choices: Vec<Choice>) -> usize {
+pub fn prompt(stdout: &mut RawTerminal, choices: &[Choice]) -> usize {
 	render_choices(stdout, &choices);
 	stdout.flush().unwrap();
 
@@ -62,7 +62,7 @@ pub fn prompt(stdout: &mut RawTerminal, choices: Vec<Choice>) -> usize {
 	choices.len() + 1
 }
 
-fn match_choice(key: termion::event::Key, choices: &Vec<Choice>) -> Option<usize> {
+fn match_choice(key: termion::event::Key, choices: &[Choice]) -> Option<usize> {
 	for (i, choice) in choices.iter().enumerate() {
 		if match_key(key, &choice.keys) {
 			return Some(i);
@@ -71,12 +71,12 @@ fn match_choice(key: termion::event::Key, choices: &Vec<Choice>) -> Option<usize
 	None
 }
 
-fn match_key(key: termion::event::Key, keys: &Vec<termion::event::Key>) -> bool {
+fn match_key(key: termion::event::Key, keys: &[termion::event::Key]) -> bool {
 	let rhs = format!("{:?}", key);
 	keys.iter().any(|k| format!("{:?}", k) == rhs) // note that termion keys cannot be compared directly...
 }
 
-fn render_choices(stdout: &mut RawTerminal, choices: &Vec<Choice>) {
+fn render_choices(stdout: &mut RawTerminal, choices: &[Choice]) {
 	let bg = to_termion(Color::Black);
 	let fg1 = to_termion(Color::White);
 	let fg2 = to_termion(Color::LightBlue);
@@ -99,7 +99,7 @@ fn render_choices(stdout: &mut RawTerminal, choices: &Vec<Choice>) {
 	}
 }
 
-fn keys_to_str(keys: &Vec<termion::event::Key>) -> String {
+fn keys_to_str(keys: &[termion::event::Key]) -> String {
 	let parts: Vec<String> = keys.iter().map(|k| key_to_str(*k)).collect();
 	parts.join(", ")
 }

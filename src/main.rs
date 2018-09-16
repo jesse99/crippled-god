@@ -1,6 +1,7 @@
 extern crate chrono;
 #[macro_use]
 extern crate clap;
+extern crate dirs;
 extern crate fnv;
 #[macro_use]
 extern crate log;
@@ -88,7 +89,7 @@ fn find_config_path() -> Result<String, String> {
 			return Ok(path.to_str().unwrap().to_string());
 		}
 	}
-	if let Some(ref mut path) = env::home_dir() {
+	if let Some(ref mut path) = dirs::home_dir() {
 		path.push(file_name);
 		if path.as_path().is_file() {
 			return Ok(path.to_str().unwrap().to_string());
@@ -104,9 +105,8 @@ fn main() {
 	let options = parse_options();
 	match std::fs::File::create(&options.log_file) {
 		Ok(file) => {
-			let _ =
-				simplelog::WriteLogger::init(options.log_level, simplelog::Config::default(), file)
-					.unwrap_or_else(|e| options_err(&format!("Couldn't create logger: {}", e)));
+			simplelog::WriteLogger::init(options.log_level, simplelog::Config::default(), file)
+				.unwrap_or_else(|e| options_err(&format!("Couldn't create logger: {}", e)));
 
 			let args: Vec<String> = std::env::args().collect();
 			let joined = args.join(" ");

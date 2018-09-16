@@ -77,7 +77,7 @@ impl Level {
 		let y = 8;
 		level.set_terrain(x + 2, y, Terrain::Wall);
 		level.set_terrain(x + 1, y, Terrain::Wall);
-		level.set_terrain(x + 0, y, Terrain::Wall);
+		level.set_terrain(x, y, Terrain::Wall);
 		level.set_terrain(x - 1, y, Terrain::Wall);
 		level.set_terrain(x - 2, y, Terrain::Wall);
 
@@ -211,26 +211,28 @@ impl Level {
 	/// the player.
 	pub fn other_ready_time(&self) -> Option<Time> {
 		let times = self.npc_locs.iter().map(|loc| self.npc(*loc).ready_time());
-		let time = times.min();
-		// info!("next NPC will be ready at {:?}", time);
-		time
+		times.min()
 	}
 
 	// Normally scheduling would happen with a priority queue but that would require something like
 	// Rc which gets annoying. So we simply store one reference and brute force scheduling which
 	// should be fine given our relatively small levels.
 	pub fn execute_others(&mut self, game_time: Time, rng: &mut RNG) {
-		let locs: Vec<Location> = self
-			.npc_locs
+		// TODO: We need to make a copy of the locations we need to iterate before we start
+		// mutating the vector. It would be more efficient to do this after the filter but the
+		// only way I could figure out for that was to use a map to dereference and then call
+		// collect but clippy complained that the map was better off replaced with a clone and
+		// I coulnd't get the references working that way.
+		let old_locs = self.npc_locs.clone();
+		let npc_locs: Vec<&Location> = old_locs
 			.iter()
 			.filter(|loc| {
 				let npc = self.npc(**loc);
 				assert!(npc.ready_time() >= game_time);
 				npc.ready_time() == game_time
 			})
-			.map(|loc| *loc)	// need the map and the collect to appease the borrow checker
 			.collect();
-		for loc in locs {
+		for &loc in npc_locs {
 			let mut npc = self.remove_npc(loc);
 			if let Some(new_loc) = npc.execute(self, loc, rng) {
 				self.add_npc(new_loc, npc);
@@ -251,7 +253,7 @@ impl Level {
 		let mut indexes: Vec<i32> = (0..size.width * size.height).collect();
 		rng.shuffle(&mut indexes);
 
-		for i in indexes.iter() {
+		for i in &indexes {
 			let x = i % size.width;
 			let y = i / size.width;
 			let loc = Location::new(x, y);
@@ -263,7 +265,7 @@ impl Level {
 				}
 			}
 		}
-		return None;
+		None
 	}
 
 	/// screen_size is the number of tiles the renderer wants to render. This can be
@@ -432,14 +434,14 @@ impl fmt::Debug for Tile {
 
 impl fmt::Debug for Level {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "\n")?;
+		writeln!(f)?;
 		for y in 0..self.cells.size().height {
 			for x in 0..self.cells.size().width {
 				let loc = Location::new(x, y);
 				write!(f, "{:?}", self.get_terrain(loc))?;
 			}
 			if y + 1 < self.cells.size().height {
-				write!(f, "\n")?;
+				writeln!(f)?;
 			}
 		}
 		write!(f, "")

@@ -4,7 +4,7 @@ use super::vec2::*;
 use super::*;
 use std::collections::VecDeque;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Key {
 	UpArrow,
 	DownArrow,
@@ -50,7 +50,7 @@ impl Game {
 		let mut rng = RNG::new(seed);
 
 		let mut messages = VecDeque::new();
-		const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+		const VERSION: &str = env!("CARGO_PKG_VERSION");
 		let greeting = format!("Welcome to the Crippled God version {}", VERSION);
 		messages.push_back(Message {
 			topic: Topic::NonGamePlay,
@@ -156,7 +156,7 @@ impl Game {
 				Err(err) => self.add_message(Topic::Warning, &err),
 			}
 		} else {
-			for err in errors.iter() {
+			for err in &errors {
 				self.add_message(Topic::Error, &format!("config error: {}", err));
 			}
 		}

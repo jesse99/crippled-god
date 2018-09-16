@@ -328,7 +328,7 @@ fn add_shallow_bump(loc: Location, active_views: &mut Vec<View>, view_index: usi
 	view.shallow_line.f = loc;
 	view.shallow_bump.insert(0, loc);
 
-	for bump in view.steep_bump.iter() {
+	for bump in &view.steep_bump {
 		if view.shallow_line.above(*bump) {
 			view.shallow_line.i = *bump;
 		}
@@ -341,7 +341,7 @@ fn add_steep_bump(loc: Location, active_views: &mut Vec<View>, view_index: usize
 	view.steep_line.f = loc;
 	view.steep_bump.insert(0, loc);
 
-	for bump in view.shallow_bump.iter() {
+	for bump in &view.shallow_bump {
 		if view.steep_line.below(*bump) {
 			view.steep_line.i = *bump;
 		}

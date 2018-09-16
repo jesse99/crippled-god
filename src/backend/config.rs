@@ -43,14 +43,14 @@ impl Config {
 			Ok(path) => {
 				let contents = read_file(&path)?;
 				let table = parse_string(&contents)?;
-				let errors = self.process_game(table);
+				let errors = self.process_game(&table);
 				Err(errors)
 			}
 			Err(err) => Err(vec![err]),
 		}
 	}
 
-	fn process_game(&mut self, table: toml::value::Table) -> Vec<String> {
+	fn process_game(&mut self, table: &toml::value::Table) -> Vec<String> {
 		let mut errors = Vec::new();
 
 		for (key, value) in table.iter() {

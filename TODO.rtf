@@ -5,14 +5,12 @@
 \red104\green26\blue29;\red43\green39\blue19;\red2\green2\blue2;\red140\green83\blue65;\red38\green38\blue38;
 \red245\green245\blue245;\red254\green228\blue200;\red60\green60\blue59;\red130\green130\blue130;\red17\green17\blue17;
 \red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red240\green240\blue240;
-\red9\green80\blue208;\red0\green0\blue0;\red51\green136\blue141;\red95\green124\blue3;\red242\green242\blue242;
-}
+\red9\green80\blue208;\red51\green136\blue141;}
 {\*\expandedcolortbl;;\csgray\c0;\cssrgb\c18824\c20000\c21176;\csgenericrgb\c63137\c12941\c42353;
 \cssrgb\c49020\c15294\c15294;\cssrgb\c22353\c20000\c9412;\csgenericrgb\c784\c784\c784;\csgenericrgb\c54902\c32549\c25490;\cssrgb\c20000\c20000\c20000;
 \cssrgb\c96863\c96863\c96863;\cssrgb\c100000\c91449\c82330;\cssrgb\c30196\c30196\c29804;\cssrgb\c58039\c58039\c58039;\cssrgb\c8627\c8627\c8627;
 \cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c95294\c95294\c95294;
-\cssrgb\c0\c41176\c85098;\cssrgb\c0\c0\c0;\cssrgb\c24314\c60000\c62353;\cssrgb\c44314\c54902\c0;\cssrgb\c96078\c96078\c96078;
-}
+\cssrgb\c0\c41176\c85098;\cssrgb\c24314\c60000\c62353;}
 \deftab720
 \pard\pardeftab720\sl300\partightenfactor0
 
@@ -129,14 +127,28 @@ pick Intelligence\
 phials recharge as you gain experience (so only need one)\
 \
 \
-\pard\pardeftab720\sl380\partightenfactor0
+\pard\pardeftab720\sl420\partightenfactor0
 
-\f0\fs32 \cf18 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec18 use\cf21 \strokec21  std::panic;\
+\f0\fs28 \cf15 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec15 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf13 \strokec13 // let locs: Vec<Location> = self\cf15 \strokec15 \
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf16 \strokec16 let\cf15 \strokec15  locs = \{\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf18 \strokec18 self\cf15 \strokec15 .npc_locs\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0.\cf17 \strokec17 iter\cf15 \strokec15 ()\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0.\cf17 \strokec17 filter\cf15 \strokec15 (|loc| \{\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf16 \strokec16 let\cf15 \strokec15  npc = \cf18 \strokec18 self\cf15 \strokec15 .\cf17 \strokec17 npc\cf15 \strokec15 (**loc);\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf21 \strokec21 assert!\cf15 \strokec15 (npc.\cf17 \strokec17 ready_time\cf15 \strokec15 () >= game_time);\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0npc.\cf17 \strokec17 ready_time\cf15 \strokec15 () == game_time\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\})\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0.\cf17 \strokec17 clone\cf15 \strokec15 ()\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0.\cf17 \strokec17 into_iter\cf15 \strokec15 ()\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\};\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf13 \strokec13 // .map(|loc| *loc)        // need the map and the collect to appease the borrow checker\cf15 \strokec15 \
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf13 \strokec13 // .collect();\cf15 \strokec15 \
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf16 \strokec16 for\cf15 \strokec15  &\cb19 loc \cf16 \strokec16 in\cf15 \strokec15  locs \{\cb1 \
+\cb19 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf16 \strokec16 let\cf15 \strokec15  \cf16 \strokec16 mut\cf15 \strokec15  npc = \cf18 \strokec18 self\cf15 \strokec15 .\cf17 \strokec17 remove_npc\cf15 \strokec15 (loc);\cb1 \
+\cb19 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf16 \strokec16 if\cf15 \strokec15  \cf16 \strokec16 let\cf15 \strokec15  Some(new_loc) = npc.\cf17 \strokec17 execute\cf15 \strokec15 (\cf18 \strokec18 self\cf15 \strokec15 , loc, rng) \{\cb1 \
+\cb19 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf18 \strokec18 self\cf15 \strokec15 .\cf17 \strokec17 add_npc\cf15 \strokec15 (new_loc, npc);\cb1 \
+\cb19 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\}\cb1 \
+\cb19 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\}\cb1 \
 \
-panic::set_hook(Box::new(|\cf18 \strokec18 _\cf21 \strokec21 | \{\
-    \cf22 \strokec22 println!\cf21 \strokec21 (\cf23 \strokec23 "Custom panic hook"\cf21 \strokec21 );\
-\}));\
-\
-\cf18 \strokec18 let\cf21 \strokec21  \cf18 \strokec18 _\cf21 \strokec21  = panic::take_hook();\cb24 \
 }
