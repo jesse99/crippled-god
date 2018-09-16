@@ -17,12 +17,12 @@ pub struct Choice {
 }
 
 impl Choice {
-	pub fn new1(key1: termion::event::Key, text: &str) -> Choice {
-		Choice {
-			keys: vec![key1],
-			text: text.to_string(),
-		}
-	}
+	// pub fn new1(key1: termion::event::Key, text: &str) -> Choice {
+	// 	Choice {
+	// 		keys: vec![key1],
+	// 		text: text.to_string(),
+	// 	}
+	// }
 
 	pub fn new2(key1: termion::event::Key, key2: termion::event::Key, text: &str) -> Choice {
 		Choice {
@@ -53,8 +53,8 @@ pub fn prompt(stdout: &mut RawTerminal, choices: Vec<Choice>) -> usize {
 					// 	termion::color::Fg(fg),
 					// 	key_to_str(key),
 					// );
-					// stdout.flush().unwrap();
 					let _ = write!(stdout, "\x07");
+					stdout.flush().unwrap();
 				}
 			}
 		}

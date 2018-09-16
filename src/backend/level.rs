@@ -176,43 +176,43 @@ impl Level {
 		}
 	}
 
-	pub fn npc_mut(&mut self, loc: Location) -> &mut NPC {
-		let cell = self.cells.get_mut(loc);
-		match cell.character {
-			Character::NPC(ref mut c) => c,
-			_ => {
-				assert!(false, "{:?} does not contain an npc", cell);
-				panic!()
-			}
-		}
-	}
+	// pub fn npc_mut(&mut self, loc: Location) -> &mut NPC {
+	// 	let cell = self.cells.get_mut(loc);
+	// 	match cell.character {
+	// 		Character::NPC(ref mut c) => c,
+	// 		_ => {
+	// 			assert!(false, "{:?} does not contain an npc", cell);
+	// 			panic!()
+	// 		}
+	// 	}
+	// }
 
-	pub fn npc_moved(&mut self, old_loc: Location, new_loc: Location) {
-		assert!(self.empty(new_loc));
-		let mut tmp = Character::None;
-		{
-			let old_cell = self.cells.get_mut(old_loc);
-			mem::swap(&mut old_cell.character, &mut tmp);
-		}
+	// pub fn npc_moved(&mut self, old_loc: Location, new_loc: Location) {
+	// 	assert!(self.empty(new_loc));
+	// 	let mut tmp = Character::None;
+	// 	{
+	// 		let old_cell = self.cells.get_mut(old_loc);
+	// 		mem::swap(&mut old_cell.character, &mut tmp);
+	// 	}
 
-		let terrain = {
-			let new_cell = self.cells.get_mut(new_loc);
-			mem::swap(&mut tmp, &mut new_cell.character);
-			new_cell.terrain
-		};
+	// 	let terrain = {
+	// 		let new_cell = self.cells.get_mut(new_loc);
+	// 		mem::swap(&mut tmp, &mut new_cell.character);
+	// 		new_cell.terrain
+	// 	};
 
-		self.npc_locs.remove(&old_loc);
-		self.npc_locs.insert(new_loc);
-		self.player_mut()
-			.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
-	}
+	// 	self.npc_locs.remove(&old_loc);
+	// 	self.npc_locs.insert(new_loc);
+	// 	self.player_mut()
+	// 		.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+	// }
 
 	/// Returns the next time at which a monster or device is ready to execute, i.e. everything but
 	/// the player.
 	pub fn other_ready_time(&self) -> Option<Time> {
 		let times = self.npc_locs.iter().map(|loc| self.npc(*loc).ready_time());
 		let time = times.min();
-		info!("next NPC will be ready at {:?}", time);
+		// info!("next NPC will be ready at {:?}", time);
 		time
 	}
 

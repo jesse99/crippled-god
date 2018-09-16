@@ -80,15 +80,9 @@ feature\
 
 \fs48 \cf7 \kerning1\expnd0\expndtw0 \ulnone * 6 It\'92s alive:\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf7 	- move_player needs to somehow set player\'92s ready_time\
-		use MovementSpeed to scale time\
-	- players_time_slice needs to go through all candidates and give time\
-	  to any npc that is ready, then reset game_time\
-	- give it some simple AI, maybe aggressive, dijkstra maps help here\
-	- threads may help with AI\
-	- will need some sort of time system (look at basic articles)\
-* Might be nice to be able to look at a log for a character\
+\cf7 	- MovementDelay really should be scaled by base player speed\
 * 7 Add simple combat\
+* Might be nice to be able to look at a log for a character\
 * 7 Might want options to control stuff like printing misses.\
 * 9 Add items\
 * 12 Add the first level:/Users/jessejones/Source/crippled-god/src/backend/level.rs\

@@ -16,7 +16,7 @@ pub struct Player {
 }
 
 impl Player {
-	const MOVEMENT_SPEED: i64 = 5;
+	//const MOVEMENT_SPEED: i64 = 5;
 
 	pub fn new(race: Race) -> Player {
 		let ready_time = Time::zero();
@@ -55,7 +55,7 @@ impl Scheduled for Player {
 		self.ready_time
 	}
 
-	fn execute(&mut self, level: &mut Level, loc: Location, rng: &mut RNG) -> Option<Location> {
+	fn execute(&mut self, _level: &mut Level, _loc: Location, _rng: &mut RNG) -> Option<Location> {
 		assert!(false, "execute shouldn't be called on the player");
 		None
 	}
