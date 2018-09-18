@@ -3,6 +3,8 @@ use super::scheduled::*;
 use super::*;
 use std::f32;
 
+pub const BASE_MOVEMENT_SPEED: f32 = 5.0;
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Race {
 	Human,
@@ -16,8 +18,6 @@ pub struct Player {
 }
 
 impl Player {
-	//const MOVEMENT_SPEED: i64 = 5;
-
 	pub fn new(race: Race) -> Player {
 		let ready_time = Time::zero();
 		Player { race, ready_time }
@@ -70,19 +70,19 @@ impl MovementDelay for Race {
 					f32::INFINITY
 				}
 				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => 5.0,
-				Terrain::ShallowWater => 0.9 * 5.0,
+				Terrain::Ground => BASE_MOVEMENT_SPEED,
+				Terrain::ShallowWater => 0.9 * BASE_MOVEMENT_SPEED,
 				Terrain::Wall => f32::INFINITY,
 			},
 			// Race::Toblakai => match terrain {
 			// 	Terrain::Blank => {
 			// 		assert!(false); // blank should only be used for rendering
-			// 		0.0
+			// 		f32::INFINITY
 			// 	}
-			// 	Terrain::DeepWater => 0.0,
-			// 	Terrain::Ground => 1.1,
-			// 	Terrain::ShallowWater => 1.0,
-			// 	Terrain::Wall => 0.0,
+			// 	Terrain::DeepWater => f32::INFINITY,
+			// 	Terrain::Ground => 1.1*BASE_MOVEMENT_SPEED,
+			// 	Terrain::ShallowWater => 1.1*BASE_MOVEMENT_SPEED,
+			// 	Terrain::Wall => f32::INFINITY,
 			// },
 		}
 	}

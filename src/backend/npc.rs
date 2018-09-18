@@ -142,8 +142,8 @@ impl MovementDelay for Species {
 					f32::INFINITY
 				}
 				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => 4.0, // TODO: probably should scale these by a base player speed
-				Terrain::ShallowWater => 0.9 * 4.0,
+				Terrain::Ground => 0.9 * player::BASE_MOVEMENT_SPEED,
+				Terrain::ShallowWater => 0.85 * player::BASE_MOVEMENT_SPEED,
 				Terrain::Wall => f32::INFINITY,
 			},
 			Species::Bhederin => match terrain {
@@ -152,8 +152,8 @@ impl MovementDelay for Species {
 					f32::INFINITY
 				}
 				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => 3.0,
-				Terrain::ShallowWater => 0.9 * 3.0,
+				Terrain::Ground => 0.8 * player::BASE_MOVEMENT_SPEED,
+				Terrain::ShallowWater => 0.8 * player::BASE_MOVEMENT_SPEED,
 				Terrain::Wall => f32::INFINITY,
 			},
 		}
