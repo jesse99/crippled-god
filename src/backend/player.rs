@@ -3,39 +3,37 @@ use super::scheduled::*;
 use super::*;
 use std::f32;
 
-pub const BASE_MOVEMENT_SPEED: f32 = 5.0;
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum Race {
-	Human,
-	// Toblakai,
-}
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Player {
-	race: Race,
+	character: Character,
 	ready_time: Time,
+	hp: i32,
 }
 
 impl Player {
-	pub fn new(race: Race) -> Player {
+	pub fn new(character: Character) -> Player {
 		let ready_time = Time::zero();
-		Player { race, ready_time }
+		let hp = 100;
+		Player {
+			character,
+			ready_time,
+			hp,
+		}
 	}
 
-	pub fn race(&self) -> Race {
-		self.race
+	pub fn character(&self) -> Character {
+		self.character
 	}
 
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.get_terrain(loc);
-		let delay = self.race.delay(terrain);
+		let delay = (attributes(self.character).movement_delay)(terrain);
 		delay < f32::INFINITY && level.empty(loc)
 	}
 
 	/// Used for normal movement, i.e. not something like a teleport.
 	pub fn on_moved(&mut self, terrain: Terrain, dx: i32, dy: i32) {
-		let delay = self.race.delay(terrain);
+		let delay = (attributes(self.character).movement_delay)(terrain);
 		let delay = if dx != 0 && dy != 0 {
 			1.414 * delay
 		} else {
@@ -58,38 +56,5 @@ impl Scheduled for Player {
 	fn execute(&mut self, _level: &mut Level, _loc: Location, _rng: &mut RNG) -> Option<Location> {
 		assert!(false, "execute shouldn't be called on the player");
 		None
-	}
-}
-
-impl MovementDelay for Race {
-	fn delay(&self, terrain: Terrain) -> f32 {
-		match self {
-			Race::Human => match terrain {
-				Terrain::Blank => {
-					assert!(false); // blank should only be used for rendering
-					f32::INFINITY
-				}
-				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => BASE_MOVEMENT_SPEED,
-				Terrain::ShallowWater => 0.9 * BASE_MOVEMENT_SPEED,
-				Terrain::Wall => f32::INFINITY,
-			},
-			// Race::Toblakai => match terrain {
-			// 	Terrain::Blank => {
-			// 		assert!(false); // blank should only be used for rendering
-			// 		f32::INFINITY
-			// 	}
-			// 	Terrain::DeepWater => f32::INFINITY,
-			// 	Terrain::Ground => 1.1*BASE_MOVEMENT_SPEED,
-			// 	Terrain::ShallowWater => 1.1*BASE_MOVEMENT_SPEED,
-			// 	Terrain::Wall => f32::INFINITY,
-			// },
-		}
-	}
-}
-
-impl MovementDelay for Player {
-	fn delay(&self, terrain: Terrain) -> f32 {
-		self.race.delay(terrain)
 	}
 }

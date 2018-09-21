@@ -1,3 +1,4 @@
+mod attributes;
 mod config;
 mod game;
 mod level;
@@ -11,6 +12,7 @@ mod size;
 mod terrain;
 mod vec2;
 
+pub use self::attributes::*;
 pub use self::config::*;
 pub use self::game::*;
 pub use self::level::*;

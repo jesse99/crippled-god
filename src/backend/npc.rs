@@ -3,34 +3,33 @@ use super::scheduled::*;
 use super::*;
 use std::f32;
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum Species {
-	Ay,       // giant wolf
-	Bhederin, // large herbivore
-}
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NPC {
-	species: Species,
+	character: Character,
 	ready_time: Time,
+	hp: i32,
 }
 
+// TODO: Attributes instead of Stats
+// Attributes includes name and movement speed
 impl NPC {
-	pub fn new(species: Species) -> NPC {
+	pub fn new(character: Character) -> NPC {
 		let ready_time = Time::zero();
+		let hp = 100;
 		NPC {
-			species,
+			character,
 			ready_time,
+			hp,
 		}
 	}
 
-	pub fn species(&self) -> Species {
-		self.species
+	pub fn character(&self) -> Character {
+		self.character
 	}
 
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.get_terrain(loc);
-		let delay = self.delay(terrain);
+		let delay = (attributes(self.character).movement_delay)(terrain);
 		delay < f32::INFINITY && level.empty(loc)
 	}
 
@@ -96,7 +95,7 @@ impl NPC {
 		}
 		if delta != Location::zero() {
 			let terrain = level.get_terrain(loc + delta);
-			let delay = self.species.delay(terrain);
+			let delay = (attributes(self.character).movement_delay)(terrain);
 			let delay = if delta.x != 0 && delta.y != 0 {
 				1.414 * delay
 			} else {
@@ -119,9 +118,10 @@ impl Scheduled for NPC {
 
 	fn execute(&mut self, level: &mut Level, loc: Location, rng: &mut RNG) -> Option<Location> {
 		let old_time = self.ready_time();
-		let result = match self.species {
-			Species::Ay => self.execute_aggressive(level, loc, rng),
-			Species::Bhederin => self.execute_skittish(level, loc, rng),
+		let result = match self.character {
+			Character::Ay => self.execute_aggressive(level, loc, rng),
+			Character::Bhederin => self.execute_skittish(level, loc, rng),
+			Character::Human => self.execute_aggressive(level, loc, rng),
 		};
 		assert!(
 			self.ready_time() > old_time,
@@ -130,38 +130,5 @@ impl Scheduled for NPC {
 			old_time
 		);
 		result
-	}
-}
-
-impl MovementDelay for Species {
-	fn delay(&self, terrain: Terrain) -> f32 {
-		match self {
-			Species::Ay => match terrain {
-				Terrain::Blank => {
-					assert!(false); // blank should only be used for rendering
-					f32::INFINITY
-				}
-				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => 0.9 * player::BASE_MOVEMENT_SPEED,
-				Terrain::ShallowWater => 0.85 * player::BASE_MOVEMENT_SPEED,
-				Terrain::Wall => f32::INFINITY,
-			},
-			Species::Bhederin => match terrain {
-				Terrain::Blank => {
-					assert!(false); // blank should only be used for rendering
-					f32::INFINITY
-				}
-				Terrain::DeepWater => f32::INFINITY,
-				Terrain::Ground => 0.8 * player::BASE_MOVEMENT_SPEED,
-				Terrain::ShallowWater => 0.8 * player::BASE_MOVEMENT_SPEED,
-				Terrain::Wall => f32::INFINITY,
-			},
-		}
-	}
-}
-
-impl MovementDelay for NPC {
-	fn delay(&self, terrain: Terrain) -> f32 {
-		self.species.delay(terrain)
 	}
 }
