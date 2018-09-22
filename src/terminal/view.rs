@@ -13,46 +13,42 @@ pub struct View {
 impl View {
 	pub fn new(tile: &backend::Tile) -> View {
 		if tile.visible {
-			match tile.character {
-				backend::CharacterType::Player(_) => {
+			if let Some(name) = tile.char_name {
+				if tile.has_player {
 					let bg = colors::to_termion(tile.terrain.back_color());
 					let fg = colors::to_termion(colors::Color::White);
 					let symbol = '@'; // TODO: use player.race
 					View { symbol, fg, bg }
-				}
-				backend::CharacterType::NPC(species) => {
+				} else {
 					let bg = colors::to_termion(tile.terrain.back_color());
-					let fg = colors::to_termion(species.fore_color());
-					let symbol = species.visible_symbol();
+					let fg = colors::to_termion(name.fore_color());
+					let symbol = name.visible_symbol();
 					View { symbol, fg, bg }
 				}
-				backend::CharacterType::None => {
-					let bg = colors::to_termion(tile.terrain.back_color());
-					let fg = colors::to_termion(tile.terrain.fore_color());
-					let symbol = tile.terrain.visible_symbol();
-					View { symbol, fg, bg }
-				}
+			} else {
+				let bg = colors::to_termion(tile.terrain.back_color());
+				let fg = colors::to_termion(tile.terrain.fore_color());
+				let symbol = tile.terrain.visible_symbol();
+				View { symbol, fg, bg }
 			}
 		} else {
-			match tile.character {
-				backend::CharacterType::Player(_) => {
+			if let Some(name) = tile.char_name {
+				if tile.has_player {
 					let bg = colors::to_termion(colors::Color::LightGrey);
 					let fg = colors::to_termion(colors::Color::White);
 					let symbol = '@'; // TODO: use player.race
 					View { symbol, fg, bg }
-				}
-				backend::CharacterType::NPC(species) => {
+				} else {
 					let bg = colors::to_termion(colors::Color::LightGrey);
 					let fg = colors::to_termion(colors::Color::DarkGray);
-					let symbol = species.visible_symbol();
+					let symbol = name.visible_symbol();
 					View { symbol, fg, bg }
 				}
-				backend::CharacterType::None => {
-					let bg = colors::to_termion(colors::Color::LightGrey);
-					let fg = colors::to_termion(colors::Color::DarkGray);
-					let symbol = tile.terrain.hidden_symbol();
-					View { symbol, fg, bg }
-				}
+			} else {
+				let bg = colors::to_termion(colors::Color::LightGrey);
+				let fg = colors::to_termion(colors::Color::DarkGray);
+				let symbol = tile.terrain.hidden_symbol();
+				View { symbol, fg, bg }
 			}
 		}
 	}
@@ -99,11 +95,12 @@ impl ToForeColor for backend::Terrain {
 	}
 }
 
-impl ToForeColor for backend::Species {
+impl ToForeColor for backend::CharName {
 	fn fore_color(&self) -> colors::Color {
 		match self {
-			backend::Species::Ay => colors::Color::BurlyWood,
-			backend::Species::Bhederin => colors::Color::Chocolate,
+			backend::CharName::Ay => colors::Color::BurlyWood,
+			backend::CharName::Bhederin => colors::Color::Chocolate,
+			backend::CharName::Human => colors::Color::White,
 		}
 	}
 }
@@ -132,11 +129,12 @@ impl HiddenSymbol for backend::Terrain {
 	}
 }
 
-impl VisibleSymbol for backend::Species {
+impl VisibleSymbol for backend::CharName {
 	fn visible_symbol(&self) -> char {
 		match self {
-			backend::Species::Ay => 'a',
-			backend::Species::Bhederin => 'b',
+			backend::CharName::Ay => 'a',
+			backend::CharName::Bhederin => 'b',
+			backend::CharName::Human => 'h',
 		}
 	}
 }

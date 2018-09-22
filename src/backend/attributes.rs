@@ -4,16 +4,6 @@ use super::*;
 use std::f32;
 // use serde::*;
 
-pub const BASE_MOVEMENT_SPEED: f32 = 5.0;
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum Character {
-	Ay,       // giant wolf
-	Bhederin, // large herbivore
-	Human,
-	// Toblakai,
-}
-
 #[derive(Clone, Copy, Debug)]
 pub enum Brand {
 	Physical,
@@ -42,9 +32,9 @@ pub struct Attributes {
 	pub attacks: fn(rng: &mut RNG) -> Vec<Attack>,
 }
 
-pub fn attributes(character: Character) -> Attributes {
-	match character {
-		Character::Ay => Attributes {
+pub fn attributes(name: CharName) -> Attributes {
+	match name {
+		CharName::Ay => Attributes {
 			max_hps: |_| 100,
 			resistence: |_| 0.0,
 			movement_delay: |terrain| normal_movement_delay(0.8, terrain),
@@ -56,7 +46,7 @@ pub fn attributes(character: Character) -> Attributes {
 				}]
 			},
 		},
-		Character::Bhederin => Attributes {
+		CharName::Bhederin => Attributes {
 			max_hps: |_| 60,
 			resistence: |_| 0.0,
 			movement_delay: |terrain| normal_movement_delay(0.9, terrain),
@@ -68,7 +58,7 @@ pub fn attributes(character: Character) -> Attributes {
 				}]
 			},
 		},
-		Character::Human => Attributes {
+		CharName::Human => Attributes {
 			max_hps: |_| 75,
 			resistence: |_| 0.0,
 			movement_delay: |terrain| normal_movement_delay(1.0, terrain),

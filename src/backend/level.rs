@@ -1,23 +1,12 @@
-use super::npc::*;
+use super::character::*;
 use super::rng::*;
 use super::scheduled::*;
 use super::vec2::*;
 use super::*;
-use backend::terrain::MovementDelay;
-// use rand::SeedableRng;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use std::f32;
 use std::fmt;
-use std::mem;
-
-/// Set if the player or an NPC is within a Tile on the Level.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum CharacterType {
-	Player(Race),
-	NPC(Species),
-	None,
-}
 
 /// Used to render a location within the Level.
 #[derive(Clone, Deserialize, Serialize)]
@@ -25,7 +14,8 @@ pub struct Tile {
 	/// If visible is set then terrain and character will be up to date. Otherwise terrain will be
 	/// blank if the user has never seen the Tile and whatever he saw last if he has seen the Tile.
 	pub terrain: Terrain,
-	pub character: CharacterType,
+	pub char_name: Option<CharName>,
+	pub has_player: bool,
 
 	/// True if the player can see the square
 	pub visible: bool,
@@ -81,56 +71,48 @@ impl Level {
 		level.set_terrain(x - 2, y, Terrain::Wall);
 
 		// Add the player.
-		let race = Race::Human;
-		let player = Player::new(race);
+		let name = CharName::Human;
+		let player = Character::new(name);
 		let loc = level
-			.rand_loc_for_char(rng, |t| race.delay(t) < f32::INFINITY)
-			.expect("failed to find a location when new'ing the player");
+			.rand_loc_for_char(rng, |t| {
+				(attributes(name).movement_delay)(t) < f32::INFINITY
+			}).expect("failed to find a location when new'ing the player");
 		level.add_player(loc, player);
 
 		// Add some NPCs.
 		for _ in 0..5 {
-			let species = Species::Ay;
-			let npc = NPC::new(species);
+			let name = CharName::Ay;
+			let npc = Character::new(name);
 			let loc = level
-				.rand_loc_for_char(rng, |t| species.delay(t) < f32::INFINITY)
-				.expect("failed to find a location when new'ing an Ay");
+				.rand_loc_for_char(rng, |t| {
+					(attributes(name).movement_delay)(t) < f32::INFINITY
+				}).expect("failed to find a location when new'ing an Ay");
 			level.add_npc(loc, npc);
 		}
 
 		for _ in 0..5 {
-			let species = Species::Bhederin;
-			let npc = NPC::new(species);
+			let name = CharName::Bhederin;
+			let npc = Character::new(name);
 			let loc = level
-				.rand_loc_for_char(rng, |t| species.delay(t) < f32::INFINITY)
-				.expect("failed to find a location when new'ing a Bison");
+				.rand_loc_for_char(rng, |t| {
+					(attributes(name).movement_delay)(t) < f32::INFINITY
+				}).expect("failed to find a location when new'ing a Bison");
 			level.add_npc(loc, npc);
 		}
 
+		level.invariant();
 		level
 	}
 
-	pub fn player(&self) -> &Player {
+	pub fn player(&self) -> &Character {
 		let cell = self.cells.get(self.player_loc);
-		match cell.character {
-			Character::Player(ref p) => p,
-			_ => {
-				assert!(false, "{:?} does not contain a player", cell);
-				panic!()
-			}
-		}
+		cell.character.as_ref().unwrap()
 	}
 
-	pub fn player_mut(&mut self) -> &mut Player {
-		let cell = self.cells.get_mut(self.player_loc);
-		match cell.character {
-			Character::Player(ref mut p) => p,
-			_ => {
-				assert!(false, "{:?} does not contain a player", cell);
-				panic!()
-			}
-		}
-	}
+	// pub fn player_mut(&mut self) -> &mut Character {
+	// 	let cell = self.cells.get_mut(self.player_loc);
+	// 	cell.character.as_mut().unwrap()
+	// }
 
 	pub fn player_loc(&self) -> Location {
 		self.player_loc
@@ -138,72 +120,60 @@ impl Level {
 
 	pub fn move_player(&mut self, new_loc: Location) {
 		assert!(self.empty(new_loc));
-		let old_loc = self.player_loc;
-		let mut tmp = Character::None;
+		self.invariant();
+
 		{
-			let old_cell = self.cells.get_mut(self.player_loc);
-			mem::swap(&mut old_cell.character, &mut tmp);
+			let old_loc = self.player_loc;
+			let player = {
+				let old_cell = self.cells.get_mut(self.player_loc);
+				old_cell.character.take()
+			};
+			assert!(player.is_some());
+
+			let new_cell = self.cells.get_mut(new_loc);
+			assert!(new_cell.character.is_none());
+			new_cell.character = player;
+
+			self.player_loc = new_loc;
+			new_cell.character.as_mut().unwrap().on_moved(
+				new_cell.terrain,
+				new_loc.x - old_loc.x,
+				new_loc.y - old_loc.y,
+			);
 		}
 
-		let terrain = {
-			let new_cell = self.cells.get_mut(new_loc);
-			mem::swap(&mut tmp, &mut new_cell.character);
-			new_cell.terrain
-		};
-		self.player_loc = new_loc;
-		self.player_mut()
-			.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+		// let old_loc = self.player_loc;
+		// let mut tmp = Character::None;
+		// {
+		// 	let old_cell = self.cells.get_mut(self.player_loc);
+		// 	mem::swap(&mut old_cell.character, &mut tmp);
+		// }
+
+		// let terrain = {
+		// 	let new_cell = self.cells.get_mut(new_loc);
+		// 	mem::swap(&mut tmp, &mut new_cell.character);
+		// 	new_cell.terrain
+		// };
+		// self.player_loc = new_loc;
+		// self.player_mut()
+		// 	.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+		self.invariant();
 	}
 
 	pub fn empty(&self, loc: Location) -> bool {
 		let cell = self.cells.get(loc);
-		match cell.character {
-			Character::NPC(_) => false,
-			Character::Player(_) => false,
-			Character::None => true,
-		}
+		cell.character.is_none()
 	}
 
-	pub fn npc(&self, loc: Location) -> &NPC {
+	pub fn npc(&self, loc: Location) -> &Character {
+		assert!(self.player_loc != loc);
 		let cell = self.cells.get(loc);
-		match cell.character {
-			Character::NPC(ref c) => c,
-			_ => {
-				assert!(false, "{:?} does not contain an npc", cell);
-				panic!()
-			}
-		}
+		cell.character.as_ref().unwrap()
 	}
 
-	// pub fn npc_mut(&mut self, loc: Location) -> &mut NPC {
+	// pub fn npc_mut(&mut self, loc: Location) -> &mut Character {
 	// 	let cell = self.cells.get_mut(loc);
-	// 	match cell.character {
-	// 		Character::NPC(ref mut c) => c,
-	// 		_ => {
-	// 			assert!(false, "{:?} does not contain an npc", cell);
-	// 			panic!()
-	// 		}
-	// 	}
-	// }
-
-	// pub fn npc_moved(&mut self, old_loc: Location, new_loc: Location) {
-	// 	assert!(self.empty(new_loc));
-	// 	let mut tmp = Character::None;
-	// 	{
-	// 		let old_cell = self.cells.get_mut(old_loc);
-	// 		mem::swap(&mut old_cell.character, &mut tmp);
-	// 	}
-
-	// 	let terrain = {
-	// 		let new_cell = self.cells.get_mut(new_loc);
-	// 		mem::swap(&mut tmp, &mut new_cell.character);
-	// 		new_cell.terrain
-	// 	};
-
-	// 	self.npc_locs.remove(&old_loc);
-	// 	self.npc_locs.insert(new_loc);
-	// 	self.player_mut()
-	// 		.on_moved(terrain, new_loc.x - old_loc.x, new_loc.y - old_loc.y);
+	// &mut cell.character.unwrap()
 	// }
 
 	/// Returns the next time at which a monster or device is ready to execute, i.e. everything but
@@ -217,6 +187,7 @@ impl Level {
 	// Rc which gets annoying. So we simply store one reference and brute force scheduling which
 	// should be fine given our relatively small levels.
 	pub fn execute_others(&mut self, game_time: Time, rng: &mut RNG) {
+		self.invariant();
 		// TODO: We need to make a copy of the locations we need to iterate before we start
 		// mutating the vector. It would be more efficient to do this after the filter but the
 		// only way I could figure out for that was to use a map to dereference and then call
@@ -229,14 +200,14 @@ impl Level {
 				let npc = self.npc(**loc);
 				assert!(npc.ready_time() >= game_time);
 				npc.ready_time() == game_time
-			})
-			.collect();
+			}).collect();
 		for &loc in npc_locs {
 			let mut npc = self.remove_npc(loc);
 			if let Some(new_loc) = npc.execute(self, loc, rng) {
 				self.add_npc(new_loc, npc);
 			}
 		}
+		self.invariant();
 	}
 
 	pub fn get_terrain(&self, loc: Location) -> Terrain {
@@ -257,7 +228,7 @@ impl Level {
 			let y = i / size.width;
 			let loc = Location::new(x, y);
 			let cell = self.cells.get(loc);
-			if let Character::None = cell.character {
+			if let None = cell.character {
 				let terrain = cell.terrain;
 				if predicate(terrain) {
 					return Some(loc);
@@ -283,33 +254,39 @@ impl Level {
 		cell.terrain = terrain;
 	}
 
-	fn add_player(&mut self, loc: Location, player: Player) {
+	fn add_player(&mut self, loc: Location, player: Character) {
 		assert!(self.empty(loc));
-		let cell = self.cells.get_mut(loc);
-		cell.character = Character::Player(player);
-		self.player_loc = loc;
-	}
-
-	fn add_npc(&mut self, loc: Location, npc: NPC) {
-		assert!(self.empty(loc));
-		let cell = self.cells.get_mut(loc);
-		cell.character = Character::NPC(npc);
-		self.npc_locs.insert(loc);
-	}
-
-	fn remove_npc(&mut self, loc: Location) -> NPC {
-		assert!(!self.empty(loc));
-		let mut tmp = Character::None;
-		let old_cell = self.cells.get_mut(loc);
-		mem::swap(&mut old_cell.character, &mut tmp);
-		self.npc_locs.remove(&loc);
-		match tmp {
-			Character::NPC(c) => c,
-			_ => {
-				assert!(false, "{:?} doesn't contain an npc", tmp);
-				panic!()
-			}
+		{
+			let cell = self.cells.get_mut(loc);
+			cell.character = Some(player);
+			self.player_loc = loc;
 		}
+		assert!(!self.empty(loc));
+	}
+
+	fn add_npc(&mut self, loc: Location, npc: Character) {
+		assert!(self.empty(loc));
+		assert!(self.player_loc != loc);
+		{
+			let cell = self.cells.get_mut(loc);
+			cell.character = Some(npc);
+			self.npc_locs.insert(loc);
+		}
+		assert!(!self.empty(loc));
+	}
+
+	fn remove_npc(&mut self, loc: Location) -> Character {
+		assert!(!self.empty(loc));
+		assert!(self.player_loc != loc);
+
+		let character = {
+			let cell = self.cells.get_mut(loc);
+			let chr = cell.character.take();
+			chr.unwrap()
+		};
+		self.npc_locs.remove(&loc);
+		assert!(self.empty(loc));
+		character
 	}
 
 	// Returns the subset of tiles that are rendered on the screen.
@@ -337,12 +314,13 @@ impl Level {
 
 	const DEFAULT_CELL: Cell = Cell {
 		terrain: Terrain::Ground,
-		character: Character::None,
+		character: None,
 	};
 
 	const DEFAULT_TILE: Tile = Tile {
 		terrain: Terrain::Blank,
-		character: CharacterType::None,
+		char_name: None,
+		has_player: false,
 		visible: false,
 	};
 
@@ -359,15 +337,10 @@ impl Level {
 				radius: 10, // TODO: depends on race?
 				visit_tile: |loc| {
 					let cell = self.cells.get(loc);
-					match cell.character {
-						Character::Player(ref p) => {
-							visible.insert(loc, (cell.terrain, CharacterType::Player(p.race())))
-						}
-						Character::NPC(ref c) => {
-							visible.insert(loc, (cell.terrain, CharacterType::NPC(c.species())))
-						}
-						Character::None => visible.insert(loc, (cell.terrain, CharacterType::None)),
-					};
+					visible.insert(
+						loc,
+						(cell.terrain, cell.character.as_ref().map(|c| c.name())),
+					);
 				},
 				blocks_los: |loc| {
 					let terrain = self.get_terrain(loc);
@@ -378,10 +351,12 @@ impl Level {
 			pov.visit();
 		}
 
+		let player_loc = self.player_loc;
 		self.tiles.apply(|loc, tile| match visible.get(&loc) {
 			Some((terrain, ch)) => {
 				tile.terrain = *terrain;
-				tile.character = *ch;
+				tile.char_name = *ch;
+				tile.has_player = loc == player_loc;
 				tile.visible = true;
 			}
 			None => tile.visible = false,
@@ -412,31 +387,47 @@ impl Level {
 
 		visible
 	}
-}
 
-/// Set if the player or an NPC is within a Tile on the Level.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-enum Character {
-	Player(Player),
-	NPC(NPC),
-	None,
+	fn invariant(&self) {
+		assert!(self.tiles.size() == self.cells.size());
+
+		assert!(self.player_loc.x >= 0);
+		assert!(self.player_loc.x < self.cells.size().width);
+		assert!(self.player_loc.y >= 0);
+		assert!(self.player_loc.y < self.cells.size().height);
+
+		for loc in &self.npc_locs {
+			assert!(*loc != self.player_loc);
+
+			assert!(loc.x >= 0);
+			assert!(loc.x < self.cells.size().width);
+			assert!(loc.y >= 0);
+			assert!(loc.y < self.cells.size().height);
+
+			assert!(!self.empty(*loc));
+		}
+	}
 }
 
 /// Level has a 2D array of these.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct Cell {
 	terrain: Terrain,
-	character: Character,
+	character: Option<Character>,
 	// feature: Option<Feature>,
 	// items: Vec<Item>,
 }
 
 impl fmt::Debug for Tile {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		match self.character {
-			CharacterType::Player(_) => write!(f, "@"),
-			CharacterType::NPC(_) => write!(f, "m"),
-			CharacterType::None => write!(f, "{:?}", self.terrain),
+		if let Some(_) = self.char_name {
+			if self.has_player {
+				write!(f, "@")
+			} else {
+				write!(f, "m")
+			}
+		} else {
+			write!(f, "{:?}", self.terrain)
 		}
 	}
 }
