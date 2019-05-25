@@ -5,4 +5,7 @@ authors = ["Jesse Vorisek <jesse.vorisek@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-structopt = "0.2.15"			# command line parser built on top of clap
+slog = "2.4.1"				# structured logging
+slog-async = "2.3.0"		# asynchrous log writing
+slog-term = "2.4.0"			# asynchlogging to a terminal/console/shell or other text based dest
+structopt = "0.2.15"		# command line parser built on top of clap
