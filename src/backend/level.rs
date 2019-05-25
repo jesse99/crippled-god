@@ -72,7 +72,7 @@ impl Level {
 
 		// Add the player.
 		let name = CharName::Human;
-		let player = Character::new(name);
+		let player = Character::new_player(name);
 		let loc = level
 			.rand_loc_for_char(rng, |t| {
 				(attributes(name).movement_delay)(t) < f32::INFINITY
@@ -82,7 +82,7 @@ impl Level {
 		// Add some NPCs.
 		for _ in 0..5 {
 			let name = CharName::Ay;
-			let npc = Character::new(name);
+			let npc = Character::new_npc(name);
 			let loc = level
 				.rand_loc_for_char(rng, |t| {
 					(attributes(name).movement_delay)(t) < f32::INFINITY
@@ -92,7 +92,7 @@ impl Level {
 
 		for _ in 0..5 {
 			let name = CharName::Bhederin;
-			let npc = Character::new(name);
+			let npc = Character::new_npc(name);
 			let loc = level
 				.rand_loc_for_char(rng, |t| {
 					(attributes(name).movement_delay)(t) < f32::INFINITY
@@ -119,7 +119,7 @@ impl Level {
 	}
 
 	pub fn move_player(&mut self, new_loc: Location) {
-		assert!(self.empty(new_loc));
+		assert!(self.has_char(new_loc));
 		self.invariant();
 
 		{
@@ -160,7 +160,7 @@ impl Level {
 		self.invariant();
 	}
 
-	pub fn empty(&self, loc: Location) -> bool {
+	pub fn has_char(&self, loc: Location) -> bool {
 		let cell = self.cells.get(loc);
 		cell.character.is_none()
 	}
@@ -170,6 +170,12 @@ impl Level {
 		let cell = self.cells.get(loc);
 		cell.character.as_ref().unwrap()
 	}
+
+	// pub fn npc_mut(&mut self, loc: Location) -> &mut Character {
+	// 	assert!(self.player_loc != loc);
+	// 	let cell = self.cells.get_mut(loc);
+	// 	cell.character.as_mut().unwrap()
+	// }
 
 	// pub fn npc_mut(&mut self, loc: Location) -> &mut Character {
 	// 	let cell = self.cells.get_mut(loc);
@@ -255,28 +261,28 @@ impl Level {
 	}
 
 	fn add_player(&mut self, loc: Location, player: Character) {
-		assert!(self.empty(loc));
+		assert!(self.has_char(loc));
 		{
 			let cell = self.cells.get_mut(loc);
 			cell.character = Some(player);
 			self.player_loc = loc;
 		}
-		assert!(!self.empty(loc));
+		assert!(!self.has_char(loc));
 	}
 
 	fn add_npc(&mut self, loc: Location, npc: Character) {
-		assert!(self.empty(loc));
+		assert!(self.has_char(loc));
 		assert!(self.player_loc != loc);
 		{
 			let cell = self.cells.get_mut(loc);
 			cell.character = Some(npc);
 			self.npc_locs.insert(loc);
 		}
-		assert!(!self.empty(loc));
+		assert!(!self.has_char(loc));
 	}
 
 	fn remove_npc(&mut self, loc: Location) -> Character {
-		assert!(!self.empty(loc));
+		assert!(!self.has_char(loc));
 		assert!(self.player_loc != loc);
 
 		let character = {
@@ -285,7 +291,7 @@ impl Level {
 			chr.unwrap()
 		};
 		self.npc_locs.remove(&loc);
-		assert!(self.empty(loc));
+		assert!(self.has_char(loc));
 		character
 	}
 
@@ -404,7 +410,7 @@ impl Level {
 			assert!(loc.y >= 0);
 			assert!(loc.y < self.cells.size().height);
 
-			assert!(!self.empty(*loc));
+			assert!(!self.has_char(*loc));
 		}
 	}
 }

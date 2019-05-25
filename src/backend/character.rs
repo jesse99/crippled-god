@@ -14,6 +14,7 @@ pub enum CharName {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Character {
 	name: CharName,
+	label: String,
 	ready_time: Time,
 	hp: i32,
 }
@@ -21,11 +22,25 @@ pub struct Character {
 // TODO: Attributes instead of Stats
 // Attributes includes name and movement speed
 impl Character {
-	pub fn new(name: CharName) -> Character {
+	pub fn new_npc(name: CharName) -> Character {
+		let label = char_name_to_label(name);
 		let ready_time = Time::zero();
 		let hp = 100;
 		Character {
 			name,
+			label,
+			ready_time,
+			hp,
+		}
+	}
+
+	pub fn new_player(name: CharName) -> Character {
+		let label = "you".to_string();
+		let ready_time = Time::zero();
+		let hp = 100;
+		Character {
+			name,
+			label,
 			ready_time,
 			hp,
 		}
@@ -35,10 +50,14 @@ impl Character {
 		self.name
 	}
 
+	pub fn label(&self) -> &str {
+		&self.label
+	}
+
 	pub fn can_move_to(&self, level: &Level, loc: Location) -> bool {
 		let terrain = level.get_terrain(loc);
 		let delay = (attributes(self.name).movement_delay)(terrain);
-		delay < f32::INFINITY && level.empty(loc)
+		delay < f32::INFINITY && level.has_char(loc)
 	}
 
 	fn execute_aggressive(
@@ -143,4 +162,12 @@ impl Scheduled for Character {
 		);
 		result
 	}
+}
+
+fn char_name_to_label(name: CharName) -> String {
+	match name {
+		CharName::Ay => "ay",
+		CharName::Bhederin => "bhederin",
+		CharName::Human => "human",
+	}.to_string()
 }

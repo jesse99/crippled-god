@@ -51,11 +51,20 @@ fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, topic: backend::Top
 	);
 }
 
+// TODO: Should probably have a config option for console colors. Maybe map colors too.
+// Though that is a bit traicky because the backend would need Color (or some extensibility option?).
 fn topic_to_color(topic: backend::Topic) -> Color {
 	match topic {
 		backend::Topic::Error => Color::Red,
 		backend::Topic::NonGamePlay => Color::Lime,
-		backend::Topic::Status => Color::AliceBlue,
+		backend::Topic::NpcIsDamaged => Color::Green,
+		backend::Topic::NpcIsNotDamaged => Color::LightGreen,
+		backend::Topic::PlayerDidDamage => Color::AliceBlue,
+		backend::Topic::PlayerDidNoDamage => Color::Gray,
+		backend::Topic::PlayerIsDamaged => Color::Red,
+		backend::Topic::PlayerIsNotDamaged => Color::Orange,
+		backend::Topic::PlayerIsImpaired => Color::Orange,
+		backend::Topic::PlayerIsThreatened => Color::Orange,
 		backend::Topic::Warning => Color::Orange,
 	}
 }

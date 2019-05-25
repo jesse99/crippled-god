@@ -22,8 +22,29 @@ pub enum Topic {
 	/// Something that doesn't affect the game.
 	NonGamePlay,
 
-	/// Something has affected the player.
-	Status,
+	/// NPC was damaged (but not by the player).
+	NpcIsDamaged, // TODO: might want to have a separate Topic for player allies
+
+	/// NPC was attacked but not damaged (but not by the player).
+	NpcIsNotDamaged,
+
+	/// The player has caused damage.
+	PlayerDidDamage,
+
+	/// The player attacked byt did no damage.
+	PlayerDidNoDamage,
+
+	/// The player has taken damage.
+	PlayerIsDamaged,
+
+	/// The player was attacked but took no damage.
+	PlayerIsNotDamaged,
+
+	/// The player will not operate less well.
+	PlayerIsImpaired, // TODO: probably also want a PlayerEnchanced
+
+	/// The player is at risk of taking damage.
+	PlayerIsThreatened,
 
 	/// An operation was not completely successful.
 	Warning,
@@ -83,6 +104,10 @@ impl Game {
 		&self.config
 	}
 
+	pub fn rng(&mut self) -> &mut RNG {
+		&mut self.rng
+	}
+
 	pub fn messages(&self) -> &VecDeque<Message> {
 		&self.messages
 	}
@@ -126,15 +151,15 @@ impl Game {
 	/// Returns false if the key was not handled.
 	pub fn handle_key(&mut self, key: Key) -> bool {
 		match key {
-			Key::UpArrow | Key::Char('8') => move_player(self, 0, -1),
-			Key::DownArrow | Key::Char('2') => move_player(self, 0, 1),
-			Key::LeftArrow | Key::Char('4') => move_player(self, -1, 0),
-			Key::RightArrow | Key::Char('6') => move_player(self, 1, 0),
+			Key::UpArrow | Key::Char('8') => self.arrow_key(0, -1),
+			Key::DownArrow | Key::Char('2') => self.arrow_key(0, 1),
+			Key::LeftArrow | Key::Char('4') => self.arrow_key(-1, 0),
+			Key::RightArrow | Key::Char('6') => self.arrow_key(1, 0),
 
-			Key::Char('7') => move_player(self, -1, -1),
-			Key::Char('9') => move_player(self, 1, -1),
-			Key::Char('1') => move_player(self, -1, 1),
-			Key::Char('3') => move_player(self, 1, 1),
+			Key::Char('7') => self.arrow_key(-1, -1),
+			Key::Char('9') => self.arrow_key(1, -1),
+			Key::Char('1') => self.arrow_key(-1, 1),
+			Key::Char('3') => self.arrow_key(1, 1),
 
 			Key::Char('^') => {
 				self.reload_config();
@@ -161,18 +186,90 @@ impl Game {
 			}
 		}
 	}
-}
 
-fn move_player(game: &mut Game, dx: i32, dy: i32) -> bool {
-	let p = game.level.player_loc();
-	let loc = Location::new(p.x + dx, p.y + dy);
-	if game.level.player().can_move_to(&game.level, loc) {
-		game.level.move_player(loc);
-		if let Terrain::ShallowWater = game.level.get_terrain(loc) {
-			game.add_message(Topic::Status, "You splash through the water.")
+	fn arrow_key(&mut self, dx: i32, dy: i32) -> bool {
+		let p = self.level.player_loc();
+		let loc = Location::new(p.x + dx, p.y + dy);
+		if self.level.has_char(loc) {
+			let player_loc = self.level.player_loc();
+			self.attack(player_loc, loc);
+			true
+		} else if self.level.player().can_move_to(&self.level, loc) {
+			self.level.move_player(loc);
+			if let Terrain::ShallowWater = self.level.get_terrain(loc) {
+				self.add_message(Topic::PlayerIsImpaired, "You splash through the water.")
+			}
+			true
+		} else {
+			false
 		}
-		true
-	} else {
-		false
+	}
+
+	fn attack(&mut self, attacker_loc: Location, attackee_loc: Location) {
+		fn attacker_label(game: &Game, loc: Location) -> String {
+			if game.level.player_loc() == loc {
+				"You".to_string()
+			} else if game.level.is_visible(game.level.player_loc(), loc) {
+				"The ".to_string() + game.level.npc(loc).label()
+			} else {
+				"Something".to_string()
+			}
+		}
+
+		fn attackee_label(game: &Game, loc: Location) -> String {
+			if game.level.player_loc() == loc {
+				"you".to_string()
+			} else if game.level.is_visible(game.level.player_loc(), loc) {
+				"the ".to_string() + game.level.npc(loc).label()
+			} else {
+				"something".to_string()
+			}
+		}
+
+		fn attack_topic(
+			game: &Game,
+			attacker_loc: Location,
+			attackee_loc: Location,
+			damage: i32,
+		) -> Topic {
+			if game.level.player_loc() == attacker_loc {
+				if damage > 0 {
+					Topic::PlayerDidDamage
+				} else {
+					Topic::PlayerDidNoDamage
+				}
+			} else if game.level.player_loc() == attackee_loc {
+				if damage > 0 {
+					Topic::PlayerIsDamaged
+				} else {
+					Topic::PlayerIsNotDamaged
+				}
+			} else if damage > 0 {
+				Topic::NpcIsDamaged
+			} else {
+				Topic::NpcIsNotDamaged
+			}
+		}
+
+		let attacker = self.level.npc(attacker_loc).name();
+		let attackee = self.level.npc(attackee_loc).name();
+		let attacks = (attributes(attacker).attacks)(self.rng());
+		for attack in &attacks {
+			let resist = (attributes(attackee).resistence)(attack.brand);
+			let damage = (attack.damage * (100 - resist)) / 100;
+
+			let topic = attack_topic(self, attacker_loc, attackee_loc, damage);
+			let attacker = attacker_label(self, attacker_loc);
+			let attackee = attackee_label(self, attackee_loc);
+			let mesg = if damage > 0 {
+				format!(
+					"{} {} {} for {} points.",
+					attacker, attack.name, attackee, damage
+				)
+			} else {
+				format!("{} {} {} for no damage.", attacker, attack.name, attackee)
+			};
+			self.add_message(topic, &mesg)
+		}
 	}
 }

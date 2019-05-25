@@ -1,8 +1,6 @@
 use super::rng::*;
-//use super::scheduled::*;
 use super::*;
 use std::f32;
-// use serde::*;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Brand {
@@ -12,7 +10,7 @@ pub enum Brand {
 #[derive(Debug)]
 pub struct Attack {
 	pub name: String,
-	pub damage: f32,
+	pub damage: i32,
 	pub brand: Brand,
 }
 
@@ -21,9 +19,9 @@ pub struct Attributes {
 	/// Hitpoints. When this goes to zero the character dies.
 	pub max_hps: fn(rng: &mut RNG) -> i32,
 
-	/// Range is [0.0, 1.0]. At 0.0 attacks have no damage reduction. At 1.0 attacks are completely
+	/// Range is [0, 100]. At 0 attacks have no damage reduction. At 100 attacks are completely
 	/// blocked.
-	pub resistence: fn(brand: Brand) -> f32,
+	pub resistence: fn(brand: Brand) -> i32,
 
 	/// Should be based on BASE_MOVEMENT_SPEED. Use f32::INFINITY for impassable terrain.
 	pub movement_delay: fn(terrain: Terrain) -> f32,
@@ -36,36 +34,36 @@ pub fn attributes(name: CharName) -> Attributes {
 	match name {
 		CharName::Ay => Attributes {
 			max_hps: |_| 100,
-			resistence: |_| 0.0,
+			resistence: |_| 0,
 			movement_delay: |terrain| normal_movement_delay(0.8, terrain),
 			attacks: |_| {
 				vec![Attack {
 					name: "bites".to_string(),
-					damage: 10.0, // TODO: maybe we should use a fn to scale damage
+					damage: 10, // TODO: maybe we should use a fn to scale damage
 					brand: Brand::Physical,
 				}]
 			},
 		},
 		CharName::Bhederin => Attributes {
 			max_hps: |_| 60,
-			resistence: |_| 0.0,
+			resistence: |_| 0,
 			movement_delay: |terrain| normal_movement_delay(0.9, terrain),
 			attacks: |_| {
 				vec![Attack {
 					name: "bites".to_string(),
-					damage: 20.0,
+					damage: 20,
 					brand: Brand::Physical,
 				}]
 			},
 		},
 		CharName::Human => Attributes {
 			max_hps: |_| 75,
-			resistence: |_| 0.0,
+			resistence: |_| 0,
 			movement_delay: |terrain| normal_movement_delay(1.0, terrain),
 			attacks: |_| {
 				vec![Attack {
 					name: "hits".to_string(),
-					damage: 15.0,
+					damage: 15,
 					brand: Brand::Physical,
 				}]
 			},
