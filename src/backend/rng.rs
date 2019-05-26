@@ -12,7 +12,7 @@ impl RNG {
 	#[inline(always)]
 	pub fn new(seed: u64) -> RNG {
 		if seed == 0 {
-			RNG(1, 0)
+			RNG(43, 1)
 		} else {
 			RNG(42, seed)
 		}
@@ -50,16 +50,16 @@ impl RNG {
 	// Sequence trait, see https://docs.rs/random/0.12.2/src/random/sequence.rs.html#6-9).
 
 	// From https://docs.rs/rand/0.5.5/src/rand/lib.rs.html#413-723
-	pub fn shuffle<T>(&mut self, values: &mut [T]) {
-		let mut i = values.len();
-		while i >= 2 {
-			// invariant: elements with index >= i have been locked in place.
-			i -= 1;
-			// lock element i in place.
-			let j = self.read::<usize>() % (i + 1);
-			values.swap(i, j);
-		}
-	}
+	// pub fn shuffle<T>(&mut self, values: &mut [T]) {
+	// 	let mut i = values.len();
+	// 	while i >= 2 {
+	// 		// invariant: elements with index >= i have been locked in place.
+	// 		i -= 1;
+	// 		// lock element i in place.
+	// 		let j = self.read::<usize>() % (i + 1);
+	// 		values.swap(i, j);
+	// 	}
+	// }
 }
 
 /// Trait used to instantiate RNGs for all the float and integral types.

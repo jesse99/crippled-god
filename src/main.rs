@@ -7,7 +7,7 @@ extern crate structopt;
 
 mod backend;
 
-use backend::level::{Entity, Level};
+use backend::level::Level;
 use slog::Drain;
 use std::fs::OpenOptions;
 use std::str::FromStr;
