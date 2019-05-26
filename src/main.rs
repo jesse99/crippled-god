@@ -7,7 +7,7 @@ extern crate structopt;
 
 mod backend;
 
-use backend::level::{Entity};
+use backend::level::{Entity, Level};
 use slog::Drain;
 use std::fs::OpenOptions;
 use std::str::FromStr;
@@ -59,7 +59,8 @@ fn main() {
 	let monster_logger = root_logger.new(o!("name" => "Ay", "level" => "Dungeon #5"));
 	debug!(monster_logger, "woke up"; "reason" => "heard player");
 
-	let e1 = Entity::new("player");
-	let e2 = Entity::new("ay");
-	info!(app_logger, "rntities"; "player" => e1, "nps" => e2);
+	let mut level = Level::new();
+	let e1 = level.new_entity("player");
+	let e2 = level.new_entity("ay");
+	info!(app_logger, "entities"; "player" => e1, "nps" => e2);
 }

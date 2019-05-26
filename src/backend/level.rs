@@ -1,8 +1,5 @@
 use std::collections::HashMap; // TODO: may want to use a faster hash
 use std::hash::{Hash, Hasher};
-use std::sync::atomic::{AtomicUsize, Ordering};
-
-static ENTITY_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 // Usually entities are indexes into a Vec. But:
 // 1) An index isn't very meaningful in isolation.
@@ -11,21 +8,21 @@ static ENTITY_COUNTER: AtomicUsize = AtomicUsize::new(0);
 #[derive(Clone, Copy, Debug)]
 pub struct Entity {
 	prefix: &'static str, // static so that we can cheaply copy these
-	count: usize,
+	id: usize,
 }
 
 impl Entity {
-	pub fn new(prefix: &'static str) -> Entity {
+	fn new(prefix: &'static str, id: usize) -> Entity {
 		Entity {
 			prefix,
-			count: ENTITY_COUNTER.fetch_add(1, Ordering::SeqCst),
+			id,
 		}
 	}
 }
 
 impl PartialEq for Entity {
 	fn eq(&self, other: &Self) -> bool {
-		self.count == other.count
+		self.id == other.id
 	}
 }
 
@@ -33,7 +30,7 @@ impl Eq for Entity {}
 
 impl Hash for Entity {
 	fn hash<S: Hasher>(&self, state: &mut S) {
-		self.count.hash(state); // count is the unique part of an Enity so we can save time by ignoring prefix
+		self.id.hash(state); // id is the unique part of an Enity so we can save time by ignoring prefix
 	}
 }
 
@@ -44,7 +41,7 @@ impl slog::Value for Entity {
 		key: slog::Key,
 		serializer: &mut dyn slog::Serializer,
 	) -> Result<(), slog::Error> {
-		serializer.emit_arguments(key, &format_args!("{}", self.count))
+		serializer.emit_arguments(key, &format_args!("{}", self.id))
 	}
 }
 
@@ -58,7 +55,23 @@ struct PositionComponent {
 	y: i32,
 }
 
-struct Level {
+pub struct Level {
 	player_components: HashMap<Entity, PlayerComponent>,
 	position_components: HashMap<Entity, PositionComponent>,
+	num_entities: usize,	// this is the total number of entities that have ever existed
+}
+
+impl Level {
+	pub fn new() -> Level {
+		Level {
+			player_components: HashMap::new(),
+			position_components: HashMap::new(),
+			num_entities: 0,
+		}
+	}
+
+	pub fn new_entity(&mut self, prefix: &'static str) -> Entity {
+		self.num_entities += 1;
+		Entity::new(prefix, self.num_entities)
+	}
 }
