@@ -1,4 +1,4 @@
-use std::collections::HashMap; // TODO: may want to use a faster hash
+use fnv::FnvHashMap;
 use std::hash::{Hash, Hasher};
 
 // Usually entities are indexes into a Vec. But:
@@ -60,8 +60,8 @@ struct PositionComponent {
 /// near the player.
 pub struct Level {
 	num_entities: usize, // this is the total number of entities that have ever existed
-	player_components: HashMap<Entity, PlayerComponent>,
-	position_components: HashMap<Entity, PositionComponent>,
+	player_components: FnvHashMap<Entity, PlayerComponent>,
+	position_components: FnvHashMap<Entity, PositionComponent>,
 }
 
 impl Level {
@@ -70,8 +70,8 @@ impl Level {
 		// TODO: should this be public?
 		Level {
 			num_entities: 0,
-			player_components: HashMap::new(),
-			position_components: HashMap::new(),
+			player_components: FnvHashMap::default(),
+			position_components: FnvHashMap::default(),
 		}
 	}
 

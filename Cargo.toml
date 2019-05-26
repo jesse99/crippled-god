@@ -5,8 +5,8 @@ authors = ["Jesse Vorisek <jesse.vorisek@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+fnv = "1.0.6"				# deterministic hasher that is fast for small keys
 slog = "2.4.1"				# structured logging
 slog-async = "2.3.0"		# asynchrous log writing
-slog_derive = "0.1.1"		# custom derive to allow an entire struct to be logged
 slog-term = "2.4.0"			# logging to a terminal/console/shell or other text based dest
 structopt = "0.2.15"		# command line parser built on top of clap
