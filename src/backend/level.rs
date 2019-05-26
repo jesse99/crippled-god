@@ -5,18 +5,18 @@ use std::hash::{Hash, Hasher};
 // 1) An index isn't very meaningful in isolation.
 // 2) Speed isn't a huge concern here so the contiguousness of a Vec isn't too important.
 // 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
+
+/// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
+/// Note that these are unique across the whole game, not just the current level.
 #[derive(Clone, Copy, Debug)]
 pub struct Entity {
-	prefix: &'static str, // static so that we can cheaply copy these
+	prefix: &'static str, // static so that we can cheaply copy these, TODO: not sure that this will work with serialization
 	id: usize,
 }
 
 impl Entity {
 	fn new(prefix: &'static str, id: usize) -> Entity {
-		Entity {
-			prefix,
-			id,
-		}
+		Entity { prefix, id }
 	}
 }
 
@@ -55,22 +55,30 @@ struct PositionComponent {
 	y: i32,
 }
 
+/// This contains all the data associated with the current level. Note that when a new level is
+/// generated all comnponents with a position are removed except for the player and (some) NPCs
+/// near the player.
 pub struct Level {
+	num_entities: usize, // this is the total number of entities that have ever existed
 	player_components: HashMap<Entity, PlayerComponent>,
 	position_components: HashMap<Entity, PositionComponent>,
-	num_entities: usize,	// this is the total number of entities that have ever existed
 }
 
 impl Level {
+	/// Creates a new level with no components.
 	pub fn new() -> Level {
+		// TODO: should this be public?
 		Level {
+			num_entities: 0,
 			player_components: HashMap::new(),
 			position_components: HashMap::new(),
-			num_entities: 0,
 		}
 	}
 
+	/// Creates a new enity with no components. The prefix is an arbitrary string literal used
+	/// for debugging.
 	pub fn new_entity(&mut self, prefix: &'static str) -> Entity {
+		// TODO: should this be public?
 		self.num_entities += 1;
 		Entity::new(prefix, self.num_entities)
 	}
