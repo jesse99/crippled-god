@@ -26,7 +26,7 @@ struct Options {
 	log_level: String,
 
 	#[structopt(long = "seed", default_value = "0")]
-	seed: usize,
+	seed: u64,
 }
 
 fn main() {

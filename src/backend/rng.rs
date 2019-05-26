@@ -3,22 +3,22 @@
 // 2) Doesn't panic if zero is used for the seed.
 // 3) Seed is a u64 instead of a [u64; 2].
 // 5) Doesn't use the Source trait.
-// 6) Doesn't
-#[derive(Clone, Copy, Deserialize, Serialize)]
+//#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy)]
 pub struct RNG(u64, u64);
 
 impl RNG {
-	/// Create an instance of the algorithm.
+	/// Create a new random number generator.
 	#[inline(always)]
 	pub fn new(seed: u64) -> RNG {
 		if seed == 0 {
 			RNG(1, 0)
 		} else {
-			RNG(0, seed)
+			RNG(42, seed)
 		}
 	}
 
-	/// Read `u64` uniformly distributed over `{0, 1, …, u64::MAX}`.
+	/// Return `u64` uniformly distributed over `{0, 1, …, u64::MAX}`.
 	#[inline(always)]
 	fn read_u64(&mut self) -> u64 {
 		let (mut x, y) = (self.0, self.1);
@@ -30,13 +30,13 @@ impl RNG {
 		x.wrapping_add(y)
 	}
 
-	/// Read `f64` uniformly distributed over `[0, 1]`.
+	/// Return `f64` uniformly distributed over `[0, 1]`.
 	#[inline(always)]
 	fn read_f64(&mut self) -> f64 {
 		self.read_u64() as f64 / ::std::u64::MAX as f64
 	}
 
-	/// Read a random value.
+	/// Return a random value.
 	#[inline(always)]
 	pub fn read<V>(&mut self) -> V
 	where
@@ -65,7 +65,7 @@ impl RNG {
 /// Trait used to instantiate RNGs for all the float and integral types.
 pub trait Value {
 	/// Read a random value.
-	fn read(&mut RNG) -> Self;
+	fn read(rng: &mut RNG) -> Self;
 }
 
 macro_rules! implement(
@@ -89,7 +89,7 @@ mod tests {
 
 	#[test]
 	fn read() {
-		let mut source = RNG::new(42);
+		let mut source = RNG::new(69);
 
 		macro_rules! read(
             ($($kind:ident => [$one:expr, $two:expr],)*) => ({$(
@@ -101,8 +101,8 @@ mod tests {
 		read! {
 			i8 => [52, -34],
 			i16 => [-17348, -1036],
-			i32 => [948125133, -1432682055],
-			i64 => [-6330235019914458621, -4877218639256617945],
+			i32 => [948_125_133, -1_432_682_055],
+			i64 => [-6_330_235_019_914_458_621, -4_877_218_639_256_617_945],
 		}
 	}
 }
