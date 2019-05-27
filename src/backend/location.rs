@@ -1,5 +1,5 @@
-use std::ops::Add;
-use std::ops::Sub;
+use std::fmt;
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Location {
@@ -12,9 +12,9 @@ impl Location {
 		Location { x, y }
 	}
 
-	// pub fn zero() -> Location {
-	// 	Location { x: 0, y: 0 }
-	// }
+	pub fn zero() -> Location {
+		Location { x: 0, y: 0 }
+	}
 
 	// pub fn left(&self) -> Location {
 	//  Location::new(self.x - 1, self.y)
@@ -43,7 +43,7 @@ impl Location {
 	// 	}
 }
 
-impl Add<Location> for Location {
+impl Add for Location {
 	type Output = Location;
 
 	fn add(self, other: Location) -> Location {
@@ -51,11 +51,35 @@ impl Add<Location> for Location {
 	}
 }
 
-impl Sub<Location> for Location {
+impl Sub for Location {
 	type Output = Location;
 
 	fn sub(self, other: Location) -> Location {
 		Location::new(self.x - other.x, self.y - other.y)
+	}
+}
+
+impl AddAssign for Location {
+	fn add_assign(&mut self, other: Self) {
+		*self = Self {
+			x: self.x + other.x,
+			y: self.y + other.y,
+		};
+	}
+}
+
+impl SubAssign for Location {
+	fn sub_assign(&mut self, other: Self) {
+		*self = Self {
+			x: self.x - other.x,
+			y: self.y - other.y,
+		};
+	}
+}
+
+impl fmt::Display for Location {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "({}, {})", self.x, self.y)
 	}
 }
 

@@ -1,86 +1,48 @@
 
+use super::character::{CharacterComponent, CharacterFlags};
+use super::entity::Entity;
+use super::flags::Flags;
 use super::location::Location;
 use super::size::Size;
 use super::terrain::Terrain;
 use super::vec2d::Vec2d;
-//use fnv::FnvHashMap;
-use std::hash::{Hash, Hasher};
-// Usually entities are indexes into a Vec. But:
-// 1) An index isn't very meaningful in isolation.
-// 2) Speed isn't a huge concern here so the contiguousness of a Vec isn't too important.
-// 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
-
-/// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
-/// Note that these are unique across the whole game, not just the current level.
-#[derive(Clone, Copy)]
-pub struct Entity {
-	prefix: &'static str, // static so that we can cheaply copy these, TODO: not sure that this will work with serialization
-	id: usize,
-}
-
-impl Entity {
-	fn new(prefix: &'static str, id: usize) -> Entity {
-		Entity { prefix, id }
-	}
-}
-
-impl PartialEq for Entity {
-	fn eq(&self, other: &Self) -> bool {
-		self.id == other.id
-	}
-}
-
-impl Eq for Entity {}
-
-impl Hash for Entity {
-	fn hash<S: Hasher>(&self, state: &mut S) {
-		self.id.hash(state); // id is the unique part of an Enity so we can save time by ignoring prefix
-	}
-}
-
-impl slog::Value for Entity {
-	fn serialize(
-		&self,
-		_: &slog::Record<'_>,
-		key: slog::Key,
-		serializer: &mut dyn slog::Serializer,
-	) -> Result<(), slog::Error> {
-		serializer.emit_arguments(key, &format_args!("{}-{}", self.prefix, self.id))
-	}
-}
-
-// struct PlayerComponent {
-// 	name: String,
-// }
-
-// top-left is (0, 0)
-// struct PositionComponent {
-// 	x: i32,
-// 	y: i32,
-// }
+use fnv::FnvHashMap;
 
 /// This contains all the data associated with the current level. Note that when a new level is
 /// generated all comnponents with a position are removed except for the player and (some) NPCs
 /// near the player.
 pub struct Level {
+	pub player: Entity,
+	pub character_components: FnvHashMap<Entity, CharacterComponent>,
+	pub position_components: FnvHashMap<Entity, Location>,
+
 	num_entities: usize, // this is the total number of entities that have ever existed
-	// player_components: FnvHashMap<Entity, PlayerComponent>,
-	// position_components: FnvHashMap<Entity, PositionComponent>,
 	terrain: Vec2d<Terrain>,
 }
 
 impl Level {
-	/// Creates a new level with no components.
+	/// Creates a new level with just a player component.
 	pub fn new() -> Level {
 		// TODO: should this be public?
-		let size = Size::new(20, 15);
-		//		let size = Size::new(64, 32);
+		let size = Size::new(64, 32);
 		let mut level = Level {
-			num_entities: 0,
-			// player_components: FnvHashMap::default(),
-			// position_components: FnvHashMap::default(),
+			player: Entity::internal_new("player", 1),
+			num_entities: 1,
+			character_components: FnvHashMap::default(),
+			position_components: FnvHashMap::default(),
 			terrain: Vec2d::new(size, Terrain::Ground),
 		};
+
+		let player = level.new_entity("player");
+		let flags = Flags::<CharacterFlags>::new();
+		level.character_components.insert(
+			player,
+			CharacterComponent::new("player", flags)
+		);
+		level.position_components.insert(
+			player,
+			Location::new(1, 1),
+		);
 
 		// Add walls around the outside
 		for x in 0..size.width {
@@ -117,7 +79,7 @@ impl Level {
 	pub fn new_entity(&mut self, prefix: &'static str) -> Entity {
 		// TODO: should this be public?
 		self.num_entities += 1;
-		Entity::new(prefix, self.num_entities)
+		Entity::internal_new(prefix, self.num_entities)
 	}
 
 	fn set_terrain(&mut self, x: i32, y: i32, terrain: Terrain) {
