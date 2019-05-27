@@ -15,7 +15,7 @@ pub enum CharacterFlags {
 
 pub struct CharacterComponent {
 	name: String,
-	flags: Flags<CharacterFlags>,
+	pub flags: Flags<CharacterFlags>,
 }
 
 impl CharacterComponent {

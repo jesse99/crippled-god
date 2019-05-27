@@ -18,19 +18,19 @@ impl<T: Clone> Vec2d<T> {
 		Vec2d { size, elements }
 	}
 
-	// pub fn size(&self) -> Size {
-	// 	self.size
-	// }
+	pub fn size(&self) -> Size {
+		self.size
+	}
 
 	// pub fn set(&mut self, loc: Location, value: T) {
 	// 	let index = loc.x + loc.y * self.size.width;
 	// 	self.elements[index as usize] = value;
 	// }
 
-	// pub fn get(&self, loc: Location) -> &T {
-	// 	let index = loc.x + loc.y * self.size.width;
-	// 	&self.elements[index as usize]
-	// }
+	pub fn get(&self, loc: Location) -> &T {
+		let index = loc.x + loc.y * self.size.width;
+		&self.elements[index as usize]
+	}
 
 	pub fn get_mut(&mut self, loc: Location) -> &mut T {
 		let index = loc.x + loc.y * self.size.width;

@@ -1,7 +1,5 @@
 #[derive(Clone, Copy)]
 pub enum Terrain {
-	/// This is used for rendering (for a Cell the user hasn't ever seen).
-	// Blank,
 	DeepWater,
 	Ground,
 	ShallowWater,

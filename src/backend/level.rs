@@ -15,9 +15,9 @@ pub struct Level {
 	pub player: Entity,
 	pub character_components: FnvHashMap<Entity, CharacterComponent>,
 	pub position_components: FnvHashMap<Entity, Location>,
+	pub terrain: Vec2d<Terrain>,
 
 	num_entities: usize, // this is the total number of entities that have ever existed
-	terrain: Vec2d<Terrain>,
 }
 
 impl Level {
@@ -35,14 +35,12 @@ impl Level {
 
 		let player = level.new_entity("player");
 		let flags = Flags::<CharacterFlags>::new();
-		level.character_components.insert(
-			player,
-			CharacterComponent::new("player", flags)
-		);
-		level.position_components.insert(
-			player,
-			Location::new(1, 1),
-		);
+		level
+			.character_components
+			.insert(player, CharacterComponent::new("player", flags));
+		level
+			.position_components
+			.insert(player, Location::new(1, 1));
 
 		// Add walls around the outside
 		for x in 0..size.width {
