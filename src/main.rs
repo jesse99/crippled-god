@@ -8,6 +8,8 @@ extern crate structopt;
 mod backend;
 
 use backend::level::Level;
+use backend::location::Location;
+use backend::systems::player_system;
 use slog::Drain;
 use std::fs::OpenOptions;
 use std::str::FromStr;
@@ -56,11 +58,9 @@ fn main() {
 	let app_logger = root_logger.new(o!("version" => env!("CARGO_PKG_VERSION")));
 	info!(app_logger, "started up"; "seed" => options.seed);
 
-	let monster_logger = root_logger.new(o!("name" => "Ay", "level" => "Dungeon #5"));
-	debug!(monster_logger, "woke up"; "reason" => "heard player");
-
-	let mut level = Level::new();
-	let e1 = level.new_entity("player");
-	let e2 = level.new_entity("ay");
-	info!(app_logger, "entities"; "player" => e1, "nps" => e2);
+	let level_logger = root_logger.new(o!());
+	let mut level = Level::new(level_logger);
+	player_system::delta_player_system(&mut level, Location::new(0, 1));
+	player_system::delta_player_system(&mut level, Location::new(0, -1));
+	player_system::delta_player_system(&mut level, Location::new(0, -1));
 }

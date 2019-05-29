@@ -13,7 +13,7 @@ use std::hash::{Hash, Hasher};
 /// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
 /// Note that these are unique across the whole game, not just the current level. Also note that
 /// these are created via Level::new_entity.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Entity {
 	prefix: &'static str, // static so that we can cheaply copy these, TODO: not sure that this will work with serialization
 	id: usize,

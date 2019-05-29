@@ -15,7 +15,6 @@ pub enum Terrain {
 // impl fmt::Debug for Terrain {
 // 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 // 		match *self {
-// 			Terrain::Blank => write!(f, "?"),
 // 			Terrain::DeepWater => write!(f, "w"),
 // 			Terrain::Ground => write!(f, "."),
 // 			Terrain::ShallowWater => write!(f, "~"),
@@ -31,7 +30,6 @@ pub enum Terrain {
 // impl BlocksLOS for Terrain {
 // 	fn blocks_los(&self) -> bool {
 // 		match *self {
-// 			Terrain::Blank => true,
 // 			Terrain::DeepWater => false,
 // 			Terrain::Ground => false,
 // 			Terrain::ShallowWater => false,
@@ -39,3 +37,19 @@ pub enum Terrain {
 // 		}
 // 	}
 // }
+
+impl slog::Value for Terrain {
+	fn serialize(
+		&self,
+		_: &slog::Record<'_>,
+		key: slog::Key,
+		serializer: &mut dyn slog::Serializer,
+	) -> Result<(), slog::Error> {
+		match *self {
+			Terrain::DeepWater => serializer.emit_arguments(key, &format_args!("w")),
+			Terrain::Ground => serializer.emit_arguments(key, &format_args!(".")),
+			Terrain::ShallowWater => serializer.emit_arguments(key, &format_args!("~")),
+			Terrain::Wall => serializer.emit_arguments(key, &format_args!("#")),
+		}
+	}
+}
