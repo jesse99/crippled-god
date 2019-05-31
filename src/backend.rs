@@ -1,11 +1,6 @@
-/// All the game logic is contained in this module.
-pub mod character;
-pub mod entity;
-pub mod flags;
-pub mod level;
-pub mod location;
-pub mod rng;
-pub mod size;
-pub mod systems;
-pub mod terrain;
-pub mod vec2d;
+mod internal;
+
+// TODO: Need to figure out what we should really be exporting.
+pub use self::internal::level::Level;
+pub use self::internal::location::Location;
+pub use self::internal::systems::player_system;

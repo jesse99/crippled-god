@@ -1,11 +1,4 @@
-
-use super::character::{CharacterComponent, CharacterFlags};
-use super::entity::Entity;
-use super::flags::Flags;
-use super::location::Location;
-use super::size::Size;
-use super::terrain::Terrain;
-use super::vec2d::Vec2d;
+use super::*;
 use fnv::FnvHashMap;
 use slog::Logger;
 
@@ -13,7 +6,7 @@ use slog::Logger;
 /// generated all comnponents with a position are removed except for the player and (some) NPCs
 /// near the player.
 pub struct Level {
-	pub player: Entity,
+	pub player: super::Entity,
 	pub character_components: FnvHashMap<Entity, CharacterComponent>,
 	pub position_components: FnvHashMap<Entity, Location>,
 	pub terrain: Vec2d<Terrain>,

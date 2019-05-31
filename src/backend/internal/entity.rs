@@ -2,11 +2,7 @@
 // 1) An index isn't very meaningful in isolation.
 // 2) Speed isn't a huge concern here so the contiguousness of a Vec isn't too important.
 // 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
-use super::character::CharacterComponent;
-use super::location::Location;
-use super::size::Size;
-use super::terrain::Terrain;
-use super::vec2d::Vec2d;
+use super::*;
 use fnv::FnvHashMap;
 use std::hash::{Hash, Hasher};
 

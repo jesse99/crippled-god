@@ -1,5 +1,4 @@
-use super::location::Location;
-use super::size::Size;
+use super::*;
 
 #[derive(Clone)]
 pub struct Vec2d<T> {

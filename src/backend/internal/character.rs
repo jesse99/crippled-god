@@ -1,8 +1,5 @@
 
-use super::flags::Flags;
-use super::location::Location;
-use super::size::Size;
-use super::terrain::Terrain;
+use super::*;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum CharacterFlags {

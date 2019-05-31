@@ -5,11 +5,8 @@ extern crate slog_term;
 //#[macro_use]
 extern crate structopt;
 
-mod backend;
+mod backend::{Level, Location};
 
-use backend::level::Level;
-use backend::location::Location;
-use backend::systems::player_system;
 use slog::Drain;
 use std::fs::OpenOptions;
 use std::str::FromStr;
@@ -60,7 +57,7 @@ fn main() {
 
 	let level_logger = root_logger.new(o!());
 	let mut level = Level::new(level_logger);
-	player_system::delta_player_system(&mut level, Location::new(0, 1));
-	player_system::delta_player_system(&mut level, Location::new(0, -1));
-	player_system::delta_player_system(&mut level, Location::new(0, -1));
+	backend::player_system::delta_player_system(&mut level, Location::new(0, 1));
+	backend::player_system::delta_player_system(&mut level, Location::new(0, -1));
+	backend::player_system::delta_player_system(&mut level, Location::new(0, -1));
 }

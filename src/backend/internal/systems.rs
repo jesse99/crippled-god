@@ -1,9 +1,4 @@
-
-use super::character::CharacterFlags;
-use super::entity::Entity;
-use super::level::Level;
-use super::location::Location;
-use super::terrain::Terrain;
+use super::*;
 
 pub mod move_system {
 	use super::*;
