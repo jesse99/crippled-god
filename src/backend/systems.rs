@@ -41,7 +41,8 @@ pub mod move_system {
 pub mod player_system {
 	use super::*;
 
-	/// Called in response to the user pressing an arrow key. Several things can happen here including:
+	/// Called in response to the user pressing an arrow or directional key. Several things can
+	/// happen here including:
 	/// 1) If current location + delta doesn't have an NPC and is a compatible terrain then move the
 	/// player there.
 	/// 2) If that location does have an NPC then attack it.
