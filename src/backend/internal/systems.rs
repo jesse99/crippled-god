@@ -5,7 +5,10 @@ pub mod move_system {
 
 	/// Can be used to move arbitrary distances (e.g. teleport or blink).
 	pub fn move_to(level: &mut Level, entity: Entity, loc: Location) {
-		level.position_components.insert(entity, loc);
+		if let Some(old_loc) = level.position_components.insert(entity, loc) {
+			level.cells.get_mut(old_loc).character = None;
+		}
+		level.cells.get_mut(loc).character = Some(entity);
 		debug!(level.logger, "moved"; "name" => entity, "new_loc" => loc);
 	}
 

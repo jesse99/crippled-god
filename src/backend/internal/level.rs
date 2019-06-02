@@ -43,9 +43,11 @@ impl Level {
 		level
 			.character_components
 			.insert(player, CharacterComponent::new("player", flags));
+		let player_loc = Location::new(1, 1);
 		level
 			.position_components
-			.insert(player, Location::new(1, 1));
+			.insert(player, player_loc);
+		level.cells.get_mut(player_loc).character = Some(player);
 
 		// Add walls around the outside
 		for x in 0..size.width {

@@ -27,20 +27,19 @@ pub fn run(root_logger: &Logger, seed: u64) {
 	loop {
 		render_game(terminal_size, &mut stdout, &mut game);
 		// if game.players_time_slice() {
-			if let Some(c) = key_iter.next() {
-				let cc = c.unwrap();
-				if let Some(action) = map_action(cc) {
-					game.dispatch_action(action);
-					if !game.running() {
-						break;
-					}
-				} else {
-						warn!(root_logger, "user pressed"; "key" => format!("{:?}", cc));
-						let _ = write!(stdout, "\x07");
-						stdout.flush().unwrap();
+		if let Some(c) = key_iter.next() {
+			let cc = c.unwrap();
+			if let Some(action) = map_action(cc) {
+				game.dispatch_action(action);
+				if !game.running() {
+					break;
 				}
+			} else {
+				warn!(root_logger, "user pressed"; "key" => format!("{:?}", cc));
+				let _ = write!(stdout, "\x07");
+				stdout.flush().unwrap();
 			}
-		// }
+		}
 	}
 	// save_game(&mut stdout, &game);
 	restore();
@@ -75,6 +74,7 @@ fn map_action(key: termion::event::Key) -> Option<PlayerAction> {
 		termion::event::Key::Right => Some(PlayerAction::DeltaEast),
 		termion::event::Key::Up => Some(PlayerAction::DeltaNorth),
 		termion::event::Key::Down => Some(PlayerAction::DeltaSouth),
+		termion::event::Key::Char('q') => Some(PlayerAction::Quit),
 		_ => None,
 	}
 }

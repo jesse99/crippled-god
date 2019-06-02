@@ -4,10 +4,10 @@ use fnv::FnvHashMap;
 use slog::Logger;
 use std::hash::{Hash, Hasher};
 
-use internal::vec2d::Vec2d;
+
 use internal::level::Level;
 use internal::systems::player_system;
-
+use internal::vec2d::Vec2d;
 pub use self::internal::entity::Entity;
 // pub use self::internal::level::Level;
 pub use self::internal::location::Location;
@@ -19,7 +19,7 @@ pub use self::internal::terrain::Terrain;
 pub struct Tile {
 	/// If true then the tile is currently within the player's field of view.
 	/// If false then the tile state is as it was when the player last saw it.
-	pub visible: bool,	
+	pub visible: bool,
 
 	/// Player or NPC.
 	pub character: Option<Entity>,
@@ -45,9 +45,13 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new(logger: Logger) -> Game {	// TODO: should be taking a reference to a parent logger
+	pub fn new(logger: Logger) -> Game {
+		// TODO: should be taking a reference to a parent logger
 		let level = Level::with_logger(logger);
-		Game{level, running: true}
+		Game {
+			level,
+			running: true,
+		}
 	}
 
 	pub fn running(&self) -> bool {
@@ -65,14 +69,30 @@ impl Game {
 	pub fn dispatch_action(&mut self, action: PlayerAction) {
 		assert!(self.running);
 		match action {
-			PlayerAction::DeltaEast => player_system::delta_player_system(&mut self.level, Location::new(-1, 0)),
-			PlayerAction::DeltaNorth => player_system::delta_player_system(&mut self.level, Location::new(0, -1)),
-			PlayerAction::DeltaNorthEast => player_system::delta_player_system(&mut self.level, Location::new(-1, -1)),
-			PlayerAction::DeltaNorthWest => player_system::delta_player_system(&mut self.level, Location::new(1, -1)),
-			PlayerAction::DeltaSouth => player_system::delta_player_system(&mut self.level, Location::new(0, 1)),
-			PlayerAction::DeltaSouthEast => player_system::delta_player_system(&mut self.level, Location::new(1, 1)),
-			PlayerAction::DeltaSouthWest => player_system::delta_player_system(&mut self.level, Location::new(-1, 1)),
-			PlayerAction::DeltaWest => player_system::delta_player_system(&mut self.level, Location::new(-1, 0)),
+			PlayerAction::DeltaEast => {
+				player_system::delta_player_system(&mut self.level, Location::new(1, 0))
+			}
+			PlayerAction::DeltaNorth => {
+				player_system::delta_player_system(&mut self.level, Location::new(0, -1))
+			}
+			PlayerAction::DeltaNorthEast => {
+				player_system::delta_player_system(&mut self.level, Location::new(-1, -1))
+			}
+			PlayerAction::DeltaNorthWest => {
+				player_system::delta_player_system(&mut self.level, Location::new(1, -1))
+			}
+			PlayerAction::DeltaSouth => {
+				player_system::delta_player_system(&mut self.level, Location::new(0, 1))
+			}
+			PlayerAction::DeltaSouthEast => {
+				player_system::delta_player_system(&mut self.level, Location::new(1, 1))
+			}
+			PlayerAction::DeltaSouthWest => {
+				player_system::delta_player_system(&mut self.level, Location::new(-1, 1))
+			}
+			PlayerAction::DeltaWest => {
+				player_system::delta_player_system(&mut self.level, Location::new(-1, 0))
+			}
 			PlayerAction::Quit => self.running = false,
 		}
 	}
@@ -81,7 +101,11 @@ impl Game {
 		// TODO:
 		// return the visible cells
 		// return cells that were visible but are not now
-		let player_loc = *(self.level.position_components.get(&self.level.player).unwrap());
+		let player_loc = *(self
+			.level
+			.position_components
+			.get(&self.level.player)
+			.unwrap());
 
 		let mut tiles = Vec2d::new(screen_size, Game::DEFAULT_TILE);
 		let start_x = player_loc.x - screen_size.width / 2;
@@ -91,11 +115,14 @@ impl Game {
 				let in_loc = Location::new(start_x + out_x, start_y + out_y);
 				if in_loc.x >= 0
 					&& in_loc.x < self.size().width
-					&& in_loc.y >= 0
-					&& in_loc.y < self.size().height
+					&& in_loc.y >= 0 && in_loc.y < self.size().height
 				{
 					let cell = self.level.cells.get(in_loc);
-					let tile = Tile {visible: true, character: cell.character, terrain: cell.terrain};
+					let tile = Tile {
+						visible: true,
+						character: cell.character,
+						terrain: cell.terrain,
+					};
 
 					let out_loc = Location::new(out_x, out_y);
 					tiles.set(out_loc, tile);
