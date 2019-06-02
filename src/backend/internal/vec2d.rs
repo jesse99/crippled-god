@@ -21,10 +21,10 @@ impl<T: Clone> Vec2d<T> {
 		self.size
 	}
 
-	// pub fn set(&mut self, loc: Location, value: T) {
-	// 	let index = loc.x + loc.y * self.size.width;
-	// 	self.elements[index as usize] = value;
-	// }
+	pub fn set(&mut self, loc: Location, value: T) {
+		let index = loc.x + loc.y * self.size.width;
+		self.elements[index as usize] = value;
+	}
 
 	pub fn get(&self, loc: Location) -> &T {
 		let index = loc.x + loc.y * self.size.width;

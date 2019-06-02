@@ -4,9 +4,12 @@ extern crate slog_async;
 extern crate slog_term;
 //#[macro_use]
 extern crate structopt;
+extern crate termion;
 
-mod backend::{Level, Location};
+mod backend;
+mod terminal;
 
+// use backend::{Level, Location};
 use slog::Drain;
 use std::fs::OpenOptions;
 use std::str::FromStr;
@@ -55,9 +58,5 @@ fn main() {
 	let app_logger = root_logger.new(o!("version" => env!("CARGO_PKG_VERSION")));
 	info!(app_logger, "started up"; "seed" => options.seed);
 
-	let level_logger = root_logger.new(o!());
-	let mut level = Level::new(level_logger);
-	backend::player_system::delta_player_system(&mut level, Location::new(0, 1));
-	backend::player_system::delta_player_system(&mut level, Location::new(0, -1));
-	backend::player_system::delta_player_system(&mut level, Location::new(0, -1));
+	terminal::run(&root_logger, options.seed);
 }

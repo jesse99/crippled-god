@@ -2,31 +2,40 @@ use super::*;
 use fnv::FnvHashMap;
 use slog::Logger;
 
+#[derive(Clone)]
+pub struct Cell {
+	pub terrain: Terrain,
+	pub character: Option<Entity>,
+	// pub objects: Vec<Entity>,		
+}
+
 /// This contains all the data associated with the current level. Note that when a new level is
 /// generated all comnponents with a position are removed except for the player and (some) NPCs
 /// near the player.
 pub struct Level {
 	pub player: super::Entity,
 	pub character_components: FnvHashMap<Entity, CharacterComponent>,
-	pub position_components: FnvHashMap<Entity, Location>,
-	pub terrain: Vec2d<Terrain>,
+	pub position_components: FnvHashMap<Entity, Location>,		// TODO: do we need a map for the opposite direction?
+	pub cells: Vec2d<Cell>,
 	pub logger: Logger,
 
 	num_entities: usize, // this is the total number of entities that have ever existed
 }
 
+// TODO: add an invariant for debug builds
 impl Level {
 	/// Creates a new level with just a player component.
-	pub fn new(logger: Logger) -> Level {
+	pub fn with_logger(logger: Logger) -> Level {
 		// TODO: should this be public?
 		let size = Size::new(64, 32);
 		let player = Entity::internal_new("player", 1);
+		let default_cell = Cell{terrain: Terrain::Ground, character: None};
 		let mut level = Level {
 			player,
 			num_entities: 1,
 			character_components: FnvHashMap::default(),
 			position_components: FnvHashMap::default(),
-			terrain: Vec2d::new(size, Terrain::Ground),
+			cells: Vec2d::new(size, default_cell),
 			logger,
 		};
 
@@ -77,7 +86,7 @@ impl Level {
 	}
 
 	fn set_terrain(&mut self, x: i32, y: i32, terrain: Terrain) {
-		let cell = self.terrain.get_mut(Location::new(x, y));
-		*cell = terrain;
+		let cell = self.cells.get_mut(Location::new(x, y));
+		cell.terrain = terrain;
 	}
 }

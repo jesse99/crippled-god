@@ -1,5 +1,8 @@
 #[derive(Clone, Copy)]
 pub enum Terrain {
+	/// This is only used for rendering. It's a cell that the user has not ever seen (and may not
+	/// actually exist).
+	Blank,
 	DeepWater,
 	Ground,
 	ShallowWater,
@@ -46,6 +49,7 @@ impl slog::Value for Terrain {
 		serializer: &mut dyn slog::Serializer,
 	) -> Result<(), slog::Error> {
 		match *self {
+			Terrain::Blank => serializer.emit_arguments(key, &format_args!("?")),
 			Terrain::DeepWater => serializer.emit_arguments(key, &format_args!("w")),
 			Terrain::Ground => serializer.emit_arguments(key, &format_args!(".")),
 			Terrain::ShallowWater => serializer.emit_arguments(key, &format_args!("~")),

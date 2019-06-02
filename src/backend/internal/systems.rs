@@ -16,12 +16,13 @@ pub mod move_system {
 	pub fn valid_loc(level: &Level, loc: Location) -> bool {
 		loc.x >= 0
 			&& loc.y >= 0
-			&& loc.x < level.terrain.size().width
-			&& loc.y < level.terrain.size().height
+			&& loc.x < level.cells.size().width
+			&& loc.y < level.cells.size().height
 	}
 
 	pub fn compatible_terrain(level: &Level, entity: Entity, loc: Location) -> bool {
-		match level.terrain.get(loc) {
+		match level.cells.get(loc).terrain {
+			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater => {
 				let ch = level.character_components.get(&entity).unwrap();
 				ch.flags.has(CharacterFlags::Airborne) || ch.flags.has(CharacterFlags::Aquatic)
@@ -56,7 +57,7 @@ pub mod player_system {
 		if move_system::can_move_to(level, level.player, loc) {
 			move_system::move_to(level, level.player, loc);
 		} else {
-			let terrain = level.terrain.get(loc);
+			let terrain = level.cells.get(loc).terrain;
 			debug!(level.logger, "player can't move"; "new_loc" => loc, "terrain" => terrain);
 		}
 	}
