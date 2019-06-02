@@ -1,4 +1,5 @@
 use super::*;
+use std::fmt;
 
 #[derive(Clone)]
 pub struct Vec2d<T> {
@@ -44,15 +45,15 @@ impl<T: Clone> Vec2d<T> {
 	}
 
 	// More elegant to use a mutable iterator here but that requires an unsafe block, see https://users.rust-lang.org/t/implementing-an-iterator-of-mutable-references/8671
-	// pub fn apply<F: Fn(Location, &mut T)>(&mut self, mutate: F) {
-	// 	for i in 0..self.elements.len() {
-	// 		let x = (i % self.size.width as usize) as i32;
-	// 		let y = (i / self.size.width as usize) as i32;
-	// 		let loc = Location::new(x, y);
-	// 		let val = self.elements.get_mut(i);
-	// 		mutate(loc, val.unwrap());
-	// 	}
-	// }
+	pub fn apply<F: Fn(Location, &mut T)>(&mut self, mutate: F) {
+		for i in 0..self.elements.len() {
+			let x = (i % self.size.width as usize) as i32;
+			let y = (i / self.size.width as usize) as i32;
+			let loc = Location::new(x, y);
+			let val = self.elements.get_mut(i);
+			mutate(loc, val.unwrap());
+		}
+	}
 }
 
 impl<'a, T> Iterator for Vec2dIter<'a, T> {
@@ -71,6 +72,22 @@ impl<'a, T> Iterator for Vec2dIter<'a, T> {
 		} else {
 			None
 		}
+	}
+}
+
+impl<T: Clone + fmt::Display> fmt::Display for Vec2d<T> {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		writeln!(f)?;
+		for y in 0..self.size.height {
+			for x in 0..self.size.width {
+				let loc = Location::new(x, y);
+				write!(f, "{}", self.get(loc))?;
+			}
+			if y + 1 < self.size.height {
+				writeln!(f)?;
+			}
+		}
+		write!(f, "")
 	}
 }
 

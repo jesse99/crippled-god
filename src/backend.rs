@@ -1,13 +1,15 @@
 mod internal;
 
-use fnv::FnvHashMap;
+use fnv::{FnvHashMap, FnvHashSet};
 use slog::Logger;
 use std::hash::{Hash, Hasher};
 
-
 use internal::level::Level;
+use internal::pov::POV;
 use internal::systems::player_system;
+use internal::terrain::BlocksLOS;
 use internal::vec2d::Vec2d;
+
 pub use self::internal::entity::Entity;
 // pub use self::internal::level::Level;
 pub use self::internal::location::Location;
@@ -41,6 +43,7 @@ pub enum PlayerAction {
 
 pub struct Game {
 	level: Level,
+	tiles: Vec2d<Tile>,
 	running: bool,
 }
 
@@ -48,8 +51,10 @@ impl Game {
 	pub fn new(logger: Logger) -> Game {
 		// TODO: should be taking a reference to a parent logger
 		let level = Level::with_logger(logger);
+		let size = level.cells.size();
 		Game {
 			level,
+			tiles: Vec2d::new(size, Game::DEFAULT_TILE),
 			running: true,
 		}
 	}
@@ -97,39 +102,104 @@ impl Game {
 		}
 	}
 
-	pub fn tiles(&self, screen_size: Size) -> Vec2d<Tile> {
-		// TODO:
-		// return the visible cells
-		// return cells that were visible but are not now
-		let player_loc = *(self
-			.level
-			.position_components
-			.get(&self.level.player)
-			.unwrap());
+	/// screen_size is the number of tiles the renderer wants to render. This can be
+	/// arbitrarily large in which case the user will be able to see more of what he
+	/// saw earlier (tho that info may be outdated). It can also be arbitrarily small
+	/// though in that case the user may not be able to see all the tiles the player can.
+	pub fn tiles(&mut self, screen_size: Size) -> Vec2d<Tile> {
+		self.update_tiles();
+		self.screen_tiles(screen_size)
 
+		// let player_loc = *(self
+		// 	.level
+		// 	.position_components
+		// 	.get(&self.level.player)
+		// 	.unwrap());
+
+		// let mut tiles = Vec2d::new(screen_size, Game::DEFAULT_TILE);
+		// let start_x = player_loc.x - screen_size.width / 2;
+		// let start_y = player_loc.y - screen_size.height / 2;
+		// for out_y in 0..screen_size.height {
+		// 	for out_x in 0..screen_size.width {
+		// 		let in_loc = Location::new(start_x + out_x, start_y + out_y);
+		// 		if in_loc.x >= 0
+		// 			&& in_loc.x < self.size().width
+		// 			&& in_loc.y >= 0 && in_loc.y < self.size().height
+		// 		{
+		// 			let cell = self.level.cells.get(in_loc);
+		// 			let tile = Tile {
+		// 				visible: true,
+		// 				character: cell.character,
+		// 				terrain: cell.terrain,
+		// 			};
+
+		// 			let out_loc = Location::new(out_x, out_y);
+		// 			tiles.set(out_loc, tile);
+		// 		}
+		// 	}
+		// }
+
+		// tiles
+	}
+
+	// Updates the tiles that are within the player's LOS.
+	fn update_tiles(&mut self) {
+		// The borrow checker won't allow us to grab a mutable reference to tiles in one closure and
+		// another reference in the second closure so we need to figure out what we need to do before
+		// we call apply.
+		let player_loc = *(self.level.position_components.get(&self.level.player).unwrap());
+		let mut visible = FnvHashMap::default();
+		{
+			let mut pov = POV {
+				start: player_loc,
+				size: self.size(),
+				radius: 10, // TODO: depends on race?
+				visit_tile: |loc| {
+					let cell = self.level.cells.get(loc);
+					visible.insert(loc, cell.clone());
+				},
+				blocks_los: |loc| {
+					let terrain = self.level.cells.get(loc).terrain;
+					terrain.blocks_los()
+				}
+			};
+
+			pov.visit();
+		}
+
+		let player = self.level.player;
+		self.tiles.apply(|loc, tile| {
+			if let Some(cell) = visible.get(&loc) {
+				tile.terrain = cell.terrain;
+				// tile.char_name = *ch;
+				tile.character = if loc == player_loc {Some(player)} else {None};
+				tile.visible = true;
+			} else {
+				tile.visible = false;
+			}
+		})
+	}
+
+	// Returns the subset of tiles that are rendered on the screen.
+	fn screen_tiles(&self, screen_size: Size) -> Vec2d<Tile> {
 		let mut tiles = Vec2d::new(screen_size, Game::DEFAULT_TILE);
+		let player_loc = *(self.level.position_components.get(&self.level.player).unwrap());
 		let start_x = player_loc.x - screen_size.width / 2;
 		let start_y = player_loc.y - screen_size.height / 2;
 		for out_y in 0..screen_size.height {
-			for out_x in 0..screen_size.width {
+				for out_x in 0..screen_size.width {
 				let in_loc = Location::new(start_x + out_x, start_y + out_y);
 				if in_loc.x >= 0
-					&& in_loc.x < self.size().width
-					&& in_loc.y >= 0 && in_loc.y < self.size().height
+						&& in_loc.x < self.tiles.size().width
+						&& in_loc.y >= 0
+						&& in_loc.y < self.tiles.size().height
 				{
-					let cell = self.level.cells.get(in_loc);
-					let tile = Tile {
-						visible: true,
-						character: cell.character,
-						terrain: cell.terrain,
-					};
-
-					let out_loc = Location::new(out_x, out_y);
-					tiles.set(out_loc, tile);
+						let tile = self.tiles.get(in_loc);
+						let out_loc = Location::new(out_x, out_y);
+						tiles.set(out_loc, tile.clone());
 				}
-			}
+				}
 		}
-
 		tiles
 	}
 

@@ -26,20 +26,21 @@ pub enum Terrain {
 // 	}
 // }
 
-// pub trait BlocksLOS {
-// 	fn blocks_los(&self) -> bool; // TODO: should probably take something like a race
-// }
+pub trait BlocksLOS {
+	fn blocks_los(&self) -> bool; // TODO: should probably take something like a race
+}
 
-// impl BlocksLOS for Terrain {
-// 	fn blocks_los(&self) -> bool {
-// 		match *self {
-// 			Terrain::DeepWater => false,
-// 			Terrain::Ground => false,
-// 			Terrain::ShallowWater => false,
-// 			Terrain::Wall => true,
-// 		}
-// 	}
-// }
+impl BlocksLOS for Terrain {
+	fn blocks_los(&self) -> bool {
+		match *self {
+			Terrain::Blank => panic!("Blank should only be used for rendering"),
+			Terrain::DeepWater => false,
+			Terrain::Ground => false,
+			Terrain::ShallowWater => false,
+			Terrain::Wall => true,
+		}
+	}
+}
 
 impl slog::Value for Terrain {
 	fn serialize(
