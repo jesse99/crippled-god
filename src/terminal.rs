@@ -58,8 +58,7 @@ fn restore() {
 }
 
 fn create_game(root_logger: &Logger) -> Game {
-	let game_logger = root_logger.new(o!());
-	Game::new(game_logger)
+	Game::new(root_logger)
 }
 
 fn render_game(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {

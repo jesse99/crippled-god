@@ -1,3 +1,6 @@
+
+use super::super::Game;
+use super::*;
 #[derive(Clone, Copy)]
 pub enum Terrain {
 	/// This is only used for rendering. It's a cell that the user has not ever seen (and may not
@@ -38,6 +41,28 @@ impl BlocksLOS for Terrain {
 			Terrain::Ground => false,
 			Terrain::ShallowWater => false,
 			Terrain::Wall => true,
+		}
+	}
+}
+
+impl MessageFor for Terrain {
+	fn message_for(&self, game: &Game, entity: Entity) -> Option<Message> {
+		if game.is_player(entity) {
+			match *self {
+				Terrain::Blank => panic!("Blank should only be used for rendering"),
+				Terrain::DeepWater => Some(Message {
+					topic: Topic::NonGamePlay,
+					text: "That water is too deep.".to_string(),
+				}),
+				Terrain::Ground => None,
+				Terrain::ShallowWater => Some(Message {
+					topic: Topic::PlayerIsImpaired,
+					text: "You splash into the water.".to_string(),
+				}), // TODO: this should have some impairment, probably noise and slower movement
+				Terrain::Wall => None,
+			}
+		} else {
+			None
 		}
 	}
 }

@@ -6,7 +6,7 @@ use slog::Logger;
 pub struct Cell {
 	pub terrain: Terrain,
 	pub character: Option<Entity>,
-	// pub objects: Vec<Entity>,		
+	// pub objects: Vec<Entity>,
 }
 
 /// This contains all the data associated with the current level. Note that when a new level is
@@ -15,7 +15,7 @@ pub struct Cell {
 pub struct Level {
 	pub player: super::Entity,
 	pub character_components: FnvHashMap<Entity, CharacterComponent>,
-	pub position_components: FnvHashMap<Entity, Location>,		// TODO: do we need a map for the opposite direction?
+	pub position_components: FnvHashMap<Entity, Location>, // TODO: do we need a map for the opposite direction?
 	pub cells: Vec2d<Cell>,
 	pub logger: Logger,
 
@@ -25,18 +25,23 @@ pub struct Level {
 // TODO: add an invariant for debug builds
 impl Level {
 	/// Creates a new level with just a player component.
-	pub fn with_logger(logger: Logger) -> Level {
+	pub fn with_logger(game_logger: &Logger) -> Level {
 		// TODO: should this be public?
+		let level_logger = game_logger.new(o!());
+
 		let size = Size::new(64, 32);
 		let player = Entity::internal_new("player", 1);
-		let default_cell = Cell{terrain: Terrain::Ground, character: None};
+		let default_cell = Cell {
+			terrain: Terrain::Ground,
+			character: None,
+		};
 		let mut level = Level {
 			player,
 			num_entities: 1,
 			character_components: FnvHashMap::default(),
 			position_components: FnvHashMap::default(),
 			cells: Vec2d::new(size, default_cell),
-			logger,
+			logger: level_logger,
 		};
 
 		let flags = Flags::<CharacterFlags>::new();
@@ -44,9 +49,7 @@ impl Level {
 			.character_components
 			.insert(player, CharacterComponent::new("player", flags));
 		let player_loc = Location::new(1, 1);
-		level
-			.position_components
-			.insert(player, player_loc);
+		level.position_components.insert(player, player_loc);
 		level.cells.get_mut(player_loc).character = Some(player);
 
 		// Add walls around the outside

@@ -1,15 +1,16 @@
-use super::*;
 
+use super::super::Game;
+use super::*;
 pub mod move_system {
 	use super::*;
 
 	/// Can be used to move arbitrary distances (e.g. teleport or blink).
-	pub fn move_to(level: &mut Level, entity: Entity, loc: Location) {
-		if let Some(old_loc) = level.position_components.insert(entity, loc) {
-			level.cells.get_mut(old_loc).character = None;
+	pub fn move_to(game: &mut Game, entity: Entity, loc: Location) {
+		if let Some(old_loc) = game.level.position_components.insert(entity, loc) {
+			game.level.cells.get_mut(old_loc).character = None;
 		}
-		level.cells.get_mut(loc).character = Some(entity);
-		debug!(level.logger, "moved"; "name" => entity, "new_loc" => loc);
+		game.level.cells.get_mut(loc).character = Some(entity);
+		// debug!(game.level.logger, "moved"; "name" => entity, "new_loc" => loc);
 	}
 
 	pub fn can_move_to(level: &Level, entity: Entity, loc: Location) -> bool {
@@ -47,7 +48,7 @@ pub mod player_system {
 	/// 2) If that location does have an NPC then attack it.
 	/// 3) Manipulate an object, e.g. open or close a door.
 	/// 4) Do nothing, e.g. when trying to move into a wall.
-	pub fn delta_player_system(level: &mut Level, delta: Location) {
+	pub fn delta_player_system(game: &mut Game, delta: Location) {
 		assert!(
 			delta.x >= -1
 				&& delta.x <= 1 && delta.y >= -1
@@ -56,12 +57,17 @@ pub mod player_system {
 			delta
 		);
 
-		let loc = *(level.position_components.get(&level.player).unwrap()) + delta;
-		if move_system::can_move_to(level, level.player, loc) {
-			move_system::move_to(level, level.player, loc);
-		} else {
-			let terrain = level.cells.get(loc).terrain;
-			debug!(level.logger, "player can't move"; "new_loc" => loc, "terrain" => terrain);
+		let loc = *(game
+			.level
+			.position_components
+			.get(&game.level.player)
+			.unwrap()) + delta;
+		let terrain = game.level.cells.get(loc).terrain;
+		if move_system::can_move_to(&game.level, game.level.player, loc) {
+			move_system::move_to(game, game.level.player, loc);
+		}
+		if let Some(message) = terrain.message_for(game, game.level.player) {
+			game.add_message(message);
 		}
 	}
 }

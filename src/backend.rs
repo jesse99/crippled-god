@@ -1,8 +1,9 @@
 mod internal;
 
-use fnv::{FnvHashMap, FnvHashSet};
+use fnv::{FnvHashMap};
 use slog::Logger;
-use std::hash::{Hash, Hasher};
+use std::collections::VecDeque;
+// use std::hash::{Hash, Hasher};
 
 use internal::level::Level;
 use internal::pov::POV;
@@ -13,6 +14,7 @@ use internal::vec2d::Vec2d;
 pub use self::internal::entity::Entity;
 // pub use self::internal::level::Level;
 pub use self::internal::location::Location;
+pub use self::internal::message::{Message, Topic};
 pub use self::internal::size::Size;
 // pub use self::internal::systems::player_system;
 pub use self::internal::terrain::Terrain;
@@ -44,18 +46,32 @@ pub enum PlayerAction {
 pub struct Game {
 	level: Level,
 	tiles: Vec2d<Tile>,
+	messages: VecDeque<Message>,
 	running: bool,
+	logger: Logger,
 }
 
 impl Game {
-	pub fn new(logger: Logger) -> Game {
-		// TODO: should be taking a reference to a parent logger
-		let level = Level::with_logger(logger);
+	pub fn new(root_logger: &Logger) -> Game {
+		let game_logger = root_logger.new(o!());
+		let level = Level::with_logger(&game_logger);
 		let size = level.cells.size();
+		
+		let mut messages = VecDeque::new();
+		const VERSION: &str = env!("CARGO_PKG_VERSION");
+		let greeting = format!("Welcome to the Crippled God version {}", VERSION);
+		messages.push_back(Message {
+			topic: Topic::NonGamePlay,
+			text: greeting.clone(),
+//	text: greeting.to_string(),
+		});
+
 		Game {
 			level,
 			tiles: Vec2d::new(size, Game::DEFAULT_TILE),
+			messages,
 			running: true,
+			logger: game_logger,
 		}
 	}
 
@@ -71,32 +87,47 @@ impl Game {
 		entity == self.level.player
 	}
 
+	pub fn messages(&self) -> &VecDeque<Message> {
+		&self.messages
+	}
+
+	pub fn add_message(&mut self, message: Message) {
+		info!(self.logger, "{}", message.text);
+		self.messages.push_back(message);
+
+		let scroll_back = 100;
+		while self.messages.len() > scroll_back {
+//		while self.messages.len() > self.config.scroll_back {
+			self.messages.pop_front();
+		}
+	}
+
 	pub fn dispatch_action(&mut self, action: PlayerAction) {
 		assert!(self.running);
 		match action {
 			PlayerAction::DeltaEast => {
-				player_system::delta_player_system(&mut self.level, Location::new(1, 0))
+				player_system::delta_player_system(self, Location::new(1, 0))
 			}
 			PlayerAction::DeltaNorth => {
-				player_system::delta_player_system(&mut self.level, Location::new(0, -1))
+				player_system::delta_player_system(self, Location::new(0, -1))
 			}
 			PlayerAction::DeltaNorthEast => {
-				player_system::delta_player_system(&mut self.level, Location::new(-1, -1))
+				player_system::delta_player_system(self, Location::new(-1, -1))
 			}
 			PlayerAction::DeltaNorthWest => {
-				player_system::delta_player_system(&mut self.level, Location::new(1, -1))
+				player_system::delta_player_system(self, Location::new(1, -1))
 			}
 			PlayerAction::DeltaSouth => {
-				player_system::delta_player_system(&mut self.level, Location::new(0, 1))
+				player_system::delta_player_system(self, Location::new(0, 1))
 			}
 			PlayerAction::DeltaSouthEast => {
-				player_system::delta_player_system(&mut self.level, Location::new(1, 1))
+				player_system::delta_player_system(self, Location::new(1, 1))
 			}
 			PlayerAction::DeltaSouthWest => {
-				player_system::delta_player_system(&mut self.level, Location::new(-1, 1))
+				player_system::delta_player_system(self, Location::new(-1, 1))
 			}
 			PlayerAction::DeltaWest => {
-				player_system::delta_player_system(&mut self.level, Location::new(-1, 0))
+				player_system::delta_player_system(self, Location::new(-1, 0))
 			}
 			PlayerAction::Quit => self.running = false,
 		}
