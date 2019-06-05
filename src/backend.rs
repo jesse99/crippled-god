@@ -1,6 +1,6 @@
 mod internal;
 
-use fnv::{FnvHashMap};
+use fnv::FnvHashMap;
 use slog::Logger;
 use std::collections::VecDeque;
 // use std::hash::{Hash, Hasher};
@@ -56,14 +56,14 @@ impl Game {
 		let game_logger = root_logger.new(o!());
 		let level = Level::with_logger(&game_logger);
 		let size = level.cells.size();
-		
+
 		let mut messages = VecDeque::new();
 		const VERSION: &str = env!("CARGO_PKG_VERSION");
 		let greeting = format!("Welcome to the Crippled God version {}", VERSION);
 		messages.push_back(Message {
 			topic: Topic::NonGamePlay,
 			text: greeting.clone(),
-//	text: greeting.to_string(),
+			//	text: greeting.to_string(),
 		});
 
 		Game {
@@ -97,7 +97,7 @@ impl Game {
 
 		let scroll_back = 100;
 		while self.messages.len() > scroll_back {
-//		while self.messages.len() > self.config.scroll_back {
+			//		while self.messages.len() > self.config.scroll_back {
 			self.messages.pop_front();
 		}
 	}
@@ -112,10 +112,10 @@ impl Game {
 				player_system::delta_player_system(self, Location::new(0, -1))
 			}
 			PlayerAction::DeltaNorthEast => {
-				player_system::delta_player_system(self, Location::new(-1, -1))
+				player_system::delta_player_system(self, Location::new(1, -1))
 			}
 			PlayerAction::DeltaNorthWest => {
-				player_system::delta_player_system(self, Location::new(1, -1))
+				player_system::delta_player_system(self, Location::new(-1, -1))
 			}
 			PlayerAction::DeltaSouth => {
 				player_system::delta_player_system(self, Location::new(0, 1))
@@ -178,7 +178,11 @@ impl Game {
 		// The borrow checker won't allow us to grab a mutable reference to tiles in one closure and
 		// another reference in the second closure so we need to figure out what we need to do before
 		// we call apply.
-		let player_loc = *(self.level.position_components.get(&self.level.player).unwrap());
+		let player_loc = *(self
+			.level
+			.position_components
+			.get(&self.level.player)
+			.unwrap());
 		let mut visible = FnvHashMap::default();
 		{
 			let mut pov = POV {
@@ -192,7 +196,7 @@ impl Game {
 				blocks_los: |loc| {
 					let terrain = self.level.cells.get(loc).terrain;
 					terrain.blocks_los()
-				}
+				},
 			};
 
 			pov.visit();
@@ -203,7 +207,11 @@ impl Game {
 			if let Some(cell) = visible.get(&loc) {
 				tile.terrain = cell.terrain;
 				// tile.char_name = *ch;
-				tile.character = if loc == player_loc {Some(player)} else {None};
+				tile.character = if loc == player_loc {
+					Some(player)
+				} else {
+					None
+				};
 				tile.visible = true;
 			} else {
 				tile.visible = false;
@@ -214,22 +222,25 @@ impl Game {
 	// Returns the subset of tiles that are rendered on the screen.
 	fn screen_tiles(&self, screen_size: Size) -> Vec2d<Tile> {
 		let mut tiles = Vec2d::new(screen_size, Game::DEFAULT_TILE);
-		let player_loc = *(self.level.position_components.get(&self.level.player).unwrap());
+		let player_loc = *(self
+			.level
+			.position_components
+			.get(&self.level.player)
+			.unwrap());
 		let start_x = player_loc.x - screen_size.width / 2;
 		let start_y = player_loc.y - screen_size.height / 2;
 		for out_y in 0..screen_size.height {
-				for out_x in 0..screen_size.width {
+			for out_x in 0..screen_size.width {
 				let in_loc = Location::new(start_x + out_x, start_y + out_y);
 				if in_loc.x >= 0
-						&& in_loc.x < self.tiles.size().width
-						&& in_loc.y >= 0
-						&& in_loc.y < self.tiles.size().height
+					&& in_loc.x < self.tiles.size().width
+					&& in_loc.y >= 0 && in_loc.y < self.tiles.size().height
 				{
-						let tile = self.tiles.get(in_loc);
-						let out_loc = Location::new(out_x, out_y);
-						tiles.set(out_loc, tile.clone());
+					let tile = self.tiles.get(in_loc);
+					let out_loc = Location::new(out_x, out_y);
+					tiles.set(out_loc, tile.clone());
 				}
-				}
+			}
 		}
 		tiles
 	}
