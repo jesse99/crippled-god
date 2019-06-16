@@ -1,5 +1,5 @@
 //! The part of the terminal that shows the terrain, the position of the player, etc.
-use super::backend::{self, Game, Size};
+use super::backend::{Game, Size};
 use super::view::View;
 use std;
 use std::io::Write;
@@ -7,11 +7,7 @@ use termion;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn render_map(
-	terminal_size: Size,
-	stdout: &mut RawTerminal,
-	game: &mut Game,
-) {
+pub fn render_map(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {
 	let map_size = Size::new(
 		terminal_size.width,
 		terminal_size.height,

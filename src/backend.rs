@@ -91,13 +91,17 @@ impl Game {
 	}
 
 	pub fn get_species(&self, entity: Entity) -> Species {
-		let c = self.level.character_components.get(&entity).expect(&format!("expeted to find {:?}", entity));
+		let c = self
+			.level
+			.character_components
+			.get(&entity)
+			.expect(&format!("expeted to find {:?}", entity));
 		c.species
 	}
 
-	pub fn messages(&self) -> &VecDeque<Message> {
-		&self.messages
-	}
+	// pub fn messages(&self) -> &VecDeque<Message> {
+	// 	&self.messages
+	// }
 
 	pub fn add_message(&mut self, message: Message) {
 		info!(self.logger, "{}", message.text);

@@ -15,15 +15,15 @@ impl<T: Copy + Eq + Hash> Flags<T> {
 		}
 	}
 
-	pub fn add(&mut self, flag: T) {
-		if !self.has(flag) {
-			self.flags.insert(flag);
-		}
-	}
+	// pub fn add(&mut self, flag: T) {
+	// 	if !self.has(flag) {
+	// 		self.flags.insert(flag);
+	// 	}
+	// }
 
-	pub fn remove(&mut self, flag: T) {
-		let _ = self.flags.remove(&flag);
-	}
+	// pub fn remove(&mut self, flag: T) {
+	// 	let _ = self.flags.remove(&flag);
+	// }
 
 	pub fn has(&self, flag: T) -> bool {
 		self.flags.contains(&flag)

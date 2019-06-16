@@ -119,10 +119,8 @@ impl Level {
 			let y = i / size.width;
 			let loc = Location::new(x, y);
 			let cell = self.cells.get(loc);
-			if let None = cell.character {
-				if predicate(cell) {
-					return Some(loc);
-				}
+			if cell.character.is_none() && predicate(cell) {
+				return Some(loc);
 			}
 		}
 		None
@@ -143,7 +141,6 @@ impl Level {
 
 	fn add_npc(&mut self, loc: Location, npc: CharacterComponent, name: &'static str) {
 		let entity = self.new_entity(name);
-		let flags = Flags::<CharacterFlags>::new();
 		self.character_components.insert(entity, npc);
 		self.position_components.insert(entity, loc);
 		self.cells.get_mut(loc).character = Some(entity);

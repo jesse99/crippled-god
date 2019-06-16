@@ -50,7 +50,7 @@ impl CharacterComponent {
 impl Species {
 	/// Base time it takes for a species to move through a terrain. INFINITE_DURATION if the
 	/// terrain is impassable.
-	pub fn move_duration(&self, terrain: Terrain) -> Duration {
+	pub fn move_duration(self, terrain: Terrain) -> Duration {
 		match terrain {
 			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater | Terrain::Wall => INFINITE_DURATION,
@@ -68,8 +68,7 @@ impl Species {
 
 impl fmt::Display for Species {
 	fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-		write!(fmt, "{:?}", self);
-		Ok(())
+		write!(fmt, "{:?}", self)
 	}
 }
 

@@ -2,8 +2,8 @@
 // 1) An index isn't very meaningful in isolation.
 // 2) Speed isn't a huge concern here so the contiguousness of a Vec isn't too important.
 // 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
-use super::*;
-use fnv::FnvHashMap;
+// use super::*;
+// use fnv::FnvHashMap;
 use std::hash::{Hash, Hasher};
 
 /// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
