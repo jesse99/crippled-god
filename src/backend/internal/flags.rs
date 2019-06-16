@@ -3,6 +3,7 @@ use fnv::FnvHashSet;
 use std::hash::Hash;
 
 // #[derive(Hash)]
+#[derive(Clone)]
 pub struct Flags<T> {
 	flags: FnvHashSet<T>,
 }

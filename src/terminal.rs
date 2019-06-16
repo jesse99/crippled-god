@@ -18,7 +18,7 @@ pub fn run(root_logger: &Logger, seed: u64) {
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
 	stdout.flush().unwrap();
 
-	let mut game = create_game(root_logger);
+	let mut game = create_game(root_logger, seed);
 
 	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 	let terminal_size = Size::new(i32::from(width), i32::from(height));
@@ -57,8 +57,8 @@ fn restore() {
 	stdout.flush().unwrap();
 }
 
-fn create_game(root_logger: &Logger) -> Game {
-	Game::new(root_logger)
+fn create_game(root_logger: &Logger, seed: u64) -> Game {
+	Game::new(root_logger, seed)
 }
 
 fn render_game(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {

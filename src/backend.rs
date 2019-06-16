@@ -7,10 +7,12 @@ use std::collections::VecDeque;
 
 use internal::level::Level;
 use internal::pov::POV;
+use internal::rng::RNG;
 use internal::systems::player_system;
 use internal::terrain::BlocksLOS;
 use internal::vec2d::Vec2d;
 
+pub use self::internal::character::Species;
 pub use self::internal::entity::Entity;
 // pub use self::internal::level::Level;
 pub use self::internal::location::Location;
@@ -52,9 +54,10 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new(root_logger: &Logger) -> Game {
+	pub fn new(root_logger: &Logger, seed: u64) -> Game {
 		let game_logger = root_logger.new(o!());
-		let level = Level::with_logger(&game_logger);
+		let rng = RNG::new(seed);
+		let level = Level::with_logger(&game_logger, rng);
 		let size = level.cells.size();
 
 		let mut messages = VecDeque::new();
@@ -85,6 +88,11 @@ impl Game {
 
 	pub fn is_player(&self, entity: Entity) -> bool {
 		entity == self.level.player
+	}
+
+	pub fn get_species(&self, entity: Entity) -> Species {
+		let c = self.level.character_components.get(&entity).expect(&format!("expeted to find {:?}", entity));
+		c.species
 	}
 
 	pub fn messages(&self) -> &VecDeque<Message> {
@@ -202,16 +210,12 @@ impl Game {
 			pov.visit();
 		}
 
-		let player = self.level.player;
+		// let player = self.level.player;
 		self.tiles.apply(|loc, tile| {
 			if let Some(cell) = visible.get(&loc) {
 				tile.terrain = cell.terrain;
 				// tile.char_name = *ch;
-				tile.character = if loc == player_loc {
-					Some(player)
-				} else {
-					None
-				};
+				tile.character = cell.character;
 				tile.visible = true;
 			} else {
 				tile.visible = false;

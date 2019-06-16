@@ -1,4 +1,4 @@
-use super::backend::{self, Game, Tile};
+use super::backend::{self, Game, Species, Tile};
 use super::colors;
 use termion;
 
@@ -14,36 +14,18 @@ impl View {
 	pub fn new(game: &Game, tile: &Tile) -> View {
 		if tile.visible {
 			if let Some(entity) = tile.character {
-				if game.is_player(entity) {
-					let bg = colors::to_termion(tile.terrain.back_color());
-					let fg = colors::to_termion(colors::Color::White);
-					let symbol = '@'; // TODO: use player.race
-					View { symbol, fg, bg }
+				let bg = colors::to_termion(tile.terrain.back_color());
+				let symbol = game.get_species(entity).visible_symbol();
+				let fg = if game.is_player(entity) {
+					colors::to_termion(colors::Color::White)
 				} else {
-					let bg = colors::to_termion(tile.terrain.back_color());
-					let fg = colors::to_termion(colors::Color::Red);
-					let symbol = 'X';
-					// let fg = colors::to_termion(name.fore_color());
-					// let symbol = name.visible_symbol();
-					View { symbol, fg, bg }
-				}
+					colors::to_termion(colors::Color::Red)
+				};
+				View { symbol, fg, bg }
 			} else {
 				let bg = colors::to_termion(tile.terrain.back_color());
 				let fg = colors::to_termion(tile.terrain.fore_color());
 				let symbol = tile.terrain.visible_symbol();
-				View { symbol, fg, bg }
-			}
-		} else if let Some(entity) = tile.character {
-			if game.is_player(entity) {
-				let bg = colors::to_termion(colors::Color::LightGrey);
-				let fg = colors::to_termion(colors::Color::White);
-				let symbol = '@'; // TODO: use player.race
-				View { symbol, fg, bg }
-			} else {
-				let bg = colors::to_termion(colors::Color::LightGrey);
-				let fg = colors::to_termion(colors::Color::DarkGray);
-				let symbol = 'X';
-				// let symbol = name.visible_symbol();
 				View { symbol, fg, bg }
 			}
 		} else {
@@ -114,6 +96,16 @@ impl VisibleSymbol for backend::Terrain {
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => '#',
 			backend::Terrain::ShallowWater => '~',
+		}
+	}
+}
+
+impl VisibleSymbol for backend::Species {
+	fn visible_symbol(&self) -> char {
+		match self {
+			Species::Ay => 'a',
+			Species::Bhederin => 'b',
+			Species::Human => '@',
 		}
 	}
 }
