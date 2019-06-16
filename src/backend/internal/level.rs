@@ -1,12 +1,33 @@
 use super::*;
+
 use fnv::FnvHashMap;
 use slog::Logger;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 #[derive(Clone)]
 pub struct Cell {
 	pub terrain: Terrain,
 	pub character: Option<Entity>,
 	// pub objects: Vec<Entity>,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct Scheduled {
+	pub entity: Entity,
+	pub time: Time,
+}
+
+impl Ord for Scheduled {
+	fn cmp(&self, other: &Scheduled) -> Ordering {
+		other.time.cmp(&self.time) // backwards so our priority heap returns min times first
+	}
+}
+
+impl PartialOrd for Scheduled {
+	fn partial_cmp(&self, other: &Scheduled) -> Option<Ordering> {
+		Some(self.cmp(other))
+	}
 }
 
 /// This contains all the data associated with the current level. Note that when a new level is
@@ -19,6 +40,7 @@ pub struct Level {
 	pub cells: Vec2d<Cell>,
 	pub logger: Logger,
 	pub rng: RNG,
+	pub scheduled: BinaryHeap<Scheduled>,
 
 	num_entities: usize, // this is the total number of entities that have ever existed
 }
@@ -44,6 +66,7 @@ impl Level {
 			cells: Vec2d::new(size, default_cell),
 			logger: level_logger,
 			rng,
+			scheduled: BinaryHeap::new(),
 		};
 
 		let flags = Flags::<CharacterFlags>::new();
@@ -52,6 +75,10 @@ impl Level {
 			.insert(player, CharacterComponent::new(Species::Human, flags));
 		let player_loc = Location::new(1, 1);
 		level.position_components.insert(player, player_loc);
+		level.scheduled.push(Scheduled {
+			entity: player,
+			time: Time::from_seconds(0),
+		});
 		level.cells.get_mut(player_loc).character = Some(player);
 
 		// Add walls around the outside
@@ -105,6 +132,42 @@ impl Level {
 		level
 	}
 
+	pub fn player_loc(&self) -> Location {
+		*(self
+			.position_components
+			.get(&self.player)
+			.expect("Player has no position"))
+	}
+
+	pub fn entity_loc(&self, entity: Entity) -> Option<Location> {
+		self.position_components.get(&entity).map(|r| *r)
+	}
+
+	/// Returns true if loc is visible from start_loc.
+	pub fn is_visible(&self, start_loc: Location, loc: Location) -> bool {
+		let mut visible = false;
+		{
+			let mut pov = pov::POV {
+				start: start_loc,
+				size: self.cells.size(),
+				radius: 10, // TODO: depends on race?
+				visit_tile: |l| {
+					if l == loc {
+						visible = true;
+					}
+				},
+				blocks_los: |l| {
+					let cell = self.cells.get(l);
+					cell.terrain.blocks_los()
+				},
+			};
+
+			pov.visit();
+		}
+
+		visible
+	}
+
 	/// Returns a randomized location that satisfies the predicate.
 	pub fn rand_loc_for_char<T>(&mut self, predicate: T) -> Option<Location>
 	where
@@ -144,5 +207,21 @@ impl Level {
 		self.character_components.insert(entity, npc);
 		self.position_components.insert(entity, loc);
 		self.cells.get_mut(loc).character = Some(entity);
+
+		let c = *(self.scheduled.peek().unwrap());
+		self.scheduled.push(Scheduled {
+			entity,
+			time: c.time + Duration::from_seconds(1),
+		});
+	}
+
+	pub fn remove_entity(&mut self, entity: Entity) {
+		if let Some(loc) = self.position_components.get(&entity) {
+			let cell = self.cells.get_mut(*loc);
+			cell.character = None;
+		}
+
+		self.character_components.remove(&entity);
+		self.position_components.remove(&entity);
 	}
 }

@@ -5,11 +5,12 @@ use slog::Logger;
 use std::collections::VecDeque;
 // use std::hash::{Hash, Hasher};
 
-use internal::level::Level;
+use internal::level::{Level, Scheduled};
 use internal::pov::POV;
 use internal::rng::RNG;
-use internal::systems::player_system;
+use internal::systems::{ai_system, player_system};
 use internal::terrain::BlocksLOS;
+use internal::time;
 use internal::vec2d::Vec2d;
 
 pub use self::internal::character::Species;
@@ -99,6 +100,33 @@ impl Game {
 		c.species
 	}
 
+	pub fn execute_others(&mut self) {
+		while !self.player_ready() && !self.level.scheduled.is_empty() {
+			let s = self
+				.level
+				.scheduled
+				.pop()
+				.expect("Should have found a scheduled non-player entity");
+			if let Some(duration) = ai_system::act(self, s.entity) {
+				assert!(duration.0 > 0);
+				self.level.scheduled.push(Scheduled {
+					entity: s.entity,
+					time: s.time + duration,
+				});
+			} else {
+				self.level.remove_entity(s.entity);
+			}
+		}
+	}
+
+	fn player_ready(&self) -> bool {
+		if let Some(s) = self.level.scheduled.peek() {
+			s.entity == self.level.player
+		} else {
+			false
+		}
+	}
+
 	// pub fn messages(&self) -> &VecDeque<Message> {
 	// 	&self.messages
 	// }
@@ -116,7 +144,15 @@ impl Game {
 
 	pub fn dispatch_action(&mut self, action: PlayerAction) {
 		assert!(self.running);
-		match action {
+
+		let s = self
+			.level
+			.scheduled
+			.pop()
+			.expect("Should have found a scheduled player entity");
+		assert!(s.entity == self.level.player);
+
+		let duration = match action {
 			PlayerAction::DeltaEast => {
 				player_system::delta_player_system(self, Location::new(1, 0))
 			}
@@ -141,7 +177,18 @@ impl Game {
 			PlayerAction::DeltaWest => {
 				player_system::delta_player_system(self, Location::new(-1, 0))
 			}
-			PlayerAction::Quit => self.running = false,
+			PlayerAction::Quit => {
+				self.running = false;
+				time::INFINITE_DURATION
+			}
+		};
+		assert!(duration.0 > 0);
+
+		if self.running {
+			self.level.scheduled.push(Scheduled {
+				entity: s.entity,
+				time: s.time + duration,
+			});
 		}
 	}
 

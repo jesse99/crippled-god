@@ -32,15 +32,15 @@ impl Location {
 	//  Location::new(self.x, self.y + 1)
 	// }
 
-	// 	pub fn distance(self, rhs: Location) -> f64 {
-	// 		let x1 = f64::from(self.x);
-	// 		let y1 = f64::from(self.y);
-	// 		let x2 = f64::from(rhs.x);
-	// 		let y2 = f64::from(rhs.y);
-	// 		let dx = x1 - x2;
-	// 		let dy = y1 - y2;
-	// 		(dx * dx + dy * dy).sqrt()
-	// 	}
+		pub fn distance(self, rhs: Location) -> f64 {
+			let x1 = f64::from(self.x);
+			let y1 = f64::from(self.y);
+			let x2 = f64::from(rhs.x);
+			let y2 = f64::from(rhs.y);
+			let dx = x1 - x2;
+			let dy = y1 - y2;
+			(dx * dx + dy * dy).sqrt()
+		}
 }
 
 impl Add for Location {

@@ -1,6 +1,90 @@
 
 use super::super::Game;
 use super::*;
+
+fn move_duration(game: &Game, entity: Entity, loc: Location, delta: Location) -> Duration {
+	let c = game.level.character_components.get(&entity).unwrap();
+	let terrain = game.level.cells.get(loc + delta).terrain;
+	let duration = c.species.move_duration(terrain);
+	if delta.x != 0 && delta.y != 0 {
+		duration.percent(1.414)
+	} else {
+		duration
+	}
+}
+
+pub mod ai_system {
+	use super::*;
+
+	/// This is where entities other than the player figure out what they should do. A Some(duration)
+	/// is returned based whatever they decided to do. None is returned if the entity poofed (e.g. 
+	/// it died in combat or was some sort of transient item).
+	pub fn act(game: &mut Game, entity: Entity) -> Option<Duration> {
+		if let Some(c) = game.level.character_components.get(&entity) {
+			match c.species {
+				Species::Ay => aggressive(game, entity),
+				Species::Bhederin => passive(game, entity),
+				Species::Human => passive(game, entity),
+			}
+		} else {
+			panic!("ai for non-character entities isn't supported yet")
+		}
+	}
+
+	fn aggressive(game: &mut Game, entity: Entity) -> Option<Duration> {
+		let ploc = game.level.player_loc();
+		let left_is_better = |lhs, rhs| {
+			let d1 = ploc.distance(lhs);
+			let d2 = ploc.distance(rhs);
+			d1 > 0.0 && d1 < d2
+		};
+		move_relative_to_player(game, entity, left_is_better)
+	}
+
+	fn passive(game: &mut Game, entity: Entity) -> Option<Duration> {
+		let ploc = game.level.player_loc();
+		let left_is_better = |lhs, rhs| {
+			let d1 = ploc.distance(lhs);
+			let d2 = ploc.distance(rhs);
+			d1 > d2
+		};
+		move_relative_to_player(game, entity, left_is_better)
+	}
+
+	fn move_relative_to_player<F: Fn(Location, Location) -> bool>(game: &mut Game, entity: Entity, left_is_better: F) -> Option<Duration> {
+		let mut delta = Location::zero();
+		let loc = game.level.entity_loc(entity).expect(&format!("no position for {:?}", entity));
+		if game.level.is_visible(loc, game.level.player_loc()) {
+			let mut deltas = vec![
+				Location::new(-1, -1),
+				Location::new(-1, 0),
+				Location::new(-1, 1),
+				Location::new(0, -1),
+				Location::new(0, 0),
+				Location::new(0, 1),
+				Location::new(1, -1),
+				Location::new(1, 0),
+				Location::new(1, 1),
+			];
+
+			game.level.rng.shuffle(&mut deltas);
+			for candidate in deltas {
+				if move_system::can_move_to(&game.level, entity, loc + candidate)
+					&& left_is_better(loc + candidate, loc + delta)
+				{
+					delta = candidate;
+				}
+			}
+		}
+		if delta != Location::zero() {
+			move_system::move_to(game, entity, loc + delta);
+			Some(move_duration(game, entity, loc, delta))
+		} else {
+			Some(NO_OP_DURATION)
+		}
+	}
+}
+
 pub mod move_system {
 	use super::*;
 
@@ -48,7 +132,7 @@ pub mod player_system {
 	/// 2) If that location does have an NPC then attack it.
 	/// 3) Manipulate an object, e.g. open or close a door.
 	/// 4) Do nothing, e.g. when trying to move into a wall.
-	pub fn delta_player_system(game: &mut Game, delta: Location) {
+	pub fn delta_player_system(game: &mut Game, delta: Location) -> Duration {
 		assert!(
 			delta.x >= -1
 				&& delta.x <= 1 && delta.y >= -1
@@ -57,11 +141,7 @@ pub mod player_system {
 			delta
 		);
 
-		let loc = *(game
-			.level
-			.position_components
-			.get(&game.level.player)
-			.unwrap()) + delta;
+		let loc = game.level.player_loc() + delta;
 		let terrain = game.level.cells.get(loc).terrain;
 		if move_system::can_move_to(&game.level, game.level.player, loc) {
 			move_system::move_to(game, game.level.player, loc);
@@ -69,5 +149,6 @@ pub mod player_system {
 		if let Some(message) = terrain.message_for(game, game.level.player) {
 			game.add_message(message);
 		}
+		move_duration(game, game.level.player, loc, delta)
 	}
 }

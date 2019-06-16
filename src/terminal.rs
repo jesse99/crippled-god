@@ -25,8 +25,9 @@ pub fn run(root_logger: &Logger, seed: u64) {
 
 	let mut key_iter = stdin.keys();
 	loop {
+		game.execute_others();
 		render_game(terminal_size, &mut stdout, &mut game);
-		// if game.players_time_slice() {
+
 		if let Some(c) = key_iter.next() {
 			let cc = c.unwrap();
 			if let Some(action) = map_action(cc) {

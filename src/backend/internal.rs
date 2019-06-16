@@ -10,6 +10,7 @@ pub mod rng;
 pub mod size;
 pub mod systems;
 pub mod terrain;
+pub mod time;
 pub mod vec2d;
 
 use character::*;
@@ -23,4 +24,5 @@ use rng::*;
 use size::*;
 // use systems::*;
 use terrain::*;
+use time::*;
 use vec2d::*;

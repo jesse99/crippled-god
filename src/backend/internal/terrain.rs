@@ -5,18 +5,12 @@ use super::*;
 pub enum Terrain {
 	/// This is only used for rendering. It's a cell that the user has not ever seen (and may not
 	/// actually exist).
-	Blank,
+	Blank, // TODO: maybe we can get rid of this if we use Option when rendering?
 	DeepWater,
 	Ground,
 	ShallowWater,
 	Wall,
 }
-
-// pub trait MovementDelay {
-// 	/// Amount of time it takes a character to move through the terrain. If INFINITY then the
-// 	/// character can't move through the terrain.
-// 	fn delay(&self, terrain: Terrain) -> f32;
-// }
 
 // impl fmt::Debug for Terrain {
 // 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
