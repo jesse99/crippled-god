@@ -3,7 +3,8 @@ mod map;
 mod view;
 
 use std::io::Write;
-use termion;
+use std::panic;
+use std::process::Command;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
@@ -17,6 +18,15 @@ pub fn run(root_logger: &Logger, seed: u64) {
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
 	stdout.flush().unwrap();
+
+	let old_hook = panic::take_hook();
+	panic::set_hook(Box::new(move |arg| {
+		restore();
+		let mut stdout = std::io::stdout();
+		let _ = write!(stdout, "{}", termion::clear::All);
+		let _ = Command::new("reset").output(); // new line mode isn't reset w/o this
+		old_hook(arg);
+	}));
 
 	let mut game = create_game(root_logger, seed);
 
@@ -47,10 +57,11 @@ pub fn run(root_logger: &Logger, seed: u64) {
 }
 
 fn restore() {
-	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+	let mut stdout = std::io::stdout();
 	let _ = write!(
 		stdout,
-		"{}{}{}",
+		"{}{}{}{}",
+		termion::style::Reset,
 		termion::cursor::Restore,
 		termion::cursor::Show,
 		termion::cursor::Goto(1, 1)
