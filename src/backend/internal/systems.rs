@@ -17,7 +17,7 @@ pub mod ai_system {
 	use super::*;
 
 	/// This is where entities other than the player figure out what they should do. A Some(duration)
-	/// is returned based whatever they decided to do. None is returned if the entity poofed (e.g. 
+	/// is returned based whatever they decided to do. None is returned if the entity poofed (e.g.
 	/// it died in combat or was some sort of transient item).
 	pub fn act(game: &mut Game, entity: Entity) -> Option<Duration> {
 		if let Some(c) = game.level.character_components.get(&entity) {
@@ -51,9 +51,16 @@ pub mod ai_system {
 		move_relative_to_player(game, entity, left_is_better)
 	}
 
-	fn move_relative_to_player<F: Fn(Location, Location) -> bool>(game: &mut Game, entity: Entity, left_is_better: F) -> Option<Duration> {
+	fn move_relative_to_player<F: Fn(Location, Location) -> bool>(
+		game: &mut Game,
+		entity: Entity,
+		left_is_better: F,
+	) -> Option<Duration> {
 		let mut delta = Location::zero();
-		let loc = game.level.entity_loc(entity).expect(&format!("no position for {:?}", entity));
+		let loc = game
+			.level
+			.entity_loc(entity)
+			.expect(&format!("no position for {:?}", entity));
 		if game.level.is_visible(loc, game.level.player_loc()) {
 			let mut deltas = vec![
 				Location::new(-1, -1),
@@ -109,7 +116,7 @@ pub mod move_system {
 	}
 
 	pub fn compatible_terrain(level: &Level, entity: Entity, loc: Location) -> bool {
-		match level.cells.get(loc).terrain {
+		let is = match level.cells.get(loc).terrain {
 			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater => {
 				let ch = level.character_components.get(&entity).unwrap();
@@ -118,7 +125,9 @@ pub mod move_system {
 			Terrain::Ground => true,
 			Terrain::ShallowWater => true,
 			Terrain::Wall => false, // TODO: add support for status effects
-		}
+		};
+		// debug!(level.logger, "terrain is compatible"; "is" => is, "terrain" => level.cells.get(loc).terrain);
+		is
 	}
 }
 
@@ -132,7 +141,7 @@ pub mod player_system {
 	/// 2) If that location does have an NPC then attack it.
 	/// 3) Manipulate an object, e.g. open or close a door.
 	/// 4) Do nothing, e.g. when trying to move into a wall.
-	pub fn delta_player_system(game: &mut Game, delta: Location) -> Duration {
+	pub fn delta_player_system(game: &mut Game, delta: Location) -> Option<Duration> {
 		assert!(
 			delta.x >= -1
 				&& delta.x <= 1 && delta.y >= -1
@@ -141,14 +150,19 @@ pub mod player_system {
 			delta
 		);
 
-		let loc = game.level.player_loc() + delta;
+		let old_loc = game.level.player_loc();
+		let loc = old_loc + delta;
 		let terrain = game.level.cells.get(loc).terrain;
-		if move_system::can_move_to(&game.level, game.level.player, loc) {
-			move_system::move_to(game, game.level.player, loc);
-		}
 		if let Some(message) = terrain.message_for(game, game.level.player) {
 			game.add_message(message);
 		}
-		move_duration(game, game.level.player, loc, delta)
+		if move_system::can_move_to(&game.level, game.level.player, loc) {
+			// debug!(game.level.logger, "player is moving to"; "loc" => loc);
+			move_system::move_to(game, game.level.player, loc);
+			Some(move_duration(game, game.level.player, old_loc, delta))
+		} else {
+			// debug!(game.level.logger, "player can't move to"; "loc" => loc);
+			None
+		}
 	}
 }
