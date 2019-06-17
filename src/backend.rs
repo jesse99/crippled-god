@@ -70,13 +70,15 @@ impl Game {
 			//	text: greeting.to_string(),
 		});
 
-		Game {
+		let game = Game {
 			level,
 			tiles: Vec2d::new(size, Game::DEFAULT_TILE),
 			messages,
 			running: true,
 			logger: game_logger,
-		}
+		};
+		game.invariant();
+		game
 	}
 
 	pub fn running(&self) -> bool {
@@ -117,6 +119,7 @@ impl Game {
 				self.level.remove_entity(s.entity);
 			}
 		}
+		self.invariant();
 	}
 
 	fn player_ready(&self) -> bool {
@@ -140,6 +143,7 @@ impl Game {
 			//		while self.messages.len() > self.config.scroll_back {
 			self.messages.pop_front();
 		}
+		self.invariant();
 	}
 
 	pub fn dispatch_action(&mut self, action: PlayerAction) {
@@ -179,17 +183,21 @@ impl Game {
 			}
 			PlayerAction::Quit => {
 				self.running = false;
-				time::INFINITE_DURATION
+				None
 			}
 		};
-		assert!(duration.0 > 0);
 
-		if self.running {
+		if let Some(d) = duration {
+			assert!(d.0 > 0); // duration shouldn't be negative
+			assert!(d.0 < 10_000 * 100); // also shouldn't be crazy big
 			self.level.scheduled.push(Scheduled {
 				entity: s.entity,
-				time: s.time + duration,
+				time: s.time + d,
 			});
+		} else if self.running {
+			self.level.scheduled.push(s);
 		}
+		self.invariant();
 	}
 
 	/// screen_size is the number of tiles the renderer wants to render. This can be
@@ -198,7 +206,9 @@ impl Game {
 	/// though in that case the user may not be able to see all the tiles the player can.
 	pub fn tiles(&mut self, screen_size: Size) -> Vec2d<Tile> {
 		self.update_tiles();
-		self.screen_tiles(screen_size)
+		let tiles = self.screen_tiles(screen_size);
+		self.invariant();
+		tiles
 
 		// let player_loc = *(self
 		// 	.level
@@ -305,4 +315,26 @@ impl Game {
 		character: None,
 		terrain: Terrain::Blank,
 	};
+
+	#[cfg(debug_assertions)]
+	fn invariant(&self) {
+		assert!(self.level.cells.size() == self.tiles.size());
+
+		let mut entities = FnvHashMap::default();
+		for (_, tile) in self.tiles.iter() {
+			if let Some(entity) = tile.character {
+				let count = entities.entry(entity).or_insert(0);
+				*count += 1;
+			}
+		}
+
+		for (entity, count) in entities {
+			assert!(
+				count == 1,
+				"{:?} appears {} times in game.tiles",
+				entity,
+				count
+			);
+		}
+	}
 }
