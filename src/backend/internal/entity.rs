@@ -4,6 +4,7 @@
 // 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
 // use super::*;
 // use fnv::FnvHashMap;
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 
 /// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
@@ -30,6 +31,17 @@ impl PartialEq for Entity {
 
 impl Eq for Entity {}
 
+impl Ord for Entity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for Entity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 impl Hash for Entity {
 	fn hash<S: Hasher>(&self, state: &mut S) {
 		self.id.hash(state); // id is the unique part of an Enity so we can save time by ignoring prefix

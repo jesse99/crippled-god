@@ -129,6 +129,8 @@ impl Level {
 			level.add_npc(loc, npc, "Bhederin");
 		}
 
+		level.invariant();
+
 		level
 	}
 
@@ -213,6 +215,7 @@ impl Level {
 			entity,
 			time: c.time + Duration::from_seconds(1),
 		});
+		self.invariant();
 	}
 
 	pub fn remove_entity(&mut self, entity: Entity) {
@@ -223,5 +226,40 @@ impl Level {
 
 		self.character_components.remove(&entity);
 		self.position_components.remove(&entity);
+		self.invariant();
+	}
+
+	pub fn invariant(&self) {
+		// player should be in character_components
+		assert!(self.character_components.get(&self.player).is_some());
+
+		// all characters should have a position and be scheduled (this is a bit of a weak test
+		// which is why we have a more rigorous test below).
+		assert!(self.character_components.len() == self.position_components.len());
+		assert!(self.character_components.len() == self.scheduled.len());
+
+		// position entities must exactly match character entities
+		let mut char_entities: Vec<Entity> = self.character_components.keys().cloned().collect();
+		char_entities.sort();
+		let mut pos_entities: Vec<Entity> = self.position_components.keys().cloned().collect();
+		pos_entities.sort();
+		assert!(char_entities == pos_entities);
+
+		// scheduled entities must exactly match character entities
+		let mut sched_entities: Vec<Entity> = self.scheduled.iter().map(|s| s.entity).collect();
+		sched_entities.sort();
+		assert!(pos_entities == sched_entities);
+
+		// every entity with a position should be within cells
+		let mut cell_entities: Vec<Entity> =
+			self.cells.iter().filter_map(|c| c.1.character).collect();
+		cell_entities.sort();
+		assert!(pos_entities == cell_entities);
+
+		// scheduled times are sane
+		for s in &self.scheduled {
+			assert!(s.time.0 >= 0);
+			assert!(s.time.0 < 1000);
+		}
 	}
 }

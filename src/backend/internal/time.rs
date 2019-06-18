@@ -19,12 +19,12 @@ pub const NO_OP_DURATION: Duration = Duration(100);
 pub const INFINITE_DURATION: Duration = Duration(i64::MAX);
 
 impl Time {
-	pub fn zero() -> Time {
-		Time(0)
-	}
+	// pub fn zero() -> Time {
+	// 	Time(0)
+	// }
 
 	pub fn from_seconds(secs: i64) -> Time {
-		Time(secs*100)
+		Time(secs * 100)
 	}
 }
 
@@ -38,7 +38,7 @@ impl Add<Duration> for Time {
 
 impl Duration {
 	pub fn from_seconds(secs: i64) -> Duration {
-		Duration(secs*100)
+		Duration(secs * 100)
 	}
 
 	pub fn percent(self, p: f64) -> Duration {

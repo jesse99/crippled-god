@@ -120,6 +120,7 @@ impl Game {
 			}
 		}
 		self.invariant();
+		self.level.invariant();
 	}
 
 	fn player_ready(&self) -> bool {
@@ -198,6 +199,7 @@ impl Game {
 			self.level.scheduled.push(s);
 		}
 		self.invariant();
+		self.level.invariant();
 	}
 
 	/// screen_size is the number of tiles the renderer wants to render. This can be
