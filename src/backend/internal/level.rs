@@ -259,7 +259,7 @@ impl Level {
 		// scheduled times are sane
 		for s in &self.scheduled {
 			assert!(s.time.0 >= 0);
-			assert!(s.time.0 < 1000);
+			assert!(s.time.0 < 1000 * 100);
 		}
 	}
 }

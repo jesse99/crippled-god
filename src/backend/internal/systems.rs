@@ -105,7 +105,7 @@ pub mod move_system {
 	}
 
 	pub fn can_move_to(level: &Level, entity: Entity, loc: Location) -> bool {
-		valid_loc(level, loc) && compatible_terrain(level, entity, loc)
+		valid_loc(level, loc) && compatible_terrain(level, entity, loc) && has_no_char(level, loc)
 	}
 
 	pub fn valid_loc(level: &Level, loc: Location) -> bool {
@@ -116,7 +116,7 @@ pub mod move_system {
 	}
 
 	pub fn compatible_terrain(level: &Level, entity: Entity, loc: Location) -> bool {
-		let is = match level.cells.get(loc).terrain {
+		match level.cells.get(loc).terrain {
 			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater => {
 				let ch = level.character_components.get(&entity).unwrap();
@@ -125,9 +125,12 @@ pub mod move_system {
 			Terrain::Ground => true,
 			Terrain::ShallowWater => true,
 			Terrain::Wall => false, // TODO: add support for status effects
-		};
-		// debug!(level.logger, "terrain is compatible"; "is" => is, "terrain" => level.cells.get(loc).terrain);
-		is
+		}
+	}
+
+	pub fn has_no_char(level: &Level, loc: Location) -> bool {
+		let c = level.cells.get(loc).character;
+		c.is_none()
 	}
 }
 
