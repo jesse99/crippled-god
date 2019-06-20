@@ -13,8 +13,8 @@ pub struct View {
 impl View {
 	pub fn new(game: &Game, tile: &Tile) -> View {
 		if tile.visible {
+			let bg = colors::to_termion(tile.terrain.back_color());
 			if let Some(entity) = tile.character {
-				let bg = colors::to_termion(tile.terrain.back_color());
 				let symbol = game.get_species(entity).visible_symbol();
 				let fg = if game.is_player(entity) {
 					colors::to_termion(colors::Color::White)
@@ -23,7 +23,6 @@ impl View {
 				};
 				View { symbol, fg, bg }
 			} else {
-				let bg = colors::to_termion(tile.terrain.back_color());
 				let fg = colors::to_termion(tile.terrain.fore_color());
 				let symbol = tile.terrain.visible_symbol();
 				View { symbol, fg, bg }
@@ -31,7 +30,11 @@ impl View {
 		} else {
 			let bg = colors::to_termion(colors::Color::LightGrey);
 			let fg = colors::to_termion(colors::Color::DarkGray);
-			let symbol = tile.terrain.hidden_symbol();
+			let symbol = if let Some(entity) = tile.character {
+				game.get_species(entity).visible_symbol()
+			} else {
+				tile.terrain.hidden_symbol()
+			};
 			View { symbol, fg, bg }
 		}
 	}

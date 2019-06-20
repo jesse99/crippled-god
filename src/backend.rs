@@ -204,44 +204,14 @@ impl Game {
 
 	/// screen_size is the number of tiles the renderer wants to render. This can be
 	/// arbitrarily large in which case the user will be able to see more of what he
-	/// saw earlier (tho that info may be outdated). It can also be arbitrarily small
-	/// though in that case the user may not be able to see all the tiles the player can.
+	/// saw earlier (tho if it is not within the player's LOS that info may be outdated).
+	/// It can also be arbitrarily small though in that case the user may not be able
+	/// to see all the tiles the player can.
 	pub fn tiles(&mut self, screen_size: Size) -> Vec2d<Tile> {
 		self.update_tiles();
 		let tiles = self.screen_tiles(screen_size);
 		self.invariant();
 		tiles
-
-		// let player_loc = *(self
-		// 	.level
-		// 	.position_components
-		// 	.get(&self.level.player)
-		// 	.unwrap());
-
-		// let mut tiles = Vec2d::new(screen_size, Game::DEFAULT_TILE);
-		// let start_x = player_loc.x - screen_size.width / 2;
-		// let start_y = player_loc.y - screen_size.height / 2;
-		// for out_y in 0..screen_size.height {
-		// 	for out_x in 0..screen_size.width {
-		// 		let in_loc = Location::new(start_x + out_x, start_y + out_y);
-		// 		if in_loc.x >= 0
-		// 			&& in_loc.x < self.size().width
-		// 			&& in_loc.y >= 0 && in_loc.y < self.size().height
-		// 		{
-		// 			let cell = self.level.cells.get(in_loc);
-		// 			let tile = Tile {
-		// 				visible: true,
-		// 				character: cell.character,
-		// 				terrain: cell.terrain,
-		// 			};
-
-		// 			let out_loc = Location::new(out_x, out_y);
-		// 			tiles.set(out_loc, tile);
-		// 		}
-		// 	}
-		// }
-
-		// tiles
 	}
 
 	// Updates the tiles that are within the player's LOS.
@@ -273,15 +243,13 @@ impl Game {
 			pov.visit();
 		}
 
-		// let player = self.level.player;
 		self.tiles.apply(|loc, tile| {
 			if let Some(cell) = visible.get(&loc) {
 				tile.terrain = cell.terrain;
-				// tile.char_name = *ch;
 				tile.character = cell.character;
 				tile.visible = true;
 			} else {
-				tile.visible = false;
+				tile.visible = false; // leave the other state as it was when it was last within the player's LOS
 			}
 		})
 	}
