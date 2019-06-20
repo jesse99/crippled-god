@@ -32,7 +32,7 @@ pub struct Tile {
 	pub character: Option<Entity>,
 
 	/// None if the player has never seen the tile.
-	pub terrain: Option<Terrain>,		
+	pub terrain: Option<Terrain>,
 }
 
 pub enum PlayerAction {
