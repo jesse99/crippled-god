@@ -10,7 +10,7 @@ use internal::pov::POV;
 use internal::rng::RNG;
 use internal::systems::{ai_system, player_system};
 use internal::terrain::BlocksLOS;
-use internal::time;
+// use internal::time;
 use internal::vec2d::Vec2d;
 
 pub use self::internal::character::Species;
