@@ -195,8 +195,8 @@ impl Game {
 				entity: s.entity,
 				time: s.time + d,
 			});
-		} else if self.running {
-			self.level.scheduled.push(s);
+		} else {
+			self.level.scheduled.push(s); // we'll push even when quitting so that the invariant doesn't complain
 		}
 		self.invariant();
 		self.level.invariant();
