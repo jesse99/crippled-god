@@ -117,7 +117,6 @@ pub mod move_system {
 
 	pub fn compatible_terrain(level: &Level, entity: Entity, loc: Location) -> bool {
 		match level.cells.get(loc).terrain {
-			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater => {
 				let ch = level.character_components.get(&entity).unwrap();
 				ch.flags.has(CharacterFlags::Airborne) || ch.flags.has(CharacterFlags::Aquatic)

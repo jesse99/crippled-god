@@ -31,7 +31,8 @@ pub struct Tile {
 	/// Player or NPC.
 	pub character: Option<Entity>,
 
-	pub terrain: Terrain,
+	/// None if the player has never seen the tile.
+	pub terrain: Option<Terrain>,		
 }
 
 pub enum PlayerAction {
@@ -245,7 +246,7 @@ impl Game {
 
 		self.tiles.apply(|loc, tile| {
 			if let Some(cell) = visible.get(&loc) {
-				tile.terrain = cell.terrain;
+				tile.terrain = Some(cell.terrain);
 				tile.character = cell.character;
 				tile.visible = true;
 			} else {
@@ -283,7 +284,7 @@ impl Game {
 	const DEFAULT_TILE: Tile = Tile {
 		visible: false,
 		character: None,
-		terrain: Terrain::Blank,
+		terrain: None,
 	};
 
 	#[cfg(debug_assertions)]

@@ -34,7 +34,6 @@ impl Species {
 	/// terrain is impassable.
 	pub fn move_duration(self, terrain: Terrain) -> Duration {
 		match terrain {
-			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater | Terrain::Wall => INFINITE_DURATION,
 			Terrain::Ground => match self {
 				Species::Ay | Species::Human => BASE_MOVEMENT_DURATION,

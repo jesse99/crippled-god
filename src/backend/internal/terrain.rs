@@ -5,7 +5,6 @@ use super::*;
 pub enum Terrain {
 	/// This is only used for rendering. It's a cell that the user has not ever seen (and may not
 	/// actually exist).
-	Blank, // TODO: maybe we can get rid of this if we use Option when rendering?
 	DeepWater,
 	Ground,
 	ShallowWater,
@@ -30,7 +29,6 @@ pub trait BlocksLOS {
 impl BlocksLOS for Terrain {
 	fn blocks_los(&self) -> bool {
 		match *self {
-			Terrain::Blank => panic!("Blank should only be used for rendering"),
 			Terrain::DeepWater => false,
 			Terrain::Ground => false,
 			Terrain::ShallowWater => false,
@@ -43,7 +41,6 @@ impl MessageFor for Terrain {
 	fn message_for(&self, game: &Game, entity: Entity) -> Option<Message> {
 		if game.is_player(entity) {
 			match *self {
-				Terrain::Blank => panic!("Blank should only be used for rendering"),
 				Terrain::DeepWater => Some(Message {
 					topic: Topic::NonGamePlay,
 					text: "That water is too deep.".to_string(),
@@ -69,7 +66,6 @@ impl slog::Value for Terrain {
 		serializer: &mut dyn slog::Serializer,
 	) -> Result<(), slog::Error> {
 		match *self {
-			Terrain::Blank => serializer.emit_arguments(key, &format_args!("?")),
 			Terrain::DeepWater => serializer.emit_arguments(key, &format_args!("w")),
 			Terrain::Ground => serializer.emit_arguments(key, &format_args!(".")),
 			Terrain::ShallowWater => serializer.emit_arguments(key, &format_args!("~")),

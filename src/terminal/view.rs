@@ -13,7 +13,7 @@ pub struct View {
 impl View {
 	pub fn new(game: &Game, tile: &Tile) -> View {
 		if tile.visible {
-			let bg = colors::to_termion(tile.terrain.back_color());
+			let bg = colors::to_termion(if let Some(terrain) = tile.terrain {terrain.back_color()} else {colors::Color::Black});
 			if let Some(entity) = tile.character {
 				let symbol = game.get_species(entity).visible_symbol();
 				let fg = if game.is_player(entity) {
@@ -22,9 +22,13 @@ impl View {
 					colors::to_termion(colors::Color::Red)
 				};
 				View { symbol, fg, bg }
+			} else if let Some(terrain) = tile.terrain {
+				let fg = colors::to_termion(terrain.fore_color());
+				let symbol = terrain.visible_symbol();
+				View { symbol, fg, bg }
 			} else {
-				let fg = colors::to_termion(tile.terrain.fore_color());
-				let symbol = tile.terrain.visible_symbol();
+				let fg = colors::to_termion(colors::Color::Black);
+				let symbol = '?';
 				View { symbol, fg, bg }
 			}
 		} else {
@@ -32,8 +36,10 @@ impl View {
 			let fg = colors::to_termion(colors::Color::DarkGray);
 			let symbol = if let Some(entity) = tile.character {
 				game.get_species(entity).visible_symbol()
+			} else if let Some(terrain) = tile.terrain {
+				terrain.hidden_symbol()
 			} else {
-				tile.terrain.hidden_symbol()
+				' '
 			};
 			View { symbol, fg, bg }
 		}
@@ -60,7 +66,6 @@ trait HiddenSymbol {
 impl ToBackColor for backend::Terrain {
 	fn back_color(&self) -> colors::Color {
 		match self {
-			backend::Terrain::Blank => colors::Color::Black,
 			backend::Terrain::DeepWater => colors::Color::LightBlue,
 			backend::Terrain::Ground => colors::Color::Black,
 			backend::Terrain::Wall => colors::Color::Black,
@@ -72,7 +77,6 @@ impl ToBackColor for backend::Terrain {
 impl ToForeColor for backend::Terrain {
 	fn fore_color(&self) -> colors::Color {
 		match self {
-			backend::Terrain::Blank => colors::Color::Black,
 			backend::Terrain::DeepWater => colors::Color::Blue,
 			backend::Terrain::Ground => colors::Color::LightSlateGray,
 			backend::Terrain::Wall => colors::Color::Chocolate,
@@ -94,7 +98,6 @@ impl ToForeColor for backend::Terrain {
 impl VisibleSymbol for backend::Terrain {
 	fn visible_symbol(&self) -> char {
 		match self {
-			backend::Terrain::Blank => '?',
 			backend::Terrain::DeepWater => 'w',
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => '#',
@@ -116,7 +119,6 @@ impl VisibleSymbol for backend::Species {
 impl HiddenSymbol for backend::Terrain {
 	fn hidden_symbol(&self) -> char {
 		match self {
-			backend::Terrain::Blank => ' ',
 			backend::Terrain::DeepWater => self.visible_symbol(),
 			backend::Terrain::Ground => ' ',
 			backend::Terrain::Wall => self.visible_symbol(),
