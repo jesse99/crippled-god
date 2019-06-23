@@ -5,6 +5,8 @@ use slog::Logger;
 use std::collections::VecDeque;
 // use std::hash::{Hash, Hasher};
 
+
+use internal::config::Config;
 use internal::level::{Level, Scheduled};
 use internal::pov::POV;
 use internal::rng::RNG;
@@ -48,6 +50,8 @@ pub enum PlayerAction {
 }
 
 pub struct Game {
+	pub config: Config,
+
 	level: Level,
 	tiles: Vec2d<Tile>,
 	messages: VecDeque<Message>,
@@ -56,10 +60,11 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new(root_logger: &Logger, seed: u64) -> Game {
+	pub fn new(config_path: Option<String>, root_logger: &Logger, seed: u64) -> Game {
 		let game_logger = root_logger.new(o!());
 		let rng = RNG::new(seed);
-		let level = Level::with_logger(&game_logger, rng);
+		let (config, err) = Config::new(config_path);
+		let level = Level::with_logger(&game_logger, rng, config.slow_asserts); // TODO: on reload config need to reset level.slow_asserts
 		let size = level.cells.size();
 
 		let mut messages = VecDeque::new();
@@ -68,10 +73,24 @@ impl Game {
 		messages.push_back(Message {
 			topic: Topic::NonGamePlay,
 			text: greeting.clone(),
-			//	text: greeting.to_string(),
 		});
 
+		if let Some(err) = err {
+			messages.push_back(Message {
+				topic: Topic::Error,
+				text: err,
+			});
+		}
+
+		if config.slow_asserts {
+			messages.push_back(Message {
+				topic: Topic::NonGamePlay,
+				text: "Slow asserts are enabled!".to_string(),
+			});
+		}
+
 		let game = Game {
+			config,
 			level,
 			tiles: Vec2d::new(size, Game::DEFAULT_TILE),
 			messages,
@@ -291,21 +310,23 @@ impl Game {
 	fn invariant(&self) {
 		assert!(self.level.cells.size() == self.tiles.size());
 
-		let mut entities = FnvHashMap::default();
-		for (_, tile) in self.tiles.iter() {
-			if let Some(entity) = tile.character {
-				let count = entities.entry(entity).or_insert(0);
-				*count += 1;
+		if self.config.slow_asserts {
+			let mut entities = FnvHashMap::default();
+			for (_, tile) in self.tiles.iter() {
+				if let Some(entity) = tile.character {
+					let count = entities.entry(entity).or_insert(0);
+					*count += 1;
+				}
 			}
-		}
 
-		for (entity, count) in entities {
-			assert!(
-				count == 1,
-				"{:?} appears {} times in game.tiles",
-				entity,
-				count
-			);
+			for (entity, count) in entities {
+				assert!(
+					count == 1,
+					"{:?} appears {} times in game.tiles",
+					entity,
+					count
+				);
+			}
 		}
 	}
 }

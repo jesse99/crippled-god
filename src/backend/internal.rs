@@ -1,5 +1,6 @@
 /// All the game logic is contained in this module.
 pub mod character;
+pub mod config;
 pub mod entity;
 pub mod flags;
 pub mod level;
@@ -14,6 +15,7 @@ pub mod time;
 pub mod vec2d;
 
 use character::*;
+// use config::*;
 use entity::*;
 use flags::*;
 use level::*;

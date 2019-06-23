@@ -13,7 +13,7 @@ use slog::Logger;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn run(root_logger: &Logger, seed: u64) {
+pub fn run(config_path: Option<String>, root_logger: &Logger, seed: u64) {
 	let stdin = std::io::stdin();
 	let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 	let _ = write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All);
@@ -28,7 +28,7 @@ pub fn run(root_logger: &Logger, seed: u64) {
 		old_hook(arg);
 	}));
 
-	let mut game = create_game(root_logger, seed);
+	let mut game = create_game(config_path, root_logger, seed);
 
 	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 	let terminal_size = Size::new(i32::from(width), i32::from(height));
@@ -69,8 +69,8 @@ fn restore() {
 	stdout.flush().unwrap();
 }
 
-fn create_game(root_logger: &Logger, seed: u64) -> Game {
-	Game::new(root_logger, seed)
+fn create_game(config_path: Option<String>, root_logger: &Logger, seed: u64) -> Game {
+	Game::new(config_path, root_logger, seed)
 }
 
 fn render_game(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {

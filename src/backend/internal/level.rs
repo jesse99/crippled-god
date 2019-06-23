@@ -41,6 +41,7 @@ pub struct Level {
 	pub logger: Logger,
 	pub rng: RNG,
 	pub scheduled: BinaryHeap<Scheduled>,
+	pub slow_asserts: bool,
 
 	num_entities: usize, // this is the total number of entities that have ever existed
 }
@@ -48,7 +49,7 @@ pub struct Level {
 // TODO: add an invariant for debug builds
 impl Level {
 	/// Creates a new level with just a player component.
-	pub fn with_logger(game_logger: &Logger, rng: RNG) -> Level {
+	pub fn with_logger(game_logger: &Logger, rng: RNG, slow_asserts: bool) -> Level {
 		// TODO: should this be public?
 		let level_logger = game_logger.new(o!());
 
@@ -67,6 +68,7 @@ impl Level {
 			logger: level_logger,
 			rng,
 			scheduled: BinaryHeap::new(),
+			slow_asserts,
 		};
 
 		let flags = Flags::<CharacterFlags>::new();
@@ -238,28 +240,30 @@ impl Level {
 		assert!(self.character_components.len() == self.position_components.len());
 		assert!(self.character_components.len() == self.scheduled.len());
 
-		// position entities must exactly match character entities
-		let mut char_entities: Vec<Entity> = self.character_components.keys().cloned().collect();
-		char_entities.sort();
-		let mut pos_entities: Vec<Entity> = self.position_components.keys().cloned().collect();
-		pos_entities.sort();
-		assert!(char_entities == pos_entities);
+		if self.slow_asserts {
+			// position entities must exactly match character entities
+			let mut char_entities: Vec<Entity> = self.character_components.keys().cloned().collect();
+			char_entities.sort();
+			let mut pos_entities: Vec<Entity> = self.position_components.keys().cloned().collect();
+			pos_entities.sort();
+			assert!(char_entities == pos_entities);
 
-		// scheduled entities must exactly match character entities
-		let mut sched_entities: Vec<Entity> = self.scheduled.iter().map(|s| s.entity).collect();
-		sched_entities.sort();
-		assert!(pos_entities == sched_entities);
+			// scheduled entities must exactly match character entities
+			let mut sched_entities: Vec<Entity> = self.scheduled.iter().map(|s| s.entity).collect();
+			sched_entities.sort();
+			assert!(pos_entities == sched_entities);
 
-		// every entity with a position should be within cells
-		let mut cell_entities: Vec<Entity> =
-			self.cells.iter().filter_map(|c| c.1.character).collect();
-		cell_entities.sort();
-		assert!(pos_entities == cell_entities);
+			// every entity with a position should be within cells
+			let mut cell_entities: Vec<Entity> =
+				self.cells.iter().filter_map(|c| c.1.character).collect();
+			cell_entities.sort();
+			assert!(pos_entities == cell_entities);
 
-		// scheduled times are sane
-		for s in &self.scheduled {
-			assert!(s.time.0 >= 0);
-			assert!(s.time.0 < 1000 * 100);
+			// scheduled times are sane
+			for s in &self.scheduled {
+				assert!(s.time.0 >= 0);
+				assert!(s.time.0 < 1000 * 100);
+			}
 		}
 	}
 }
