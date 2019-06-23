@@ -51,10 +51,10 @@ pub enum PlayerAction {
 
 pub struct Game {
 	pub config: Config,
+	pub messages: VecDeque<Message>,
 
 	level: Level,
 	tiles: Vec2d<Tile>,
-	messages: VecDeque<Message>,
 	running: bool,
 	logger: Logger,
 }

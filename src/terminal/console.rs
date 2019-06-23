@@ -1,20 +1,20 @@
 //! The part of the terminal that shows the game's text output.
-use super::colors::*;
+use super::colors::{self, Color};
 // use super::*;
-use backend;
-use std;
+use super::backend::{Game, Size, Topic};
+// use std;
 use std::io::Write;
 use termion;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub fn render_console(
-	terminal_size: backend::Size,
+	terminal_size: Size,
 	stdout: &mut RawTerminal,
-	game: &backend::Game,
+	game: &Game,
 ) {
-	let bg = to_termion(Color::Black);
-	let fg = to_termion(Color::White);
+	let bg = colors::to_termion(Color::Black);
+	let fg = colors::to_termion(Color::White);
 
 	let _ = write!(
 		stdout,
@@ -26,21 +26,21 @@ pub fn render_console(
 	let mut dy = 0;
 	let width = terminal_size.width as u16;
 	let height = terminal_size.height as u16;
-	for message in game.messages().iter().rev() {
+	for message in game.messages.iter().rev() {
 		// we need to go backwards because when lines wrap we don't know how many screen lines they will take
 		let strings = split_output(width as usize, &message.text);
 		for sub_str in strings.iter().rev() {
 			render_line(width, height - dy, stdout, message.topic, sub_str);
 			dy += 1;
-			if dy >= game.config().terminal.num_lines as u16 {
+			if dy >= game.config.terminal.num_lines as u16 {
 				return;
 			}
 		}
 	}
 }
 
-fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, topic: backend::Topic, text: &str) {
-	let color = to_termion(topic_to_color(topic));
+fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, topic: Topic, text: &str) {
+	let color = colors::to_termion(topic_to_color(topic));
 	let _ = write!(
 		stdout,
 		"{}{}{:width$}",
@@ -53,19 +53,19 @@ fn render_line(width: u16, y: u16, stdout: &mut RawTerminal, topic: backend::Top
 
 // TODO: Should probably have a config option for console colors. Maybe map colors too.
 // Though that is a bit traicky because the backend would need Color (or some extensibility option?).
-fn topic_to_color(topic: backend::Topic) -> Color {
+fn topic_to_color(topic: Topic) -> Color {
 	match topic {
-		backend::Topic::Error => Color::Red,
-		backend::Topic::NonGamePlay => Color::Lime,
-		backend::Topic::NpcIsDamaged => Color::Green,
-		backend::Topic::NpcIsNotDamaged => Color::LightGreen,
-		backend::Topic::PlayerDidDamage => Color::AliceBlue,
-		backend::Topic::PlayerDidNoDamage => Color::Gray,
-		backend::Topic::PlayerIsDamaged => Color::Red,
-		backend::Topic::PlayerIsNotDamaged => Color::Orange,
-		backend::Topic::PlayerIsImpaired => Color::Orange,
-		backend::Topic::PlayerIsThreatened => Color::Orange,
-		backend::Topic::Warning => Color::Orange,
+		Topic::Error => Color::Red,
+		Topic::NonGamePlay => Color::Lime,
+		Topic::NpcIsDamaged => Color::Green,
+		Topic::NpcIsNotDamaged => Color::LightGreen,
+		Topic::PlayerDidDamage => Color::AliceBlue,
+		Topic::PlayerDidNoDamage => Color::Gray,
+		Topic::PlayerIsDamaged => Color::Red,
+		Topic::PlayerIsNotDamaged => Color::Orange,
+		Topic::PlayerIsImpaired => Color::Orange,
+		Topic::PlayerIsThreatened => Color::Orange,
+		Topic::Warning => Color::Orange,
 	}
 }
 

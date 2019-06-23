@@ -1,4 +1,5 @@
 mod colors;
+mod console;
 mod map;
 mod view;
 
@@ -75,7 +76,7 @@ fn create_game(config_path: Option<String>, root_logger: &Logger, seed: u64) -> 
 
 fn render_game(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {
 	map::render_map(terminal_size, stdout, game);
-	// render_console(terminal_size, stdout, &game);
+	console::render_console(terminal_size, stdout, game);
 	stdout.flush().unwrap();
 }
 

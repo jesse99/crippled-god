@@ -10,8 +10,7 @@ type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 pub fn render_map(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {
 	let map_size = Size::new(
 		terminal_size.width,
-		terminal_size.height,
-		// terminal_size.height - game.config().terminal.num_lines,
+		terminal_size.height - game.config.terminal.num_lines,
 	);
 	let tiles = game.tiles(map_size);
 
