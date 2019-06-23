@@ -5,6 +5,7 @@ authors = ["Jesse Vorisek <jesse.vorisek@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+chrono = "0.4.6"		# datetime library
 dirs = "2.0.1"			# access to home, cache, and config directories
 fnv = "1.0.6"			# deterministic hasher that is fast for small keys
 serde = "1.0.92"		# serialization library

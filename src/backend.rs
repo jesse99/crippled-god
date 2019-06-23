@@ -78,15 +78,18 @@ impl Game {
 		if let Some(err) = err {
 			messages.push_back(Message {
 				topic: Topic::Error,
-				text: err,
+				text: err.clone(),
 			});
+			info!(game_logger, "{}", err);
 		}
 
 		if config.slow_asserts {
+			let mesg = "Slow asserts are enabled!".to_string();
 			messages.push_back(Message {
 				topic: Topic::NonGamePlay,
-				text: "Slow asserts are enabled!".to_string(),
+				text: mesg.clone(),
 			});
+			info!(game_logger, "{}", mesg);
 		}
 
 		let game = Game {

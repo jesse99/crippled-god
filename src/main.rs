@@ -1,3 +1,4 @@
+extern crate chrono;
 extern crate dirs;
 extern crate serde;
 #[macro_use]
@@ -82,7 +83,8 @@ fn main() {
 	let root_logger = slog::Logger::root(drain, o!());
 
 	let app_logger = root_logger.new(o!("version" => env!("CARGO_PKG_VERSION")));
-	info!(app_logger, "started up"; "seed" => options.seed);
+	let local = chrono::Local::now();
+	info!(app_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
 
 	let config_path = match find_config_path() {
 		Ok(path) => Some(path),
