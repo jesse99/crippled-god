@@ -4,7 +4,7 @@
 // 3) Seed is a u64 instead of a [u64; 2].
 // 5) Doesn't use the Source trait.
 //#[derive(Clone, Copy, Deserialize, Serialize)]
-#[derive(Clone)]				// we could support Copy but in general we want to use the same generator everywhere so that the stream does not repeat
+#[derive(Clone, Deserialize, Serialize)]			// we could support Copy but in general we want to use the same generator everywhere so that the stream does not repeat
 pub struct RNG(u64, u64);
 
 impl RNG {

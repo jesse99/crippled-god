@@ -1,4 +1,5 @@
-use super::colors::*;
+use super::colors::{self, Color};
+// use super::colors::*;
 // use super::console::*;
 // use super::map::*;
 // use super::persist::*;
@@ -77,9 +78,9 @@ fn match_key(key: termion::event::Key, keys: &[termion::event::Key]) -> bool {
 }
 
 fn render_choices(stdout: &mut RawTerminal, choices: &[Choice]) {
-	let bg = to_termion(Color::Black);
-	let fg1 = to_termion(Color::White);
-	let fg2 = to_termion(Color::LightBlue);
+	let bg = colors::to_termion(Color::Black);
+	let fg1 = colors::to_termion(Color::White);
+	let fg2 = colors::to_termion(Color::LightBlue);
 
 	let _ = write!(stdout, "{}{}", termion::color::Bg(bg), termion::clear::All);
 

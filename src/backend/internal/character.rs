@@ -1,7 +1,7 @@
 use super::*;
 use std::fmt;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Species {
 	Ay,       // giant wolf
 	Bhederin, // large herbivore
@@ -9,7 +9,7 @@ pub enum Species {
 	// Toblakai,
 }
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum CharacterFlags {
 	// Large,
 	// Small,
@@ -18,6 +18,7 @@ pub enum CharacterFlags {
 	Aquatic,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct CharacterComponent {
 	pub species: Species,
 	pub flags: Flags<CharacterFlags>,

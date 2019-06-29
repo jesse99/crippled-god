@@ -1,18 +1,19 @@
 use super::*;
 
+// use crate::slog::Drain;
 use fnv::FnvHashMap;
-use slog::Logger;
+use slog::{Discard, Logger};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Cell {
 	pub terrain: Terrain,
 	pub character: Option<Entity>,
 	// pub objects: Vec<Entity>,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, Deserialize, PartialEq, Serialize)]
 pub struct Scheduled {
 	pub entity: Entity,
 	pub time: Time,
@@ -33,28 +34,38 @@ impl PartialOrd for Scheduled {
 /// This contains all the data associated with the current level. Note that when a new level is
 /// generated all comnponents with a position are removed except for the player and (some) NPCs
 /// near the player.
+#[derive(Deserialize, Serialize)]
 pub struct Level {
 	pub player: super::Entity,
 	pub character_components: FnvHashMap<Entity, CharacterComponent>,
 	pub position_components: FnvHashMap<Entity, Location>, // TODO: do we need a map for the opposite direction?
 	pub cells: Vec2d<Cell>,
-	pub logger: Logger,
 	pub rng: RNG,
 	pub scheduled: BinaryHeap<Scheduled>,
 	pub slow_asserts: bool,
 
+	#[serde(skip)]
+	#[serde(default = "default_level_logger")]
+	pub logger: Logger,
+
 	num_entities: usize, // this is the total number of entities that have ever existed
+}
+
+fn default_level_logger() -> Logger {
+    let drain = Discard{};
+	let root_logger = Logger::root(drain, o!());
+	root_logger.new(o!("default" => "level"))
 }
 
 // TODO: add an invariant for debug builds
 impl Level {
 	/// Creates a new level with just a player component.
-	pub fn with_logger(game_logger: &Logger, rng: RNG, slow_asserts: bool) -> Level {
+	pub fn new(game_logger: &Logger, rng: RNG, slow_asserts: bool) -> Level {
 		// TODO: should this be public?
 		let level_logger = game_logger.new(o!());
 
 		let size = Size::new(64, 32);
-		let player = Entity::internal_new("player", 1);
+		let player = Entity::internal_new(Kind::Player, 1);
 		let default_cell = Cell {
 			terrain: Terrain::Ground,
 			character: None,
@@ -118,7 +129,7 @@ impl Level {
 			let loc = level
 				.rand_loc_for_char(|cell| species.move_duration(cell.terrain) < INFINITE_DURATION)
 				.expect("failed to find a location when new'ing an Ay");
-			level.add_npc(loc, npc, "Ay");
+			level.add_npc(loc, npc, Kind::NPC(species));
 		}
 
 		for _ in 0..5 {
@@ -127,13 +138,17 @@ impl Level {
 			let npc = CharacterComponent::new(species, flags);
 			let loc = level
 				.rand_loc_for_char(|cell| species.move_duration(cell.terrain) < INFINITE_DURATION)
-				.expect("failed to find a location when new'ing a Bison");
-			level.add_npc(loc, npc, "Bhederin");
+				.expect("failed to find a location when new'ing a Bhederin");
+			level.add_npc(loc, npc, Kind::NPC(species));
 		}
 
 		level.invariant();
 
 		level
+	}
+
+	pub fn with_saved(&mut self, game_logger: &Logger) {
+		self.logger = game_logger.new(o!());
 	}
 
 	pub fn player_loc(&self) -> Location {
@@ -195,10 +210,10 @@ impl Level {
 
 	/// Creates a new enity with no components. The prefix is an arbitrary string literal used
 	/// for debugging.
-	pub fn new_entity(&mut self, prefix: &'static str) -> Entity {
+	pub fn new_entity(&mut self, kind: Kind) -> Entity {
 		// TODO: should this be public?
 		self.num_entities += 1;
-		Entity::internal_new(prefix, self.num_entities)
+		Entity::internal_new(kind, self.num_entities)
 	}
 
 	fn set_terrain(&mut self, x: i32, y: i32, terrain: Terrain) {
@@ -206,8 +221,8 @@ impl Level {
 		cell.terrain = terrain;
 	}
 
-	fn add_npc(&mut self, loc: Location, npc: CharacterComponent, name: &'static str) {
-		let entity = self.new_entity(name);
+	fn add_npc(&mut self, loc: Location, npc: CharacterComponent, kind: Kind) {
+		let entity = self.new_entity(kind);
 		self.character_components.insert(entity, npc);
 		self.position_components.insert(entity, loc);
 		self.cells.get_mut(loc).character = Some(entity);

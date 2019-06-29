@@ -3,7 +3,7 @@ use super::super::Game;
 use super::*;
 /// Used with Message.
 #[allow(dead_code)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Topic {
 	/// An operation could not be completed.
 	Error,
@@ -39,6 +39,7 @@ pub enum Topic {
 	Warning,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Message {
 	pub topic: Topic,
 	pub text: String,

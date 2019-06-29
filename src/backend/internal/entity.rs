@@ -2,24 +2,30 @@
 // 1) An index isn't very meaningful in isolation.
 // 2) Speed isn't a huge concern here so the contiguousness of a Vec isn't too important.
 // 3) If we did use a Vec we'd wind up with lots of holes as the player kills off monsters.
-// use super::*;
+use super::*;
 // use fnv::FnvHashMap;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum Kind {
+	Player,
+	NPC(Species),
+}
+
 /// This is a unique identifier for a game object, e.g. the player, a monster, or piece of equipment.
 /// Note that these are unique across the whole game, not just the current level. Also note that
 /// these are created via Level::new_entity.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Entity {
-	prefix: &'static str, // static so that we can cheaply copy these, TODO: not sure that this will work with serialization
+	kind: Kind, 		// could also use a String but we want something cheap to copy here
 	id: usize,
 }
 
 impl Entity {
 	/// Use Level::new_entity instead of this.
-	pub fn internal_new(prefix: &'static str, id: usize) -> Entity {
-		Entity { prefix, id }
+	pub fn internal_new(kind: Kind, id: usize) -> Entity {
+		Entity { kind, id }
 	}
 }
 
@@ -55,6 +61,6 @@ impl slog::Value for Entity {
 		key: slog::Key,
 		serializer: &mut dyn slog::Serializer,
 	) -> Result<(), slog::Error> {
-		serializer.emit_arguments(key, &format_args!("{}-{}", self.prefix, self.id))
+		serializer.emit_arguments(key, &format_args!("{:?}-{}", self.kind, self.id))
 	}
 }

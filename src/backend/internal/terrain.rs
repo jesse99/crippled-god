@@ -1,7 +1,7 @@
 
 use super::super::Game;
 use super::*;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum Terrain {
 	/// This is only used for rendering. It's a cell that the user has not ever seen (and may not
 	/// actually exist).

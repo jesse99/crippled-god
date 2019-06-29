@@ -1,16 +1,13 @@
-use super::colors::*;
-// use super::map::*;
-use backend;
-use serde_json;
+
+use super::backend::{Game, Message, Topic};
+use super::colors::{self, Color};
+use slog::Logger;
 use std;
 use std::env;
 use std::fs::File;
-// use std::io::prelude::*;
 use std::io::Read;
 use std::io::Write;
 use termion;
-// use termion::input::TermRead;
-// use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
@@ -26,7 +23,7 @@ pub fn has_saved_game() -> bool {
 	}
 }
 
-pub fn load_game() -> Result<backend::Game, String> {
+pub fn load_game(root_logger: &Logger) -> Result<Game, String> {
 	let mut path = env::current_dir().map_err(|e| e.to_string())?;
 	path.push(SAVE_FILE_NAME);
 
@@ -35,25 +32,27 @@ pub fn load_game() -> Result<backend::Game, String> {
 	file.read_to_string(&mut contents)
 		.map_err(|e| e.to_string())?;
 
-	let game: backend::Game = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
-	Ok(game.with_saved())
+	let mut game: Game = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
+	game.with_saved(root_logger);
+	Ok(game)
 }
 
-pub fn save_game(stdout: &mut RawTerminal, game: &backend::Game) {
-	if let Err(err) = do_save_game(game) {
-		let color = to_termion(Color::Red);
-		let _ = write!(
-			stdout,
-			"{}{}{}",
-			termion::cursor::Goto(1, 2),
-			termion::color::Fg(color),
-			err
-		);
+pub fn save_game(game: &mut Game) {
+	match do_save_game(game) {
+		Ok(_) => game.add_message(Message {
+			topic: Topic::NonGamePlay,
+			text: "Saved game.".to_string(),
+		}),
+		Err(err) => game.add_message(Message {
+			topic: Topic::Error,
+			text: format!("Failed to save game: {}.", err).to_string(),
+		}),
 	}
 }
 
-fn do_save_game(game: &backend::Game) -> Result<(), String> {
-	let serialized = serde_json::to_string(game).map_err(|e| e.to_string())?;
+fn do_save_game(game: &Game) -> Result<(), String> {
+	let serialized =
+		serde_json::to_string(game).map_err(|e| "serialization error, ".to_string() + &e.to_string())?;
 
 	let mut file = File::create(SAVE_FILE_NAME).map_err(|e| e.to_string())?; // TODO: probably should put the file some place other than the working directory
 	file.write_all(serialized.as_bytes())

@@ -2,7 +2,7 @@ use std::i64;
 use std::ops::Add;
 
 /// Time at which a character (or item) will do something.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Time(pub i64); // stored as 100ths of a second
 
 /// Amount of time it takes to perform some action. Characters will not be able to do anything

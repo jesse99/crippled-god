@@ -1,6 +1,8 @@
 mod colors;
 mod console;
 mod map;
+mod persist;
+mod prompt;
 mod view;
 
 use std::io::Write;
@@ -29,7 +31,7 @@ pub fn run(config_path: Option<String>, root_logger: &Logger, seed: u64) {
 		old_hook(arg);
 	}));
 
-	let mut game = create_game(config_path, root_logger, seed);
+	let mut game = create_game(&mut stdout, config_path, root_logger, seed);
 
 	let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 	let terminal_size = Size::new(i32::from(width), i32::from(height));
@@ -41,8 +43,13 @@ pub fn run(config_path: Option<String>, root_logger: &Logger, seed: u64) {
 
 		if let Some(c) = key_iter.next() {
 			let cc = c.unwrap();
-			if let Some(action) = map_action(cc) {
+			if let Some(action) = map_player_action(cc) {
 				game.dispatch_action(action);
+				if !game.running() {
+					break;
+				}
+			} else if let Some(action) = map_game_action(cc) {
+				dispatch_game_action(&mut stdout, &mut game, action);
 				if !game.running() {
 					break;
 				}
@@ -70,7 +77,44 @@ fn restore() {
 	stdout.flush().unwrap();
 }
 
-fn create_game(config_path: Option<String>, root_logger: &Logger, seed: u64) -> Game {
+fn create_game(stdout: &mut RawTerminal, config_path: Option<String>, root_logger: &Logger, seed: u64) -> Game {
+	if persist::has_saved_game() {
+		let choices = vec![
+			prompt::Choice::new2(
+				termion::event::Key::Char('y'),
+				termion::event::Key::Char('\n'),
+				"Load the saved game?",
+			),
+			prompt::Choice::new2(
+				termion::event::Key::Char('n'),
+				termion::event::Key::Esc,
+				"Don’t load the saved game (and overwrite the old game with a new game).",
+			),
+		];
+		if prompt::prompt(stdout, &choices) == 0 {
+			match persist::load_game(root_logger) {
+				Ok(game) => {
+					return game;
+				}
+				Err(err) => {
+					let bg = colors::to_termion(colors::Color::Black);
+					let fg = colors::to_termion(colors::Color::Red);
+					let _ = write!(
+						stdout,
+						"{}{}{}{}couldn't load the game: {}",
+						termion::color::Bg(bg),
+						termion::clear::All,
+						termion::cursor::Goto(1, 1),
+						termion::color::Fg(fg),
+						err,
+					);
+					stdout.flush().unwrap();
+				}
+			}
+		}
+	}
+
+	info!(root_logger, "new game"; "config_path" => &config_path, "seed" => seed);
 	Game::new(config_path, root_logger, seed)
 }
 
@@ -80,7 +124,24 @@ fn render_game(terminal_size: Size, stdout: &mut RawTerminal, game: &mut Game) {
 	stdout.flush().unwrap();
 }
 
-fn map_action(key: termion::event::Key) -> Option<PlayerAction> {
+enum GameAction {
+	SaveGame,
+}
+
+fn dispatch_game_action(stdout: &mut RawTerminal, game: &mut Game, action: GameAction) {
+	match action {
+		GameAction::SaveGame => persist::save_game(game),
+	}
+}
+
+fn map_game_action(key: termion::event::Key) -> Option<GameAction> {
+	match key {
+		termion::event::Key::Ctrl('s') => Some(GameAction::SaveGame),
+		_ => None,
+	}
+}
+
+fn map_player_action(key: termion::event::Key) -> Option<PlayerAction> {
 	match key {
 		termion::event::Key::Left => Some(PlayerAction::DeltaWest),
 		termion::event::Key::Right => Some(PlayerAction::DeltaEast),

@@ -1,7 +1,7 @@
 use super::*;
 use std::fmt;
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Vec2d<T> {
 	size: Size,
 	elements: Vec<T>,

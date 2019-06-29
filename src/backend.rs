@@ -1,7 +1,7 @@
 mod internal;
 
 use fnv::FnvHashMap;
-use slog::Logger;
+use slog::{Discard, Logger};
 use std::collections::VecDeque;
 // use std::hash::{Hash, Hasher};
 
@@ -24,7 +24,7 @@ pub use self::internal::size::Size;
 // pub use self::internal::systems::player_system;
 pub use self::internal::terrain::Terrain;
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Tile {
 	/// If true then the tile is currently within the player's field of view.
 	/// If false then the tile state is as it was when the player last saw it.
@@ -37,6 +37,7 @@ pub struct Tile {
 	pub terrain: Option<Terrain>,
 }
 
+#[derive(Deserialize, Serialize)]
 pub enum PlayerAction {
 	DeltaEast,
 	DeltaNorth,
@@ -49,6 +50,7 @@ pub enum PlayerAction {
 	Quit,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Game {
 	pub config: Config,
 	pub messages: VecDeque<Message>,
@@ -56,7 +58,16 @@ pub struct Game {
 	level: Level,
 	tiles: Vec2d<Tile>,
 	running: bool,
+
+	#[serde(skip)]
+	#[serde(default = "default_game_logger")]
 	logger: Logger,
+}
+
+fn default_game_logger() -> Logger {
+    let drain = Discard{};
+	let root_logger = Logger::root(drain, o!());
+	root_logger.new(o!("default" => "game"))
 }
 
 impl Game {
@@ -64,7 +75,7 @@ impl Game {
 		let game_logger = root_logger.new(o!());
 		let rng = RNG::new(seed);
 		let (config, err) = Config::new(config_path);
-		let level = Level::with_logger(&game_logger, rng, config.slow_asserts); // TODO: on reload config need to reset level.slow_asserts
+		let level = Level::new(&game_logger, rng, config.slow_asserts); // TODO: on reload config need to reset level.slow_asserts
 		let size = level.cells.size();
 
 		let mut messages = VecDeque::new();
@@ -102,6 +113,12 @@ impl Game {
 		};
 		game.invariant();
 		game
+	}
+
+	pub fn with_saved(&mut self, root_logger: &Logger) {
+		self.logger = root_logger.new(o!());
+		self.running = true;
+		self.level.with_saved(&self.logger);
 	}
 
 	pub fn running(&self) -> bool {

@@ -2,9 +2,8 @@
 use fnv::FnvHashSet;
 use std::hash::Hash;
 
-// #[derive(Hash)]
-#[derive(Clone)]
-pub struct Flags<T> {
+#[derive(Clone, Deserialize, Serialize)]
+pub struct Flags<T: Eq + Hash> {
 	flags: FnvHashSet<T>,
 }
 
