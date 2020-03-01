@@ -13,7 +13,7 @@ pub struct Cell {
 	// pub objects: Vec<Entity>,
 }
 
-#[derive(Copy, Clone, Eq, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Eq, Deserialize, PartialEq, Serialize)]
 pub struct Scheduled {
 	pub entity: Entity,
 	pub time: Time,
@@ -65,7 +65,7 @@ impl Level {
 		let level_logger = game_logger.new(o!());
 
 		let size = Size::new(64, 32);
-		let player = Entity::internal_new(Kind::Player, 1);
+		let player = "player".to_string();
 		let default_cell = Cell {
 			terrain: Terrain::Ground,
 			character: None,
@@ -129,7 +129,7 @@ impl Level {
 			let loc = level
 				.rand_loc_for_char(|cell| species.move_duration(cell.terrain) < INFINITE_DURATION)
 				.expect("failed to find a location when new'ing an Ay");
-			level.add_npc(loc, npc, Kind::NPC(species));
+			level.add_npc(loc, npc);
 		}
 
 		for _ in 0..5 {
@@ -139,7 +139,7 @@ impl Level {
 			let loc = level
 				.rand_loc_for_char(|cell| species.move_duration(cell.terrain) < INFINITE_DURATION)
 				.expect("failed to find a location when new'ing a Bhederin");
-			level.add_npc(loc, npc, Kind::NPC(species));
+			level.add_npc(loc, npc);
 		}
 
 		level.invariant();
@@ -210,10 +210,10 @@ impl Level {
 
 	/// Creates a new enity with no components. The prefix is an arbitrary string literal used
 	/// for debugging.
-	pub fn new_entity(&mut self, kind: Kind) -> Entity {
+	pub fn new_entity(&mut self, label: &str) -> Entity {
 		// TODO: should this be public?
 		self.num_entities += 1;
-		Entity::internal_new(kind, self.num_entities)
+		format!("{}-{}", label, self.num_entities)
 	}
 
 	fn set_terrain(&mut self, x: i32, y: i32, terrain: Terrain) {
@@ -221,8 +221,8 @@ impl Level {
 		cell.terrain = terrain;
 	}
 
-	fn add_npc(&mut self, loc: Location, npc: CharacterComponent, kind: Kind) {
-		let entity = self.new_entity(kind);
+	fn add_npc(&mut self, loc: Location, npc: CharacterComponent) {
+		let entity = self.new_entity(&format!("{}", npc.species));
 		self.character_components.insert(entity, npc);
 		self.position_components.insert(entity, loc);
 		self.cells.get_mut(loc).character = Some(entity);

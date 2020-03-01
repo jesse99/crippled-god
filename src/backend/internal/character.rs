@@ -1,7 +1,7 @@
 use super::*;
 use std::fmt;
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Display, Deserialize, Serialize)]
 pub enum Species {
 	Ay,       // giant wolf
 	Bhederin, // large herbivore
