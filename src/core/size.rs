@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Size {
 	pub width: i32,
 	pub height: i32,
@@ -16,7 +16,7 @@ impl Size {
 		}
 	}
 
-	pub fn area(self: &Size) -> i32 {
+	pub fn area(&self) -> i32 {
 		self.width * self.height
 	}
 }

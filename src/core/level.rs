@@ -18,17 +18,20 @@ impl Level {
 		}
 	}
 
-	pub fn size(&self) -> i32 {
-		self.size()
+	pub fn size(&self) -> Size {
+		self.terrain.size()
 	}
 
-	pub fn on_event(&mut self, event: &Event) {
-		match event {
+	pub fn on_event(&mut self, events: &mut Events) {
+		match events.last() {
 			Event::InitLevel(name, size, terrain) => {
 				self.name = name.to_string();
 				self.terrain = Vec2d::new(*size, *terrain);
+				events.append(Event::NewLevel);
 			}
-			Event::SetTerrain(loc, terrain) => self.terrain.set(*loc, *terrain),
+			Event::SetTerrain(loc, terrain) => {
+				self.terrain.set(*loc, *terrain);
+			}
 			_ => (),
 		}
 	}

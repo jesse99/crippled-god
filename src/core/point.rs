@@ -1,5 +1,5 @@
 /// Location within the map.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Point {
 	pub x: i32,
 	pub y: i32,
