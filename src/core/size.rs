@@ -16,7 +16,7 @@ impl Size {
 		}
 	}
 
-	pub fn area(&self) -> i32 {
+	pub fn area(self) -> i32 {
 		self.width * self.height
 	}
 }

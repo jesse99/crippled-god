@@ -18,11 +18,11 @@ impl Level {
 		}
 	}
 
-	pub fn size(&self) -> Size {
-		self.terrain.size()
-	}
+	// pub fn size(&self) -> Size {
+	// 	self.terrain.size()
+	// }
 
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
+	pub fn on_event(&mut self, event: &Event, _queued: &mut QueuedEvents) {
 		match event {
 			Event::ResetLevel(name, size, terrain) => {
 				self.name = name.to_string();

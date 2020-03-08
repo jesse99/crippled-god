@@ -1,7 +1,7 @@
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Terrain {
-	DeepWater,
+	//DeepWater,
 	Ground,
-	ShallowWater,
+	//ShallowWater,
 	Wall,
 }
