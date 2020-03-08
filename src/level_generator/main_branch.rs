@@ -1,27 +1,7 @@
-use super::*;
-
-// LevelGenerator doesn't have any state but we use a struct anyway to keep it consistent with
-// the other services.
-pub struct LevelGenerator {}
-
-impl LevelGenerator {
-	pub fn new() -> LevelGenerator {
-		LevelGenerator {}
-	}
-
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
-		if let Event::NewBranch = event {
-			// TODO: probably want some sort of invariant check here
-			// eg: that perimeter is some sort of permanent wall
-			// and open areas exist
-			// and maybe that all open areas are reachable
-			new_main(queued);
-		}
-	}
-}
+use super::super::core::*;
 
 // Create a new level for the main branch.
-fn new_main(queued: &mut QueuedEvents) {
+pub fn new(queued: &mut QueuedEvents) {
 	let size = Size::new(20, 10);
 	queued.push_back(Event::ResetLevel(
 		"Level 1".to_string(),

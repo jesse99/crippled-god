@@ -1,9 +1,11 @@
 mod core;
+mod level;
+mod level_generator;
 
 fn main() {
 	let mut store = core::EventStore::new();
-	let mut level = core::Level::new();
-	let mut level_gen = core::LevelGenerator::new();
+	let mut level = level::Level::new();
+	let mut level_gen = level_generator::LevelGenerator::new();
 
 	let mut queued = core::QueuedEvents::new();
 	queued.push_back(core::Event::NewBranch);
