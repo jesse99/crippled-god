@@ -14,7 +14,7 @@ impl EventStore {
 	}
 
 	pub fn append(&mut self, _event: &Event) {
-		// TODO: persist it (probably want to flushh too)
+		// TODO: persist it (probably want to flush too)
 	}
 }
 
