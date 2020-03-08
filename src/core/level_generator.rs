@@ -10,13 +10,12 @@ impl LevelGenerator {
 	}
 
 	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
-		match event {
+		if let Event::NewBranch = event {
 			// TODO: probably want some sort of invariant check here
 			// eg: that perimeter is some sort of permanent wall
 			// and open areas exist
 			// and maybe that all open areas are reachable
-			Event::NewBranch => new_main(queued),
-			_ => (),
+			new_main(queued);
 		}
 	}
 }
