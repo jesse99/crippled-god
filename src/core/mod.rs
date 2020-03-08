@@ -8,7 +8,8 @@ pub mod terrain;
 pub mod vec2d;
 
 pub use event::Event;
-pub use events::Events;
+pub use events::EventStore;
+pub use events::QueuedEvents;
 pub use level::Level;
 pub use level_generator::LevelGenerator;
 pub use point::Point;

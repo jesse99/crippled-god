@@ -5,50 +5,58 @@ use super::*;
 pub struct LevelGenerator {}
 
 impl LevelGenerator {
-	/// Levels start out empty and become populated as events occur.
 	pub fn new() -> LevelGenerator {
 		LevelGenerator {}
 	}
 
-	pub fn on_event(&mut self, events: &mut Events, level: &mut Level) {
-		match events.last() {
+	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
+		match event {
 			// TODO: probably want some sort of invariant check here
 			// eg: that perimeter is some sort of permanent wall
 			// and open areas exist
 			// and maybe that all open areas are reachable
-			Event::NewLevel => new_main(events, level),
+			Event::NewBranch => new_main(queued),
 			_ => (),
 		}
 	}
 }
 
 // Create a new level for the main branch.
-fn new_main(events: &mut Events, level: &mut Level) {
-	for x in 0..level.size().width {
+fn new_main(queued: &mut QueuedEvents) {
+	let size = Size::new(20, 10);
+	queued.push_back(Event::ResetLevel(
+		"Level 1".to_string(),
+		size,
+		Terrain::Wall,
+	));
+
+	for x in 0..size.width {
 		// North wall
 		let loc = Point::new(x, 0);
-		events.append(Event::SetTerrain(loc, Terrain::Wall));
+		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
 
 		// South wall
-		let loc = Point::new(x, level.size().height - 1);
-		events.append(Event::SetTerrain(loc, Terrain::Wall));
+		let loc = Point::new(x, size.height - 1);
+		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
 	}
 
-	for y in 1..(level.size().height - 1) {
+	for y in 1..(size.height - 1) {
 		// West wall
 		let loc = Point::new(0, y);
-		events.append(Event::SetTerrain(loc, Terrain::Wall));
+		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
 
 		// East wall
-		let loc = Point::new(level.size().width - 1, y);
-		events.append(Event::SetTerrain(loc, Terrain::Wall));
+		let loc = Point::new(size.width - 1, y);
+		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
 	}
 
 	// Interior
-	for x in 1..(level.size().width - 1) {
-		for y in 1..(level.size().height - 1) {
+	for x in 1..(size.width - 1) {
+		for y in 1..(size.height - 1) {
 			let loc = Point::new(x, y);
-			events.append(Event::SetTerrain(loc, Terrain::Ground));
+			queued.push_back(Event::SetTerrain(loc, Terrain::Ground));
 		}
 	}
+
+	queued.push_back(Event::NewLevel);
 }

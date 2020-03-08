@@ -1,25 +1,37 @@
 use super::*;
 
-pub struct Events {
-	events: Vec<Event>,
+// Events which have executed.
+pub struct EventStore {}
+
+// Events which are pending execution.
+pub struct QueuedEvents {
+	events: Vec<Event>, // TODO: use a deque?
 }
 
-impl Events {
-	pub fn new() -> Events {
-		Events { events: Vec::new() }
+impl EventStore {
+	pub fn new() -> EventStore {
+		EventStore {}
 	}
 
-	pub fn len(&self) -> usize {
-		self.events.len()
+	pub fn append(&mut self, _event: &Event) {
+		// TODO: persist it (probably want to flushh too)
+	}
+}
+
+impl QueuedEvents {
+	pub fn new() -> QueuedEvents {
+		QueuedEvents { events: Vec::new() }
 	}
 
-	pub fn append(&mut self, event: Event) {
+	pub fn is_empty(&self) -> bool {
+		self.events.is_empty()
+	}
+
+	pub fn push_back(&mut self, event: Event) {
 		self.events.push(event);
 	}
 
-	pub fn last(&self) -> &Event {
-		self.events
-			.last()
-			.expect("Should always have at least one event")
+	pub fn pop_front(&mut self) -> Event {
+		self.events.remove(0)
 	}
 }

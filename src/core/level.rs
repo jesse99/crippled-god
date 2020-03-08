@@ -22,12 +22,11 @@ impl Level {
 		self.terrain.size()
 	}
 
-	pub fn on_event(&mut self, events: &mut Events) {
-		match events.last() {
-			Event::InitLevel(name, size, terrain) => {
+	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
+		match event {
+			Event::ResetLevel(name, size, terrain) => {
 				self.name = name.to_string();
 				self.terrain = Vec2d::new(*size, *terrain);
-				events.append(Event::NewLevel);
 			}
 			Event::SetTerrain(loc, terrain) => {
 				self.terrain.set(*loc, *terrain);

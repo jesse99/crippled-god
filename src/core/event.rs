@@ -7,11 +7,14 @@ use super::*;
 #[derive(Debug)]
 pub enum Event {
 	// Attacked(ID, ID, DamageType, DamageAmount, Duration),	// need details so UI can render stuff like bolts or big strikes
-	/// Reset the current level with a name, size, and default terrain.
-	InitLevel(String, Size, Terrain),
-
-	/// Fires after InitLevel to allow services to finish initializing the level.
+	/// First event that fires when player enters a brand new level.
+	NewBranch, // TODO: probably want to include a branch name
+	/// Fires after level is initialized to allow services to finish initializing.
 	NewLevel,
 	// NewNPC(Point, ID, HPs),
+	/// Update the current level with a name, size, and default terrain.
+	/// SetTerrain events will follow this.
+	ResetLevel(String, Size, Terrain),
+
 	SetTerrain(Point, Terrain),
 }
