@@ -18,6 +18,7 @@ impl LevelGenerator {
 			// and open areas exist
 			// and maybe that all open areas are reachable
 			main_branch::new(queued);
+			queued.push_back(Event::NewLevel);
 		}
 	}
 }

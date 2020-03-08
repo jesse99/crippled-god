@@ -36,6 +36,4 @@ pub fn new(queued: &mut QueuedEvents) {
 			queued.push_back(Event::SetTerrain(loc, Terrain::Ground));
 		}
 	}
-
-	queued.push_back(Event::NewLevel);
 }

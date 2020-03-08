@@ -1,9 +1,9 @@
-use super::core;
+use super::core::*;
 
 /// Record of the terrain and positions of NPCs and items within a particular dungeon level.
 pub struct Level {
 	name: String,
-	terrain: core::Vec2d<core::Terrain>,
+	terrain: Vec2d<Terrain>,
 }
 
 // TODO:
@@ -14,7 +14,7 @@ impl Level {
 	pub fn new() -> Level {
 		Level {
 			name: "uninitialized".to_string(),
-			terrain: core::Vec2d::empty(),
+			terrain: Vec2d::empty(),
 		}
 	}
 
@@ -22,13 +22,13 @@ impl Level {
 	// 	self.terrain.size()
 	// }
 
-	pub fn on_event(&mut self, event: &core::Event, _queued: &mut core::QueuedEvents) {
+	pub fn on_event(&mut self, event: &Event, _queued: &mut QueuedEvents) {
 		match event {
-			core::Event::ResetLevel(name, size, terrain) => {
+			Event::ResetLevel(name, size, terrain) => {
 				self.name = name.to_string();
-				self.terrain = core::Vec2d::new(*size, *terrain);
+				self.terrain = Vec2d::new(*size, *terrain);
 			}
-			core::Event::SetTerrain(loc, terrain) => {
+			Event::SetTerrain(loc, terrain) => {
 				self.terrain.set(*loc, *terrain);
 			}
 			_ => (),

@@ -10,8 +10,8 @@ impl Point {
 		Point { x, y }
 	}
 
-	// top-left
-	// pub fn origin() -> Point {
-	// 	Point { x: 0, y: 0 }
-	// }
+	/// top-left
+	pub fn origin() -> Point {
+		Point { x: 0, y: 0 }
+	}
 }

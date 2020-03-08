@@ -16,5 +16,7 @@ pub enum Event {
 	/// SetTerrain events will follow this.
 	ResetLevel(String, Size, Terrain),
 
+	SetPlayer(Point),
+
 	SetTerrain(Point, Terrain),
 }
