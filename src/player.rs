@@ -3,13 +3,19 @@ use super::level;
 
 pub struct Player {
 	loc: Point,
+	ready: Time,
 }
 
 impl Player {
 	pub fn new() -> Player {
 		Player {
 			loc: Point::origin(),
+			ready: Time::zero(),
 		}
+	}
+
+	pub fn ready_time(&self) -> Time {
+		self.ready
 	}
 
 	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &level::Level) {

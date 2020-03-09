@@ -11,6 +11,10 @@ impl LevelGenerator {
 		LevelGenerator {}
 	}
 
+	pub fn ready_time(&self) -> Time {
+		INFINITE_TIME
+	}
+
 	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
 		if let Event::NewBranch = event {
 			// TODO: probably want some sort of invariant check here

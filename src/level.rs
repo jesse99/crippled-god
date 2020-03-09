@@ -18,6 +18,10 @@ impl Level {
 		}
 	}
 
+	pub fn ready_time(&self) -> Time {
+		INFINITE_TIME
+	}
+
 	// pub fn size(&self) -> Size {
 	// 	self.terrain.size()
 	// }
