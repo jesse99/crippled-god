@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// Location within the map.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Point {
@@ -13,5 +15,11 @@ impl Point {
 	/// top-left
 	pub fn origin() -> Point {
 		Point { x: 0, y: 0 }
+	}
+}
+
+impl fmt::Display for Point {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "({}, {})", self.x, self.y)
 	}
 }

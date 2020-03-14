@@ -44,23 +44,22 @@ fn main() {
 	let drain = slog_async::Async::new(drain).build().fuse();
 	let drain = slog::LevelFilter::new(drain, log_level).fuse();
 	let root_logger = slog::Logger::root(drain, o!());
-	let app_logger = root_logger.new(o!("version" => env!("CARGO_PKG_VERSION")));
 
 	let local = chrono::Local::now();
-	info!(app_logger, "started up"; "on" => local.to_rfc2822());
-	//	info!(app_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
+	info!(root_logger, "started up"; "on" => local.to_rfc2822(), "version" => env!("CARGO_PKG_VERSION"));
+	//	info!(root_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
 	let mut running = true;
 	while running {
 		// Grab the next event,
 		let event = queued.pop_front();
-		debug!(app_logger, "processing"; "event" => ?event);
+		debug!(root_logger, "processing"; "event" => %event);
 
 		// save it into the store (so that if there is a problem we can replay
 		// the event that caused it),
 		store.append(&event);
 
 		// and give each service a chance to respond to the event.
-		level.on_event(&event, &mut queued); // TODO: if signatures remain the same could use a vector of some trait
+		level.on_event(&event, &mut queued);
 		level_gen.on_event(&event, &mut queued);
 		player.on_event(&event, &mut queued, &level);
 		running = terminal.on_event(&event, &mut queued, &level);

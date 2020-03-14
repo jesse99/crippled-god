@@ -23,7 +23,7 @@ impl Terminal {
 	pub fn new() -> Terminal {
 		Terminal {
 			stdout: setup_terminal(),
-			ready: Time::zero(),
+			ready: Time::from_seconds(1),
 		}
 	}
 

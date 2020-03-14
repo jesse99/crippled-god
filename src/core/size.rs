@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Size {
 	pub width: i32,
@@ -18,5 +20,11 @@ impl Size {
 
 	pub fn area(self) -> i32 {
 		self.width * self.height
+	}
+}
+
+impl fmt::Display for Size {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "({}, {})", self.width, self.height)
 	}
 }
