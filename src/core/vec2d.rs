@@ -25,9 +25,9 @@ impl<T: Clone> Vec2d<T> {
 		Vec2d { size, elements }
 	}
 
-	// pub fn size(&self) -> Size {
-	// 	self.size
-	// }
+	pub fn size(&self) -> Size {
+		self.size
+	}
 
 	pub fn set(&mut self, loc: Point, value: T) {
 		let index = loc.x + loc.y * self.size.width;

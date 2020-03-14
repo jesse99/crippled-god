@@ -22,9 +22,20 @@ impl Level {
 		INFINITE_TIME
 	}
 
-	// pub fn size(&self) -> Size {
-	// 	self.terrain.size()
-	// }
+	pub fn size(&self) -> Size {
+		self.terrain.size()
+	}
+
+	pub fn is_valid(&self, loc: Point) -> bool {
+		loc.x >= 0
+			&& loc.x < self.terrain.size().width
+			&& loc.y >= 0
+			&& loc.y < self.terrain.size().height
+	}
+
+	pub fn get(&self, loc: Point) -> &Terrain {
+		self.terrain.get(loc)
+	}
 
 	pub fn on_event(&mut self, event: &Event, _queued: &mut QueuedEvents) {
 		match event {

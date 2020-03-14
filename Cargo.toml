@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 fnv = "1.0.3"		# custom hasher that is much more performant for small keys
+termion = "1.5.5"	# terminal support

@@ -1,4 +1,4 @@
-pub mod main_branch;
+mod main_branch;
 
 use super::core::*;
 

@@ -1,4 +1,4 @@
-/// Items used by multiple services.
+//! Items used by multiple services.
 pub mod event;
 pub mod events;
 pub mod point;

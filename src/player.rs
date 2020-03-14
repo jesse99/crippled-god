@@ -1,27 +1,39 @@
 use super::core::*;
-use super::level;
+use super::level::*;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PlayerAction {
+	// DeltaEast,
+	// DeltaNorth,
+	// DeltaNorthEast,
+	// DeltaNorthWest,
+	// DeltaSouth,
+	// DeltaSouthEast,
+	// DeltaSouthWest,
+	// DeltaWest,
+	Quit,
+}
 
 pub struct Player {
 	loc: Point,
-	ready: Time,
 }
 
 impl Player {
 	pub fn new() -> Player {
 		Player {
 			loc: Point::origin(),
-			ready: Time::zero(),
 		}
 	}
 
 	pub fn ready_time(&self) -> Time {
-		self.ready
+		// UI keeps track of when the player is ready and handles player actions then.
+		INFINITE_TIME
 	}
 
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &level::Level) {
+	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &Level) {
 		match event {
 			Event::NewLevel => {
-				let loc = find_initial_loc(level);
+				let loc = find_initial_loc(&level);
 				queued.push_back(Event::SetPlayer(loc));
 			}
 			Event::SetPlayer(loc) => {
@@ -33,6 +45,6 @@ impl Player {
 	}
 }
 
-fn find_initial_loc(_level: &level::Level) -> Point {
+fn find_initial_loc(_level: &Level) -> Point {
 	Point::new(4, 2)
 }
