@@ -15,6 +15,16 @@ use termion::raw::IntoRawMode;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
+pub enum TerminalEventResult {
+	Running,
+	NotRunning,
+}
+
+enum TerminalActionResult {
+	NotRunning,
+	Ignored,
+}
+
 pub struct Terminal {
 	logger: Logger,
 	stdout: RawTerminal,
@@ -40,7 +50,7 @@ impl Terminal {
 		_queued: &mut QueuedEvents,
 		level: &Level,
 		player: &mut Player,
-	) -> bool {
+	) -> TerminalEventResult {
 		// TODO:
 		//    map it to an action
 		//    dispatch it to a handler, player actions will need to return a duration
@@ -62,11 +72,13 @@ impl Terminal {
 							self.ready += duration;
 						} else {
 							match on_game_action(action) {
-								GameResult::NotRunning => {
+								TerminalActionResult::NotRunning => {
 									restore_terminal();
-									return false;
+									return TerminalEventResult::NotRunning;
 								}
-								GameResult::Ignored => panic!("Didn't handle action {:?}", action),
+								TerminalActionResult::Ignored => {
+									panic!("Didn't handle action {:?}", action)
+								}
 							}
 						}
 					// }
@@ -89,20 +101,15 @@ impl Terminal {
 				}
 			}
 		}
-		true
+		TerminalEventResult::Running
 	}
 }
 
-enum GameResult {
-	NotRunning,
-	Ignored,
-}
-
-fn on_game_action(action: PlayerAction) -> GameResult {
+fn on_game_action(action: PlayerAction) -> TerminalActionResult {
 	if let PlayerAction::Quit = action {
-		GameResult::NotRunning
+		TerminalActionResult::NotRunning
 	} else {
-		GameResult::Ignored
+		TerminalActionResult::Ignored
 	}
 }
 

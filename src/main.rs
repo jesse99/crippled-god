@@ -53,7 +53,7 @@ fn main() {
 
 	loop {
 		// Handle all the events that are queued up.
-		if !process_events(
+		match process_events(
 			&root_logger,
 			&mut queued,
 			&mut store,
@@ -62,7 +62,8 @@ fn main() {
 			&mut player,
 			&mut terminal,
 		) {
-			break;
+			TerminalEventResult::NotRunning => break,
+			TerminalEventResult::Running => (),
 		}
 
 		// Once all the services have processed figure out which service will be
@@ -80,7 +81,7 @@ fn process_events(
 	level_gen: &mut LevelGenerator,
 	player: &mut Player,
 	terminal: &mut Terminal,
-) -> bool {
+) -> TerminalEventResult {
 	while !queued.is_empty() {
 		// Grab the next event,
 		let event = queued.pop_front();
@@ -94,11 +95,12 @@ fn process_events(
 		level.on_event(&event, queued);
 		level_gen.on_event(&event, queued);
 		player.on_event(&event, queued, &level);
-		if !terminal.on_event(&event, queued, &level, player) {
-			return false;
+		match terminal.on_event(&event, queued, &level, player) {
+			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
+			TerminalEventResult::Running => (),
 		}
 	}
-	true
+	TerminalEventResult::Running
 }
 
 fn find_next_scheduled(
