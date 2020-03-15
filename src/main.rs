@@ -94,7 +94,7 @@ fn process_events(
 		level.on_event(&event, queued);
 		level_gen.on_event(&event, queued);
 		player.on_event(&event, queued, &level);
-		if !terminal.on_event(&event, queued, &level) {
+		if !terminal.on_event(&event, queued, &level, player) {
 			return false;
 		}
 	}
