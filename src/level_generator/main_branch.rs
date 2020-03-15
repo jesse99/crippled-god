@@ -36,4 +36,8 @@ pub fn new(queued: &mut QueuedEvents) {
 			queued.push_back(Event::SetTerrain(loc, Terrain::Ground));
 		}
 	}
+
+	queued.push_back(Event::SetTerrain(Point::new(4, 5), Terrain::ShallowWater));
+	queued.push_back(Event::SetTerrain(Point::new(5, 5), Terrain::DeepWater));
+	queued.push_back(Event::SetTerrain(Point::new(6, 5), Terrain::ShallowWater));
 }

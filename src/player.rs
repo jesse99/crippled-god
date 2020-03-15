@@ -25,11 +25,6 @@ impl Player {
 		}
 	}
 
-	pub fn ready_time(&self) -> Time {
-		// UI keeps track of when the player is ready and handles player actions then.
-		INFINITE_TIME
-	}
-
 	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &Level) {
 		match event {
 			Event::NewLevel => {

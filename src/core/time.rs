@@ -19,12 +19,12 @@ pub const INFINITE_TIME: Time = Time(i32::MAX);
 // pub const INFINITE_DURATION: Duration = Duration(i32::MAX);
 
 /// Smallest unit of time: a tenth of a second.
-pub const TICK: Duration = Duration(1);
+// pub const TICK: Duration = Duration(1);
 
 impl Time {
-	pub fn zero() -> Time {
-		Time(0)
-	}
+	// pub fn zero() -> Time {
+	// 	Time(0)
+	// }
 
 	pub fn from_seconds(secs: i32) -> Time {
 		Time(secs * 10)

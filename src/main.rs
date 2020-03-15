@@ -9,22 +9,25 @@ mod level_generator;
 mod player;
 mod terminal;
 
-use slog::Drain;
-use std::fs::OpenOptions;
+use crate::core::*;
+use level_generator::*;
+use player::*;
+use sloggers::Build;
 use std::str::FromStr;
+use terminal::*;
 
 fn main() {
-	let mut store = core::EventStore::new();
+	let mut store = EventStore::new();
 	let mut level = level::Level::new();
-	let mut level_gen = level_generator::LevelGenerator::new();
-	let mut player = player::Player::new();
-	let mut terminal = terminal::Terminal::new();
+	let mut level_gen = LevelGenerator::new();
+	let mut player = Player::new();
+	let mut terminal = Terminal::new();
 
-	let mut queued = core::QueuedEvents::new();
-	queued.push_back(core::Event::NewBranch);
+	let mut queued = QueuedEvents::new();
+	queued.push_back(Event::NewBranch);
 
-	// let level = match slog::Level::from_str(&options.log_level) {
-	let log_level = match slog::Level::from_str("debug") {
+	// let severity = match sloggers::types::Severity::from_str(&options.log_level) {
+	let severity = match sloggers::types::Severity::from_str("debug") {
 		Ok(l) => l,
 		Err(_) => {
 			eprintln!("--log-level should be critical, error, warning, info, debug, or trace");
@@ -32,24 +35,51 @@ fn main() {
 		}
 	};
 
-	let log_file = OpenOptions::new()
-		.create(true)
-		.write(true)
-		.truncate(true)
-		.open("crippled-god.log")
-		//		.open(options.log_path)
-		.unwrap();
-	let decorator = slog_term::PlainDecorator::new(log_file);
-	let drain = slog_term::FullFormat::new(decorator).build().fuse();
-	let drain = slog_async::Async::new(drain).build().fuse();
-	let drain = slog::LevelFilter::new(drain, log_level).fuse();
-	let root_logger = slog::Logger::root(drain, o!());
+	// "event" => event			uses slog::Value trait (so that output is structured)
+	// "event" => %event		uses Display trait
+	// "event" => ?event		uses Debug trait
+	let path = std::path::Path::new("crippled-god.log");
+	let mut builder = sloggers::file::FileLoggerBuilder::new(path);
+	builder.format(sloggers::types::Format::Compact);
+	builder.overflow_strategy(sloggers::types::OverflowStrategy::Block); // TODO: logging is async which is kinda lame
+	builder.level(severity);
+	builder.truncate();
+	let root_logger = builder.build().unwrap();
 
 	let local = chrono::Local::now();
 	info!(root_logger, "started up"; "on" => local.to_rfc2822(), "version" => env!("CARGO_PKG_VERSION"));
 	//	info!(root_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
-	let mut running = true;
-	while running {
+	loop {
+		// Handle all the events that are queued up.
+		if !process_events(
+			&root_logger,
+			&mut queued,
+			&mut store,
+			&mut level,
+			&mut level_gen,
+			&mut player,
+			&mut terminal,
+		) {
+			break;
+		}
+
+		// Once all the services have processed figure out which service will be
+		// ready next and queue up an event to advance time to that point.
+		let time = find_next_scheduled(&level, &level_gen, &terminal);
+		queued.push_back(Event::AdvanceTime(time));
+	}
+}
+
+fn process_events(
+	root_logger: &slog::Logger,
+	queued: &mut QueuedEvents,
+	store: &mut EventStore,
+	level: &mut level::Level,
+	level_gen: &mut LevelGenerator,
+	player: &mut Player,
+	terminal: &mut Terminal,
+) -> bool {
+	while !queued.is_empty() {
 		// Grab the next event,
 		let event = queued.pop_front();
 		debug!(root_logger, "processing"; "event" => %event);
@@ -59,9 +89,26 @@ fn main() {
 		store.append(&event);
 
 		// and give each service a chance to respond to the event.
-		level.on_event(&event, &mut queued);
-		level_gen.on_event(&event, &mut queued);
-		player.on_event(&event, &mut queued, &level);
-		running = terminal.on_event(&event, &mut queued, &level);
+		level.on_event(&event, queued);
+		level_gen.on_event(&event, queued);
+		player.on_event(&event, queued, &level);
+		if !terminal.on_event(&event, queued, &level) {
+			return false;
+		}
 	}
+	true
+}
+
+fn find_next_scheduled(
+	level: &level::Level,
+	level_gen: &LevelGenerator,
+	terminal: &Terminal,
+) -> Time {
+	let mut time = INFINITE_TIME;
+
+	time = std::cmp::min(time, level.ready_time());
+	time = std::cmp::min(time, level_gen.ready_time());
+	time = std::cmp::min(time, terminal.ready_time());
+
+	time
 }

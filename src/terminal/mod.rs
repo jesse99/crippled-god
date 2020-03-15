@@ -31,38 +31,37 @@ impl Terminal {
 		self.ready
 	}
 
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &Level) -> bool {
+	pub fn on_event(&mut self, event: &Event, _queued: &mut QueuedEvents, level: &Level) -> bool {
 		// TODO:
-		// on AdvanceTime(time)
-		// assert time <= self.ready
-		// if time == self.ready then
-		//    render map
-		//    get a key stroke
 		//    map it to an action
 		//    dispatch it to a handler, player actions will need to return a duration
-		//    this stuff should only be done when the player is ready
-		let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
-		let terminal_size = Size::new(i32::from(width), i32::from(height));
-		render_level(&mut self.stdout, level, terminal_size);
+		if let Event::AdvanceTime(time) = event {
+			assert!(*time <= self.ready);
+			if *time == self.ready {
+				let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
+				let terminal_size = Size::new(i32::from(width), i32::from(height));
+				render_level(&mut self.stdout, level, terminal_size);
 
-		let stdin = std::io::stdin();
-		let mut key_iter = stdin.keys();
-		if let Some(c) = key_iter.next() {
-			let cc = c.unwrap();
-			if let Some(action) = map_player_action(cc) {
-				// game.dispatch_action(action);
-				if let PlayerAction::Quit = action {
-					return false;
+				let stdin = std::io::stdin();
+				let mut key_iter = stdin.keys();
+				if let Some(c) = key_iter.next() {
+					let cc = c.unwrap();
+					if let Some(_action) = map_player_action(cc) {
+						// game.dispatch_action(action);
+						// if let PlayerAction::Quit = action {
+						return false;
+						// }
+						// } else if let Some(action) = map_game_action(cc) {
+						// 	dispatch_game_action(&mut self.stdout, &mut game, action);
+						// 	if !game.running() {
+						// 		break;
+						// 	}
+						// } else {
+						// 	warn!(root_logger, "user pressed"; "key" => format!("{:?}", cc));
+						// 	let _ = write!(self.stdout, "\x07");
+						// 	self.stdout.flush().unwrap();
+					}
 				}
-				// } else if let Some(action) = map_game_action(cc) {
-				// 	dispatch_game_action(&mut self.stdout, &mut game, action);
-				// 	if !game.running() {
-				// 		break;
-				// 	}
-				// } else {
-				// 	warn!(root_logger, "user pressed"; "key" => format!("{:?}", cc));
-				// 	let _ = write!(self.stdout, "\x07");
-				// 	self.stdout.flush().unwrap();
 			}
 		}
 		true
