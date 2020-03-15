@@ -1,5 +1,6 @@
 use super::super::core::*;
 use super::super::level::*;
+use super::super::player::*;
 use super::color;
 use termion;
 
@@ -12,11 +13,19 @@ pub struct View {
 }
 
 impl View {
-	pub fn new(level: &Level, loc: Point) -> View {
+	pub fn new(level: &Level, player: &Player, loc: Point) -> View {
 		let terrain = level.get(loc);
 		let bg = color::to_termion(terrain.back_color());
-		let fg = color::to_termion(terrain.fore_color());
-		let symbol = terrain.visible_symbol();
+		let fg = if loc == player.loc() {
+			color::to_termion(color::Color::White)
+		} else {
+			color::to_termion(terrain.fore_color())
+		};
+		let symbol = if loc == player.loc() {
+			'@' // TODO: use species
+		} else {
+			terrain.visible_symbol()
+		};
 		View { symbol, fg, bg }
 
 		// if tile.visible {
@@ -42,7 +51,7 @@ impl View {
 		// 		let symbol = '?';
 		// 		View { symbol, fg, bg }
 		// 	}
-		// } else {
+		// } else {  // not visible
 		// 	let bg = color::to_termion(color::Color::LightGrey);
 		// 	let fg = color::to_termion(color::Color::DarkGray);
 		// 	let symbol = if let Some(entity) = tile.character {
