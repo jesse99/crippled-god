@@ -17,15 +17,6 @@ use std::str::FromStr;
 use terminal::*;
 
 fn main() {
-	let mut store = EventStore::new();
-	let mut level = level::Level::new();
-	let mut level_gen = LevelGenerator::new();
-	let mut player = Player::new();
-	let mut terminal = Terminal::new();
-
-	let mut queued = QueuedEvents::new();
-	queued.push_back(Event::NewBranch);
-
 	// let severity = match sloggers::types::Severity::from_str(&options.log_level) {
 	let severity = match sloggers::types::Severity::from_str("debug") {
 		Ok(l) => l,
@@ -42,6 +33,7 @@ fn main() {
 	let mut builder = sloggers::file::FileLoggerBuilder::new(path);
 	builder.format(sloggers::types::Format::Compact);
 	builder.overflow_strategy(sloggers::types::OverflowStrategy::Block); // TODO: logging is async which is kinda lame
+	builder.source_location(sloggers::types::SourceLocation::None);
 	builder.level(severity);
 	builder.truncate();
 	let root_logger = builder.build().unwrap();
@@ -49,6 +41,16 @@ fn main() {
 	let local = chrono::Local::now();
 	info!(root_logger, "started up"; "on" => local.to_rfc2822(), "version" => env!("CARGO_PKG_VERSION"));
 	//	info!(root_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
+
+	let mut store = EventStore::new();
+	let mut level = level::Level::new();
+	let mut level_gen = LevelGenerator::new();
+	let mut player = Player::new();
+	let mut terminal = Terminal::new(&root_logger);
+
+	let mut queued = QueuedEvents::new();
+	queued.push_back(Event::NewBranch);
+
 	loop {
 		// Handle all the events that are queued up.
 		if !process_events(
