@@ -1,32 +1,27 @@
 use super::super::core::*;
 
+fn set(queued: &mut QueuedEvents, x: i32, y: i32, terrain: Terrain) {
+	let loc = Point::new(x, y);
+	queued.push_back(Event::SetTerrain(loc, terrain));
+}
+
 // Create a new level for the main branch.
 pub fn new(queued: &mut QueuedEvents) {
-	let size = Size::new(20, 10);
+	let size = Size::new(80, 60);
 	queued.push_back(Event::ResetLevel(
 		"Level 1".to_string(),
 		size,
 		Terrain::Wall,
 	));
 
+	// Add walls around the outside
 	for x in 0..size.width {
-		// North wall
-		let loc = Point::new(x, 0);
-		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
-
-		// South wall
-		let loc = Point::new(x, size.height - 1);
-		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
+		set(queued, x, 0, Terrain::Wall);
+		set(queued, x, size.height - 1, Terrain::Wall);
 	}
-
-	for y in 1..(size.height - 1) {
-		// West wall
-		let loc = Point::new(0, y);
-		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
-
-		// East wall
-		let loc = Point::new(size.width - 1, y);
-		queued.push_back(Event::SetTerrain(loc, Terrain::Wall));
+	for y in 0..size.height {
+		set(queued, 0, y, Terrain::Wall);
+		set(queued, size.width - 1, y, Terrain::Wall);
 	}
 
 	// Interior
@@ -37,7 +32,20 @@ pub fn new(queued: &mut QueuedEvents) {
 		}
 	}
 
-	queued.push_back(Event::SetTerrain(Point::new(4, 5), Terrain::ShallowWater));
-	queued.push_back(Event::SetTerrain(Point::new(5, 5), Terrain::DeepWater));
-	queued.push_back(Event::SetTerrain(Point::new(6, 5), Terrain::ShallowWater));
+	// Add a little lake in the middle.
+	let x = size.width / 2;
+	let y = size.height / 2 - 1;
+	set(queued, x, y, Terrain::ShallowWater);
+	set(queued, x - 1, y + 1, Terrain::DeepWater);
+	set(queued, x, y + 1, Terrain::DeepWater);
+	set(queued, x + 1, y + 1, Terrain::ShallowWater);
+	set(queued, x, y + 2, Terrain::ShallowWater);
+
+	// Add a short wall.
+	let y = 8;
+	set(queued, x + 2, y, Terrain::Wall);
+	set(queued, x + 1, y, Terrain::Wall);
+	set(queued, x, y, Terrain::Wall);
+	set(queued, x - 1, y, Terrain::Wall);
+	set(queued, x - 2, y, Terrain::Wall);
 }
