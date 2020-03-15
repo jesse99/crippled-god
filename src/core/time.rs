@@ -1,6 +1,6 @@
 use std::fmt;
 use std::i32; // for MAX
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 /// Time at which a character (or item) will do something.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -26,8 +26,8 @@ impl Time {
 	// 	Time(0)
 	// }
 
-	pub fn from_seconds(secs: i32) -> Time {
-		Time(secs * 10)
+	pub fn from_secs(secs: f32) -> Time {
+		Time((secs * 10.0) as i32)
 	}
 }
 
@@ -39,17 +39,23 @@ impl Add<Duration> for Time {
 	}
 }
 
-// impl Duration {
-// 	pub fn from_seconds(secs: i32) -> Duration {
-// 		Duration(secs * 10)
-// 	}
+impl AddAssign<Duration> for Time {
+	fn add_assign(&mut self, other: Duration) {
+		*self = Time(self.0 + other.0);
+	}
+}
 
-// 	pub fn percent(self, p: f64) -> Duration {
-// 		let x = (self.0 as f64) / 10.0 * p;
-// 		let x = (x * 10.0) as i32;
-// 		Duration(x)
-// 	}
-// }
+impl Duration {
+	pub fn from_secs(secs: f32) -> Duration {
+		Duration((secs * 10.0) as i32)
+	}
+
+	// 	pub fn percent(self, p: f64) -> Duration {
+	// 		let x = (self.0 as f64) / 10.0 * p;
+	// 		let x = (x * 10.0) as i32;
+	// 		Duration(x)
+	// 	}
+}
 
 impl fmt::Display for Time {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

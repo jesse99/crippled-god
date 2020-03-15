@@ -43,31 +43,46 @@ impl Player {
 		}
 	}
 
-	pub fn on_action(&mut self, action: PlayerAction) -> bool {
+	pub fn on_action(&mut self, action: PlayerAction) -> Option<Duration> {
 		match action {
-			PlayerAction::DeltaEast => self.loc.x += 1,
-			PlayerAction::DeltaNorth => self.loc.y -= 1,
+			PlayerAction::DeltaEast => {
+				self.loc.x += 1;
+				Some(Duration::from_secs(2.0))
+			}
+			PlayerAction::DeltaNorth => {
+				self.loc.y -= 1;
+				Some(Duration::from_secs(2.0))
+			}
 			PlayerAction::DeltaNorthEast => {
 				self.loc.x += 1;
 				self.loc.y -= 1;
+				Some(Duration::from_secs(1.4 * 2.0))
 			}
 			PlayerAction::DeltaNorthWest => {
 				self.loc.x -= 1;
 				self.loc.y -= 1;
+				Some(Duration::from_secs(1.4 * 2.0))
 			}
-			PlayerAction::DeltaSouth => self.loc.y += 1,
+			PlayerAction::DeltaSouth => {
+				self.loc.y += 1;
+				Some(Duration::from_secs(2.0))
+			}
 			PlayerAction::DeltaSouthEast => {
 				self.loc.x += 1;
 				self.loc.y += 1;
+				Some(Duration::from_secs(1.4 * 2.0))
 			}
 			PlayerAction::DeltaSouthWest => {
 				self.loc.x -= 1;
 				self.loc.y += 1;
+				Some(Duration::from_secs(1.4 * 2.0))
 			}
-			PlayerAction::DeltaWest => self.loc.x -= 1,
-			_ => return false,
+			PlayerAction::DeltaWest => {
+				self.loc.x -= 1;
+				Some(Duration::from_secs(2.0))
+			}
+			_ => None,
 		}
-		true
 	}
 }
 

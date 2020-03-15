@@ -26,7 +26,7 @@ impl Terminal {
 		Terminal {
 			logger: root_logger.new(o!()),
 			stdout: setup_terminal(),
-			ready: Time::from_seconds(1),
+			ready: Time::from_secs(1.0),
 		}
 	}
 
@@ -58,7 +58,9 @@ impl Terminal {
 					let cc = c.unwrap();
 					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(action) = key_to_action(cc) {
-						if !player.on_action(action) {
+						if let Some(duration) = player.on_action(action) {
+							self.ready += duration;
+						} else {
 							match on_game_action(action) {
 								GameResult::NotRunning => {
 									restore_terminal();
