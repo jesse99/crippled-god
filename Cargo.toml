@@ -10,6 +10,6 @@ edition = "2018"
 chrono = "0.4.11"		# datetime library
 fnv = "1.0.3"			# custom hasher that is much more performant for small keys
 slog = "2.5.2"			# structured logging
-sloggers = "0.3.4"		# sloc convenience functions
+sloggers = "0.3.5"		# sloc convenience functions
 slog-term = "2.5.0"		# logging to a terminal/console/shell or other text based dest
 termion = "1.5.5"		# terminal support

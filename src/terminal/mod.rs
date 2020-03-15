@@ -6,6 +6,7 @@ use super::core::*;
 use super::level::*;
 use super::player::*;
 use render::*;
+use slog::Logger;
 use std::io::Write;
 use std::panic::{set_hook, take_hook};
 use std::process;
@@ -15,13 +16,15 @@ use termion::raw::IntoRawMode;
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub struct Terminal {
+	logger: Logger,
 	stdout: RawTerminal,
 	ready: Time, // this is basically the player ready time
 }
 
 impl Terminal {
-	pub fn new() -> Terminal {
+	pub fn new(root_logger: &Logger) -> Terminal {
 		Terminal {
+			logger: root_logger.new(o!()),
 			stdout: setup_terminal(),
 			ready: Time::from_seconds(1),
 		}
@@ -43,12 +46,14 @@ impl Terminal {
 				render_level(&mut self.stdout, level, terminal_size);
 
 				let stdin = std::io::stdin();
-				let mut key_iter = stdin.keys();
+				let mut key_iter = stdin.keys(); // TODO: may want to make this a field
 				if let Some(c) = key_iter.next() {
 					let cc = c.unwrap();
+					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(_action) = map_player_action(cc) {
 						// game.dispatch_action(action);
 						// if let PlayerAction::Quit = action {
+						restore_terminal();
 						return false;
 						// }
 						// } else if let Some(action) = map_game_action(cc) {
@@ -57,7 +62,7 @@ impl Terminal {
 						// 		break;
 						// 	}
 						// } else {
-						// 	warn!(root_logger, "user pressed"; "key" => format!("{:?}", cc));
+						// 	warn!(self.logger, "user pressed"; "key" => format!("{:?}", cc));
 						// 	let _ = write!(self.stdout, "\x07");
 						// 	self.stdout.flush().unwrap();
 					}
@@ -75,9 +80,6 @@ fn setup_terminal() -> RawTerminal {
 	let old_hook = take_hook();
 	set_hook(Box::new(move |arg| {
 		restore_terminal();
-		let mut stdout = std::io::stdout();
-		let _ = write!(stdout, "{}", termion::clear::All);
-		let _ = process::Command::new("reset").output(); // new line mode isn't reset w/o this
 		old_hook(arg);
 	}));
 	stdout
@@ -93,7 +95,10 @@ fn restore_terminal() {
 		termion::cursor::Show,
 		termion::cursor::Goto(1, 1)
 	);
+	let _ = write!(stdout, "{}", termion::clear::All);
 	stdout.flush().unwrap();
+
+	let _ = process::Command::new("reset").output(); // new line mode isn't reset w/o this
 }
 
 fn map_player_action(key: termion::event::Key) -> Option<PlayerAction> {
