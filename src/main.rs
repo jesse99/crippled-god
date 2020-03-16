@@ -95,7 +95,7 @@ fn process_events(
 		level.on_event(&event, queued);
 		level_gen.on_event(&event, queued);
 		player.on_event(&event, queued, &level);
-		match terminal.on_event(&event, queued, &level, player) {
+		match terminal.on_event(&event, queued, level, player) {
 			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
 			TerminalEventResult::Running => (),
 		}

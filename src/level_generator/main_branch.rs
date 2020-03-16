@@ -1,13 +1,8 @@
 use super::super::core::*;
 
-fn set(queued: &mut QueuedEvents, x: i32, y: i32, terrain: Terrain) {
-	let loc = Point::new(x, y);
-	queued.push_back(Event::SetTerrain(loc, terrain));
-}
-
 // Create a new level for the main branch.
 pub fn new(queued: &mut QueuedEvents) {
-	let size = Size::new(80, 60);
+	let size = Size::new(100, 50);
 	queued.push_back(Event::ResetLevel(
 		"Level 1".to_string(),
 		size,
@@ -48,4 +43,9 @@ pub fn new(queued: &mut QueuedEvents) {
 	set(queued, x, y, Terrain::Wall);
 	set(queued, x - 1, y, Terrain::Wall);
 	set(queued, x - 2, y, Terrain::Wall);
+}
+
+fn set(queued: &mut QueuedEvents, x: i32, y: i32, terrain: Terrain) {
+	let loc = Point::new(x, y);
+	queued.push_back(Event::SetTerrain(loc, terrain));
 }

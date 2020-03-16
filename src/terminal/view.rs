@@ -1,6 +1,6 @@
 use super::super::core::*;
 use super::super::level::*;
-use super::super::player::*;
+// use super::super::player::*;
 use super::color;
 use termion;
 
@@ -13,56 +13,43 @@ pub struct View {
 }
 
 impl View {
-	pub fn new(level: &Level, player: &Player, loc: Point) -> View {
-		let terrain = level.get(loc);
-		let bg = color::to_termion(terrain.back_color());
-		let fg = if loc == player.loc() {
-			color::to_termion(color::Color::White)
+	pub fn new(tile: &Tile) -> View {
+		if tile.visible {
+			let bg = color::to_termion(if let Some(terrain) = tile.terrain {
+				terrain.back_color()
+			} else {
+				color::Color::Black
+			});
+			if let Some(ch) = &tile.character {
+				// let symbol = game.get_species(entity).visible_symbol();
+				let symbol = '@';
+				let fg = if ch.is_player {
+					color::to_termion(color::Color::White)
+				} else {
+					color::to_termion(color::Color::Red)
+				};
+				View { symbol, fg, bg }
+			} else if let Some(terrain) = tile.terrain {
+				let fg = color::to_termion(terrain.fore_color());
+				let symbol = terrain.visible_symbol();
+				View { symbol, fg, bg }
+			} else {
+				let fg = color::to_termion(color::Color::Black);
+				let symbol = '?';
+				View { symbol, fg, bg }
+			}
 		} else {
-			color::to_termion(terrain.fore_color())
-		};
-		let symbol = if loc == player.loc() {
-			'@' // TODO: use species
-		} else {
-			terrain.visible_symbol()
-		};
-		View { symbol, fg, bg }
-
-		// if tile.visible {
-		// 	let bg = color::to_termion(if let Some(terrain) = tile.terrain {
-		// 		terrain.back_color()
-		// 	} else {
-		// 		color::Color::Black
-		// 	});
-		// 	if let Some(entity) = tile.character {
-		// 		let symbol = game.get_species(entity).visible_symbol();
-		// 		let fg = if game.is_player(entity) {
-		// 			color::to_termion(color::Color::White)
-		// 		} else {
-		// 			color::to_termion(color::Color::Red)
-		// 		};
-		// 		View { symbol, fg, bg }
-		// 	} else if let Some(terrain) = tile.terrain {
-		// 		let fg = color::to_termion(terrain.fore_color());
-		// 		let symbol = terrain.visible_symbol();
-		// 		View { symbol, fg, bg }
-		// 	} else {
-		// 		let fg = color::to_termion(color::Color::Black);
-		// 		let symbol = '?';
-		// 		View { symbol, fg, bg }
-		// 	}
-		// } else {  // not visible
-		// 	let bg = color::to_termion(color::Color::LightGrey);
-		// 	let fg = color::to_termion(color::Color::DarkGray);
-		// 	let symbol = if let Some(entity) = tile.character {
-		// 		game.get_species(entity).visible_symbol()
-		// 	} else if let Some(terrain) = tile.terrain {
-		// 		terrain.hidden_symbol()
-		// 	} else {
-		// 		' '
-		// 	};
-		// 	View { symbol, fg, bg }
-		// }
+			let bg = color::to_termion(color::Color::LightGrey);
+			let fg = color::to_termion(color::Color::DarkGray);
+			let symbol = if let Some(_) = tile.character {
+				'@'
+			} else if let Some(terrain) = tile.terrain {
+				terrain.hidden_symbol()
+			} else {
+				' '
+			};
+			View { symbol, fg, bg }
+		}
 	}
 }
 
@@ -136,16 +123,16 @@ impl VisibleSymbol for Terrain {
 // 	}
 // }
 
-// impl HiddenSymbol for Terrain {
-// 	fn hidden_symbol(&self) -> char {
-// 		match self {
-// 			Terrain::DeepWater => self.visible_symbol(),
-// 			Terrain::Ground => ' ',
-// 			Terrain::Wall => self.visible_symbol(),
-// 			Terrain::ShallowWater => self.visible_symbol(),
-// 		}
-// 	}
-// }
+impl HiddenSymbol for Terrain {
+	fn hidden_symbol(&self) -> char {
+		match self {
+			Terrain::DeepWater => self.visible_symbol(),
+			Terrain::Ground => ' ',
+			Terrain::Wall => self.visible_symbol(),
+			Terrain::ShallowWater => self.visible_symbol(),
+		}
+	}
+}
 
 // impl VisibleSymbol for CharName {
 // 	fn visible_symbol(&self) -> char {

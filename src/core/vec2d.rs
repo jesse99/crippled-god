@@ -7,10 +7,10 @@ pub struct Vec2d<T> {
 	elements: Vec<T>,
 }
 
-// pub struct Vec2dIter<'a, T: 'a> {
-// 	index: usize,
-// 	vector: &'a Vec2d<T>,
-// }
+pub struct Vec2dIter<'a, T: 'a> {
+	index: usize,
+	vector: &'a Vec2d<T>,
+}
 
 impl<T: Clone> Vec2d<T> {
 	pub fn empty() -> Vec2d<T> {
@@ -44,43 +44,43 @@ impl<T: Clone> Vec2d<T> {
 	// 	&mut self.elements[index as usize]
 	// }
 
-	// pub fn iter(&self) -> Vec2dIter<T> {
-	// 	Vec2dIter {
-	// 		index: 0,
-	// 		vector: self,
-	// 	}
-	// }
+	pub fn iter(&self) -> Vec2dIter<T> {
+		Vec2dIter {
+			index: 0,
+			vector: self,
+		}
+	}
 
-	// // More elegant to use a mutable iterator here but that requires an unsafe block, see https://users.rust-lang.org/t/implementing-an-iterator-of-mutable-references/8671
-	// pub fn apply<F: Fn(Point, &mut T)>(&mut self, mutate: F) {
-	// 	for i in 0..self.elements.len() {
-	// 		let x = (i % self.size.width as usize) as i32;
-	// 		let y = (i / self.size.width as usize) as i32;
-	// 		let loc = Point::new(x, y);
-	// 		let val = self.elements.get_mut(i);
-	// 		mutate(loc, val.unwrap());
-	// 	}
-	// }
+	// More elegant to use a mutable iterator here but that requires an unsafe block, see https://users.rust-lang.org/t/implementing-an-iterator-of-mutable-references/8671
+	pub fn apply<F: Fn(Point, &mut T)>(&mut self, mutate: F) {
+		for i in 0..self.elements.len() {
+			let x = (i % self.size.width as usize) as i32;
+			let y = (i / self.size.width as usize) as i32;
+			let loc = Point::new(x, y);
+			let val = self.elements.get_mut(i);
+			mutate(loc, val.unwrap());
+		}
+	}
 }
 
-// impl<'a, T> Iterator for Vec2dIter<'a, T> {
-// 	type Item = (Point, &'a T);
+impl<'a, T> Iterator for Vec2dIter<'a, T> {
+	type Item = (Point, &'a T);
 
-// 	fn next(&mut self) -> Option<(Point, &'a T)> {
-// 		if self.index < self.vector.elements.len() {
-// 			let i = self.index;
-// 			self.index += 1;
+	fn next(&mut self) -> Option<(Point, &'a T)> {
+		if self.index < self.vector.elements.len() {
+			let i = self.index;
+			self.index += 1;
 
-// 			let x = (i % self.vector.size.width as usize) as i32;
-// 			let y = (i / self.vector.size.width as usize) as i32;
-// 			let loc = Point::new(x, y);
-// 			let val = self.vector.elements.get(i);
-// 			Some((loc, val.unwrap()))
-// 		} else {
-// 			None
-// 		}
-// 	}
-// }
+			let x = (i % self.vector.size.width as usize) as i32;
+			let y = (i / self.vector.size.width as usize) as i32;
+			let loc = Point::new(x, y);
+			let val = self.vector.elements.get(i);
+			Some((loc, val.unwrap()))
+		} else {
+			None
+		}
+	}
+}
 
 impl<T: Clone + fmt::Display> fmt::Display for Vec2d<T> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -98,34 +98,34 @@ impl<T: Clone + fmt::Display> fmt::Display for Vec2d<T> {
 	}
 }
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
+#[cfg(test)]
+mod tests {
+	use super::*;
 
-// 	#[test]
-// 	fn test_iter() {
-// 		let size = Size::new(2, 2);
-// 		let mut v = Vec2d::new(size, '.');
-// 		*v.get_mut(Point::new(1, 0)) = 'a';
-// 		*v.get_mut(Point::new(0, 1)) = 'b';
-// 		*v.get_mut(Point::new(1, 1)) = 'c';
+	#[test]
+	fn test_iter() {
+		let size = Size::new(2, 2);
+		let mut v = Vec2d::new(size, '.');
+		v.set(Point::new(1, 0), 'a');
+		v.set(Point::new(0, 1), 'b');
+		v.set(Point::new(1, 1), 'c');
 
-// 		let mut locs = Vec::new();
-// 		let mut values = Vec::new();
-// 		for (loc, ch) in v.iter() {
-// 			locs.push(loc);
-// 			values.push(*ch);
-// 		}
+		let mut locs = Vec::new();
+		let mut values = Vec::new();
+		for (loc, ch) in v.iter() {
+			locs.push(loc);
+			values.push(*ch);
+		}
 
-// 		assert_eq!(
-// 			locs,
-// 			vec![
-// 				Point::new(0, 0),
-// 				Point::new(1, 0),
-// 				Point::new(0, 1),
-// 				Point::new(1, 1)
-// 			]
-// 		);
-// 		assert_eq!(values, vec!['.', 'a', 'b', 'c']);
-// 	}
-// }
+		assert_eq!(
+			locs,
+			vec![
+				Point::new(0, 0),
+				Point::new(1, 0),
+				Point::new(0, 1),
+				Point::new(1, 1)
+			]
+		);
+		assert_eq!(values, vec!['.', 'a', 'b', 'c']);
+	}
+}

@@ -48,7 +48,7 @@ impl Terminal {
 		&mut self,
 		event: &Event,
 		_queued: &mut QueuedEvents,
-		level: &Level,
+		level: &mut Level,
 		player: &mut Player,
 	) -> TerminalEventResult {
 		// TODO:
@@ -57,7 +57,9 @@ impl Terminal {
 		if let Event::AdvanceTime(time) = event {
 			assert!(*time <= self.ready);
 			if *time == self.ready {
-				let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
+				// let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
+				let width = 50;
+				let height = 25;
 				let terminal_size = Size::new(i32::from(width), i32::from(height));
 				render_level(&mut self.stdout, level, player, terminal_size);
 				self.stdout.flush().unwrap();
