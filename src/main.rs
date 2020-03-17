@@ -3,6 +3,7 @@ extern crate slog;
 // extern crate slog_async;
 // extern crate slog_term;
 
+mod character;
 mod core;
 mod level;
 mod level_generator;

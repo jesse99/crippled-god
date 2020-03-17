@@ -57,9 +57,7 @@ impl Terminal {
 		if let Event::AdvanceTime(time) = event {
 			assert!(*time <= self.ready);
 			if *time == self.ready {
-				// let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
-				let width = 50;
-				let height = 25;
+				let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 				let terminal_size = Size::new(i32::from(width), i32::from(height));
 				render_level(&mut self.stdout, level, player, terminal_size);
 				self.stdout.flush().unwrap();
@@ -70,10 +68,12 @@ impl Terminal {
 					let cc = c.unwrap();
 					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(action) = key_to_action(cc) {
-						if let Some(duration) = player.on_action(action) {
-							self.ready += duration;
-						} else {
-							match on_game_action(action) {
+						match player.on_action(action, level) {
+							PlayerActionResult::Acted(duration) => self.ready += duration,
+							PlayerActionResult::Error => {
+								let _ = write!(self.stdout, "\x07");
+							}
+							PlayerActionResult::Ignored => match on_game_action(action) {
 								TerminalActionResult::NotRunning => {
 									restore_terminal();
 									return TerminalEventResult::NotRunning;
@@ -81,7 +81,7 @@ impl Terminal {
 								TerminalActionResult::Ignored => {
 									panic!("Didn't handle action {:?}", action)
 								}
-							}
+							},
 						}
 					// }
 					// } else if let Some(action) = map_game_action(cc) {
