@@ -6,7 +6,7 @@ use std::ops::{Add, AddAssign};
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Time(pub i32); // this is large enough for 2400 days of play time
 
-/// Amount of time it takes to perform some action. Characters will not be able to do anything
+/// Amount of [`Time`] it takes to perform some action. Characters will not be able to do anything
 /// until this time elapses.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Duration(pub i32);

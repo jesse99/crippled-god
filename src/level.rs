@@ -2,7 +2,7 @@ use super::core::*;
 use super::player::*;
 use fnv::FnvHashMap;
 
-/// Visual state of the player or an NPC.
+/// Visual state of the [`Player`] or an NPC.
 #[derive(Clone)]
 pub struct CharTile {
 	// TODO:

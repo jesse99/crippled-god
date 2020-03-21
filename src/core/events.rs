@@ -3,7 +3,7 @@ use super::*;
 // Events which have executed.
 pub struct EventStore {}
 
-// Events which are pending execution.
+// [`Event`]s which are pending execution.
 pub struct QueuedEvents {
 	events: Vec<Event>, // TODO: use a deque?
 }
