@@ -1,6 +1,8 @@
 use super::character::*;
 use super::core::*;
 use super::level::*;
+use rand::rngs::SmallRng;
+use rand::seq::SliceRandom;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PlayerAction {
@@ -40,10 +42,16 @@ impl Player {
 		self.loc
 	}
 
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents, level: &Level) {
+	pub fn on_event(
+		&mut self,
+		rng: &mut SmallRng,
+		event: &Event,
+		queued: &mut QueuedEvents,
+		level: &Level,
+	) {
 		match event {
 			Event::NewLevel => {
-				let loc = find_initial_loc(&level);
+				let loc = find_initial_loc(rng, &level).unwrap();
 				queued.push_back(Event::SetPlayer(loc));
 			}
 			Event::SetPlayer(loc) => {
@@ -88,6 +96,20 @@ impl Player {
 	}
 }
 
-fn find_initial_loc(_level: &Level) -> Point {
-	Point::new(4, 2)
+fn find_initial_loc(rng: &mut SmallRng, level: &Level) -> Option<Point> {
+	let size = level.size();
+	let mut indexes: Vec<i32> = (0..size.width * size.height).collect();
+	indexes.shuffle(rng);
+
+	for i in &indexes {
+		let x = i % size.width;
+		let y = i / size.width;
+		let loc = Point::new(x, y);
+		let cell = level.get(loc);
+		if let Terrain::Ground = cell {
+			// if cell.character.is_none() && predicate(cell) {
+			return Some(loc);
+		}
+	}
+	None
 }

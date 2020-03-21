@@ -56,9 +56,9 @@ impl Level {
 		INFINITE_TIME
 	}
 
-	// pub fn size(&self) -> Size {
-	// 	self.terrain.size()
-	// }
+	pub fn size(&self) -> Size {
+		self.terrain.size()
+	}
 
 	pub fn is_valid(&self, loc: Point) -> bool {
 		loc.x >= 0

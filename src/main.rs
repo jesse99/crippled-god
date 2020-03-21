@@ -13,6 +13,8 @@ mod terminal;
 use crate::core::*;
 use level_generator::*;
 use player::*;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use sloggers::Build;
 use std::str::FromStr;
 use terminal::*;
@@ -43,11 +45,24 @@ fn main() {
 	info!(root_logger, "started up"; "on" => local.to_rfc2822(), "version" => env!("CARGO_PKG_VERSION"));
 	//	info!(root_logger, "started up"; "seed" => options.seed, "on" => local.to_rfc2822());
 
+	// It would be kind of nice to package all of this up into some
+	// sort of Game struct but that gets hairy because we'd have a
+	// reference to the Game and then references to the fields (eg
+	// when we call methods). Also using a Game struct makes dependencies
+	// very fuzzy, e.g. if a function takes a mut Game reference then
+	// there is no good way to tell what will actually be changed.
 	let mut store = EventStore::new();
 	let mut level = level::Level::new();
 	let mut level_gen = LevelGenerator::new();
 	let mut player = Player::new();
 	let mut terminal = Terminal::new(&root_logger);
+
+	// Note that we can replay games but once they have been
+	// replayed the original game and the replayed game will
+	// start to diverge because of the RNG (normally the RNG
+	// is used to determine actions but that doesn't happen
+	// during replay).
+	let mut rng = SmallRng::seed_from_u64(2); // TODO: get the seed from the command line
 
 	let mut queued = QueuedEvents::new();
 	queued.push_back(Event::NewBranch);
@@ -62,6 +77,7 @@ fn main() {
 			&mut level_gen,
 			&mut player,
 			&mut terminal,
+			&mut rng,
 		) {
 			TerminalEventResult::NotRunning => break,
 			TerminalEventResult::Running => (),
@@ -74,6 +90,7 @@ fn main() {
 	}
 }
 
+#[allow(clippy::too_many_arguments)]
 fn process_events(
 	root_logger: &slog::Logger,
 	queued: &mut QueuedEvents,
@@ -82,6 +99,7 @@ fn process_events(
 	level_gen: &mut LevelGenerator,
 	player: &mut Player,
 	terminal: &mut Terminal,
+	rng: &mut SmallRng,
 ) -> TerminalEventResult {
 	while !queued.is_empty() {
 		// Grab the next event,
@@ -95,7 +113,7 @@ fn process_events(
 		// and give each service a chance to respond to the event.
 		level.on_event(&event, queued);
 		level_gen.on_event(&event, queued);
-		player.on_event(&event, queued, &level);
+		player.on_event(rng, &event, queued, &level);
 		match terminal.on_event(&event, queued, level, player) {
 			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
 			TerminalEventResult::Running => (),
