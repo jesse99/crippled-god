@@ -7,6 +7,8 @@ mod character;
 mod core;
 mod level;
 mod level_generator;
+mod npc;
+mod npcs;
 mod player;
 mod terminal;
 
