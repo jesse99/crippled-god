@@ -1,5 +1,5 @@
 use super::super::core::*;
-use super::super::level::*;
+// use super::super::level::*;
 // use super::super::player::*;
 use super::color;
 use termion;
@@ -13,23 +13,25 @@ pub struct View {
 }
 
 impl View {
-	pub fn new(tile: &Tile) -> View {
-		if tile.visible {
-			let bg = color::to_termion(if let Some(terrain) = tile.terrain {
+	pub fn new(store: &Store, cell: &Subject) -> View {
+		let seen_terrain = store.lookup_terrain(&cell, Predicate::LastSeenTerrain);
+		let seen_char = store.lookup_ref(&cell, Predicate::LastSeenChar);
+		if store.lookup_bool(&cell, Predicate::Visible).unwrap() {
+			let bg = color::to_termion(if let Some(terrain) = seen_terrain {
 				terrain.back_color()
 			} else {
 				color::Color::Black
 			});
-			if let Some(ch) = &tile.character {
+			if let Some(ch) = seen_char {
 				// let symbol = game.get_species(entity).visible_symbol();
 				let symbol = '@';
-				let fg = if ch.is_player {
+				let fg = if ch == *PLAYER {
 					color::to_termion(color::Color::White)
 				} else {
 					color::to_termion(color::Color::Red)
 				};
 				View { symbol, fg, bg }
-			} else if let Some(terrain) = tile.terrain {
+			} else if let Some(terrain) = seen_terrain {
 				let fg = color::to_termion(terrain.fore_color());
 				let symbol = terrain.visible_symbol();
 				View { symbol, fg, bg }
@@ -41,9 +43,9 @@ impl View {
 		} else {
 			let bg = color::to_termion(color::Color::LightGrey);
 			let fg = color::to_termion(color::Color::DarkGray);
-			let symbol = if let Some(_) = tile.character {
+			let symbol = if seen_char.is_some() {
 				'@'
-			} else if let Some(terrain) = tile.terrain {
+			} else if let Some(terrain) = seen_terrain {
 				terrain.hidden_symbol()
 			} else {
 				' '

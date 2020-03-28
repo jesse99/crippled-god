@@ -1,22 +1,16 @@
 use super::super::core::*;
 use super::super::level::*;
-use super::super::player::*;
 use super::view::*;
 use std::io::Write;
 use termion;
 
 type RawTerminal = termion::raw::RawTerminal<std::io::Stdout>;
 
-pub fn render_level(
-	stdout: &mut RawTerminal,
-	level: &mut Level,
-	player: &Player,
-	terminal_size: Size,
-) {
-	let tiles = level.tiles(terminal_size, player);
+pub fn render_level(stdout: &mut RawTerminal, store: &mut Store, terminal_size: Size) {
+	let seen = get_last_seen(store, terminal_size);
 
-	for (loc, tile) in tiles.iter() {
-		let view = View::new(tile);
+	for (loc, cell) in seen.iter() {
+		let view = View::new(store, cell);
 		let x = (loc.x + 1) as u16; // termion is 1-based
 		let y = (loc.y + 1) as u16;
 		let _ = write!(

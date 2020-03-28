@@ -15,5 +15,3 @@ impl NPCs {
 		None
 	}
 }
-// TODO: Box cannot be copied, could use Rc instead of a Box...
-// or use a reference to the box?

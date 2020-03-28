@@ -27,77 +27,71 @@ pub enum PlayerActionResult {
 	Error,
 }
 
-pub struct Player {
-	loc: Point,
+pub fn new_player(store: &mut Store) {
+	let loc = Point::origin();
+	store.insert(&PLAYER, Predicate::Loc, Object::Point(loc));
 }
 
-impl Player {
-	pub fn new() -> Player {
-		Player {
-			loc: Point::origin(),
+pub fn player_loc(store: &Store) -> Point {
+	store.lookup_pt(&PLAYER, Predicate::Loc).unwrap()
+}
+
+pub fn on_player_event(
+	store: &mut Store,
+	rng: &mut SmallRng,
+	event: &Event,
+	queued: &mut QueuedEvents,
+) {
+	match event {
+		Event::NewLevel => {
+			let loc = find_initial_loc(store, rng).unwrap();
+			queued.push_back(Event::SetPlayer(loc));
 		}
-	}
-
-	pub fn loc(&self) -> Point {
-		self.loc
-	}
-
-	pub fn on_event(
-		&mut self,
-		rng: &mut SmallRng,
-		event: &Event,
-		queued: &mut QueuedEvents,
-		level: &Level,
-	) {
-		match event {
-			Event::NewLevel => {
-				let loc = find_initial_loc(rng, &level).unwrap();
-				queued.push_back(Event::SetPlayer(loc));
-			}
-			Event::SetPlayer(loc) => {
-				// TODO: should have an assert here (or maybe in Level) that loc is sane
-				self.loc = *loc;
-			}
-			_ => (),
+		Event::SetPlayer(loc) => {
+			// TODO: should have an assert here (or maybe in Level) that loc is sane
+			store.insert(&PLAYER, Predicate::Loc, Object::Point(*loc));
 		}
+		_ => (),
 	}
+}
 
-	pub fn on_action(&mut self, action: PlayerAction, level: &Level) -> PlayerActionResult {
-		match action {
-			PlayerAction::DeltaEast => self.move_by(level, 1, 0),
-			PlayerAction::DeltaNorth => self.move_by(level, 0, -1),
-			PlayerAction::DeltaNorthEast => self.move_by(level, 1, -1),
-			PlayerAction::DeltaNorthWest => self.move_by(level, -1, -1),
-			PlayerAction::DeltaSouth => self.move_by(level, 0, 1),
-			PlayerAction::DeltaSouthEast => self.move_by(level, 1, 1),
-			PlayerAction::DeltaSouthWest => self.move_by(level, -1, 1),
-			PlayerAction::DeltaWest => self.move_by(level, -1, 0),
-			_ => PlayerActionResult::Ignored,
-		}
+pub fn on_player_action(store: &mut Store, action: PlayerAction) -> PlayerActionResult {
+	match action {
+		PlayerAction::DeltaEast => move_player_by(store, 1, 0),
+		PlayerAction::DeltaNorth => move_player_by(store, 0, -1),
+		PlayerAction::DeltaNorthEast => move_player_by(store, 1, -1),
+		PlayerAction::DeltaNorthWest => move_player_by(store, -1, -1),
+		PlayerAction::DeltaSouth => move_player_by(store, 0, 1),
+		PlayerAction::DeltaSouthEast => move_player_by(store, 1, 1),
+		PlayerAction::DeltaSouthWest => move_player_by(store, -1, 1),
+		PlayerAction::DeltaWest => move_player_by(store, -1, 0),
+		_ => PlayerActionResult::Ignored,
 	}
+}
 
-	fn move_by(&mut self, level: &Level, dx: i32, dy: i32) -> PlayerActionResult {
-		assert!(dx != 0 || dy != 0);
+fn move_player_by(store: &mut Store, dx: i32, dy: i32) -> PlayerActionResult {
+	assert!(dx != 0 || dy != 0);
 
-		let new_loc = Point {
-			x: self.loc.x + dx,
-			y: self.loc.y + dy,
-		};
-		if can_move_to(level, new_loc) {
-			self.loc = new_loc;
-			if dx != 0 && dy != 0 {
-				PlayerActionResult::Acted(Duration::from_secs(1.4 * 2.0))
-			} else {
-				PlayerActionResult::Acted(Duration::from_secs(2.0))
-			}
+	let old_loc = store.lookup_pt(&PLAYER, Predicate::Loc).unwrap();
+
+	let new_loc = Point {
+		x: old_loc.x + dx,
+		y: old_loc.y + dy,
+	};
+	if can_move_to(store, new_loc) {
+		store.insert(&PLAYER, Predicate::Loc, Object::Point(new_loc));
+		if dx != 0 && dy != 0 {
+			PlayerActionResult::Acted(Duration::from_secs(1.4 * 2.0))
 		} else {
-			PlayerActionResult::Error // TODO: should we include a reason?
+			PlayerActionResult::Acted(Duration::from_secs(2.0))
 		}
+	} else {
+		PlayerActionResult::Error // TODO: should we include a reason?
 	}
 }
 
-fn find_initial_loc(rng: &mut SmallRng, level: &Level) -> Option<Point> {
-	let size = level.size();
+fn find_initial_loc(store: &Store, rng: &mut SmallRng) -> Option<Point> {
+	let size = get_level_size(store);
 	let mut indexes: Vec<i32> = (0..size.width * size.height).collect();
 	indexes.shuffle(rng);
 
@@ -105,7 +99,7 @@ fn find_initial_loc(rng: &mut SmallRng, level: &Level) -> Option<Point> {
 		let x = i % size.width;
 		let y = i / size.width;
 		let loc = Point::new(x, y);
-		let cell = level.get(loc);
+		let cell = get_level_terrain(store, loc);
 		if let Terrain::Ground = cell {
 			// if cell.character.is_none() && predicate(cell) {
 			return Some(loc);

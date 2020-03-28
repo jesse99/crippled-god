@@ -3,7 +3,7 @@ mod render;
 mod view;
 
 use super::core::*;
-use super::level::*;
+// use super::level::*;
 use super::player::*;
 use render::*;
 use slog::Logger;
@@ -48,8 +48,7 @@ impl Terminal {
 		&mut self,
 		event: &Event,
 		_queued: &mut QueuedEvents,
-		level: &mut Level,
-		player: &mut Player,
+		store: &mut Store,
 	) -> TerminalEventResult {
 		// TODO:
 		//    map it to an action
@@ -59,7 +58,7 @@ impl Terminal {
 			if *time == self.ready {
 				let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 				let terminal_size = Size::new(i32::from(width), i32::from(height));
-				render_level(&mut self.stdout, level, player, terminal_size);
+				render_level(&mut self.stdout, store, terminal_size);
 				self.stdout.flush().unwrap();
 
 				let stdin = std::io::stdin();
@@ -68,7 +67,7 @@ impl Terminal {
 					let cc = c.unwrap();
 					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(action) = key_to_action(cc) {
-						match player.on_action(action, level) {
+						match on_player_action(store, action) {
 							PlayerActionResult::Acted(duration) => self.ready += duration,
 							PlayerActionResult::Error => {
 								let _ = write!(self.stdout, "\x07");

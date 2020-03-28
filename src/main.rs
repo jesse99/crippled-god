@@ -1,4 +1,6 @@
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate slog;
 // extern crate slog_async;
 // extern crate slog_term;
@@ -13,6 +15,7 @@ mod player;
 mod terminal;
 
 use crate::core::*;
+use level::*;
 use level_generator::*;
 use player::*;
 use rand::rngs::SmallRng;
@@ -53,11 +56,13 @@ fn main() {
 	// when we call methods). Also using a Game struct makes dependencies
 	// very fuzzy, e.g. if a function takes a mut Game reference then
 	// there is no good way to tell what will actually be changed.
-	let mut store = EventStore::new();
-	let mut level = level::Level::new();
+	let mut store = Store::new();
+	let mut events = EventStore::new();
 	let mut level_gen = LevelGenerator::new();
-	let mut player = Player::new();
 	let mut terminal = Terminal::new(&root_logger);
+
+	new_level(&mut store);
+	new_player(&mut store);
 
 	// Note that we can replay games but once they have been
 	// replayed the original game and the replayed game will
@@ -74,10 +79,9 @@ fn main() {
 		match process_events(
 			&root_logger,
 			&mut queued,
-			&mut store,
-			&mut level,
+			&mut events,
 			&mut level_gen,
-			&mut player,
+			&mut store,
 			&mut terminal,
 			&mut rng,
 		) {
@@ -87,7 +91,7 @@ fn main() {
 
 		// Once all the services have processed figure out which service will be
 		// ready next and queue up an event to advance time to that point.
-		let time = find_next_scheduled(&level, &level_gen, &terminal);
+		let time = find_next_scheduled(&level_gen, &terminal);
 		queued.push_back(Event::AdvanceTime(time));
 	}
 }
@@ -96,10 +100,9 @@ fn main() {
 fn process_events(
 	root_logger: &slog::Logger,
 	queued: &mut QueuedEvents,
-	store: &mut EventStore,
-	level: &mut level::Level,
+	events: &mut EventStore,
 	level_gen: &mut LevelGenerator,
-	player: &mut Player,
+	store: &mut Store,
 	terminal: &mut Terminal,
 	rng: &mut SmallRng,
 ) -> TerminalEventResult {
@@ -110,13 +113,13 @@ fn process_events(
 
 		// save it into the store (so that if there is a problem we can replay
 		// the event that caused it),
-		store.append(&event);
+		events.append(&event);
 
 		// and give each service a chance to respond to the event.
-		level.on_event(&event, queued);
+		on_level_event(store, &event, queued);
 		level_gen.on_event(&event, queued);
-		player.on_event(rng, &event, queued, &level);
-		match terminal.on_event(&event, queued, level, player) {
+		on_player_event(store, rng, &event, queued);
+		match terminal.on_event(&event, queued, store) {
 			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
 			TerminalEventResult::Running => (),
 		}
@@ -124,14 +127,9 @@ fn process_events(
 	TerminalEventResult::Running
 }
 
-fn find_next_scheduled(
-	level: &level::Level,
-	level_gen: &LevelGenerator,
-	terminal: &Terminal,
-) -> Time {
+fn find_next_scheduled(level_gen: &LevelGenerator, terminal: &Terminal) -> Time {
 	let mut time = INFINITE_TIME;
 
-	time = std::cmp::min(time, level.ready_time());
 	time = std::cmp::min(time, level_gen.ready_time());
 	time = std::cmp::min(time, terminal.ready_time());
 
