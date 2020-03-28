@@ -1,33 +1,39 @@
+#[cfg(test)]
 use super::*;
+
+#[cfg(test)]
 use std::fmt;
 
 #[derive(Clone)]
+#[cfg(test)]
 pub struct Vec2d<T> {
 	size: Size,
 	elements: Vec<T>,
 }
 
+#[cfg(test)]
 pub struct Vec2dIter<'a, T: 'a> {
 	index: usize,
 	vector: &'a Vec2d<T>,
 }
 
+#[cfg(test)]
 impl<T: Clone> Vec2d<T> {
-	pub fn empty() -> Vec2d<T> {
-		Vec2d {
-			size: Size::zero(),
-			elements: Vec::new(),
-		}
-	}
+	// pub fn empty() -> Vec2d<T> {
+	// 	Vec2d {
+	// 		size: Size::zero(),
+	// 		elements: Vec::new(),
+	// 	}
+	// }
 
 	pub fn new(size: Size, default: T) -> Vec2d<T> {
 		let elements = vec![default; size.area() as usize];
 		Vec2d { size, elements }
 	}
 
-	pub fn size(&self) -> Size {
-		self.size
-	}
+	// pub fn size(&self) -> Size {
+	// 	self.size
+	// }
 
 	pub fn set(&mut self, loc: Point, value: T) {
 		let index = loc.x + loc.y * self.size.width;
@@ -52,17 +58,18 @@ impl<T: Clone> Vec2d<T> {
 	}
 
 	// More elegant to use a mutable iterator here but that requires an unsafe block, see https://users.rust-lang.org/t/implementing-an-iterator-of-mutable-references/8671
-	pub fn apply<F: Fn(Point, &mut T)>(&mut self, mutate: F) {
-		for i in 0..self.elements.len() {
-			let x = (i % self.size.width as usize) as i32;
-			let y = (i / self.size.width as usize) as i32;
-			let loc = Point::new(x, y);
-			let val = self.elements.get_mut(i);
-			mutate(loc, val.unwrap());
-		}
-	}
+	// pub fn apply<F: Fn(Point, &mut T)>(&mut self, mutate: F) {
+	// 	for i in 0..self.elements.len() {
+	// 		let x = (i % self.size.width as usize) as i32;
+	// 		let y = (i / self.size.width as usize) as i32;
+	// 		let loc = Point::new(x, y);
+	// 		let val = self.elements.get_mut(i);
+	// 		mutate(loc, val.unwrap());
+	// 	}
+	// }
 }
 
+#[cfg(test)]
 impl<'a, T> Iterator for Vec2dIter<'a, T> {
 	type Item = (Point, &'a T);
 
@@ -82,6 +89,7 @@ impl<'a, T> Iterator for Vec2dIter<'a, T> {
 	}
 }
 
+#[cfg(test)]
 impl<T: Clone + fmt::Display> fmt::Display for Vec2d<T> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		writeln!(f)?;

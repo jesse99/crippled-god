@@ -11,13 +11,14 @@ impl Size {
 		Size { width, height }
 	}
 
-	pub fn zero() -> Size {
-		Size {
-			width: 0,
-			height: 0,
-		}
-	}
+	// pub fn zero() -> Size {
+	// 	Size {
+	// 		width: 0,
+	// 		height: 0,
+	// 	}
+	// }
 
+	#[cfg(test)]
 	pub fn area(self) -> i32 {
 		self.width * self.height
 	}

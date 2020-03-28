@@ -318,7 +318,7 @@ fn add_steep_bump(loc: Point, active_views: &mut Vec<View>, view_index: usize) {
 }
 
 // Removes the view in active_views at index view_index if
-//    - The two lines are coolinear
+//    - The two lines are collinear
 //    - The lines pass through either extremity
 fn check_view(active_views: &mut Vec<View>, view_index: usize) -> bool {
 	let shallow_line = active_views[view_index].shallow_line;

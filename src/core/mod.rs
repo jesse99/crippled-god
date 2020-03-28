@@ -17,4 +17,6 @@ pub use size::Size;
 pub use store::*;
 pub use terrain::Terrain;
 pub use time::*;
+
+#[cfg(test)]
 pub use vec2d::Vec2d;
