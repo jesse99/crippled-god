@@ -30,10 +30,19 @@ pub enum PlayerActionResult {
 pub fn new_player(store: &mut Store) {
 	let loc = Point::origin();
 	store.insert(&PLAYER, Predicate::Loc, Object::Point(loc));
+	store.insert(
+		&PLAYER,
+		Predicate::Ready,
+		Object::Time(Time::from_secs(1.0)),
+	);
 }
 
 pub fn player_loc(store: &Store) -> Point {
 	store.lookup_pt(&PLAYER, Predicate::Loc).unwrap()
+}
+
+pub fn player_ready_time(store: &Store) -> Time {
+	store.lookup_time(&PLAYER, Predicate::Ready).unwrap()
 }
 
 pub fn on_player_event(

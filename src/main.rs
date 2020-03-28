@@ -58,7 +58,6 @@ fn main() {
 	// there is no good way to tell what will actually be changed.
 	let mut store = Store::new();
 	let mut executed = ExecutedEvents::new();
-	let mut level_gen = LevelGenerator::new();
 	let mut terminal = Terminal::new(&root_logger);
 
 	new_level(&mut store);
@@ -80,7 +79,6 @@ fn main() {
 			&root_logger,
 			&mut pending,
 			&mut executed,
-			&mut level_gen,
 			&mut store,
 			&mut terminal,
 			&mut rng,
@@ -91,17 +89,15 @@ fn main() {
 
 		// Once all the services have processed figure out which service will be
 		// ready next and queue up an event to advance time to that point.
-		let time = find_next_scheduled(&level_gen, &terminal);
+		let time = find_next_scheduled(&store);
 		pending.push_back(Event::AdvanceTime(time));
 	}
 }
 
-#[allow(clippy::too_many_arguments)]
 fn process_events(
 	root_logger: &slog::Logger,
 	pending: &mut PendingEvents,
 	executed: &mut ExecutedEvents,
-	level_gen: &mut LevelGenerator,
 	store: &mut Store,
 	terminal: &mut Terminal,
 	rng: &mut SmallRng,
@@ -117,7 +113,7 @@ fn process_events(
 
 		// and give each service a chance to respond to the event.
 		on_level_event(store, &event, pending);
-		level_gen.on_event(&event, pending);
+		on_level_gen_event(store, &event, pending);
 		on_player_event(store, rng, &event, pending);
 		match terminal.on_event(&event, pending, store) {
 			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
@@ -127,11 +123,11 @@ fn process_events(
 	TerminalEventResult::Running
 }
 
-fn find_next_scheduled(level_gen: &LevelGenerator, terminal: &Terminal) -> Time {
+fn find_next_scheduled(store: &Store) -> Time {
 	let mut time = INFINITE_TIME;
 
-	time = std::cmp::min(time, level_gen.ready_time());
-	time = std::cmp::min(time, terminal.ready_time());
+	time = std::cmp::min(time, level_gen_ready_time(store));
+	time = std::cmp::min(time, player_ready_time(store));
 
 	time
 }

@@ -28,7 +28,6 @@ enum TerminalActionResult {
 pub struct Terminal {
 	logger: Logger,
 	stdout: RawTerminal,
-	ready: Time, // this is basically the player ready time
 }
 
 impl Terminal {
@@ -36,12 +35,7 @@ impl Terminal {
 		Terminal {
 			logger: root_logger.new(o!()),
 			stdout: setup_terminal(),
-			ready: Time::from_secs(1.0),
 		}
-	}
-
-	pub fn ready_time(&self) -> Time {
-		self.ready
 	}
 
 	pub fn on_event(
@@ -54,8 +48,9 @@ impl Terminal {
 		//    map it to an action
 		//    dispatch it to a handler, player actions will need to return a duration
 		if let Event::AdvanceTime(time) = event {
-			assert!(*time <= self.ready);
-			if *time == self.ready {
+			let ready = player_ready_time(store);
+			assert!(*time <= ready);
+			if *time == ready {
 				let (width, height) = termion::terminal_size().expect("couldn't get terminal size");
 				let terminal_size = Size::new(i32::from(width), i32::from(height));
 				render_level(&mut self.stdout, store, terminal_size);
@@ -68,7 +63,11 @@ impl Terminal {
 					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(action) = key_to_action(cc) {
 						match on_player_action(store, action) {
-							PlayerActionResult::Acted(duration) => self.ready += duration,
+							PlayerActionResult::Acted(duration) => store.insert(
+								&PLAYER,
+								Predicate::Ready,
+								Object::Time(ready + duration),
+							),
 							PlayerActionResult::Error => {
 								let _ = write!(self.stdout, "\x07");
 							}

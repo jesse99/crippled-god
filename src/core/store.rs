@@ -45,7 +45,7 @@ pub enum Predicate {
 	LastSeenTerrain,
 	Loc,
 	Name,
-	// Ready,
+	Ready,
 	Size,
 	Terrain,
 	Visible,
@@ -60,7 +60,7 @@ pub enum Object {
 	Size(Size),
 	Str(String),
 	Terrain(Terrain),
-	// Time(Time),
+	Time(Time),
 }
 
 pub struct Store {
@@ -143,6 +143,18 @@ impl Store {
 	pub fn lookup_size(&self, subject: &Subject, predicate: Predicate) -> Option<Size> {
 		if let Some(inner) = self.data.get(subject) {
 			if let Some(Object::Size(v)) = inner.get(&predicate) {
+				Some(*v)
+			} else {
+				None
+			}
+		} else {
+			None
+		}
+	}
+
+	pub fn lookup_time(&self, subject: &Subject, predicate: Predicate) -> Option<Time> {
+		if let Some(inner) = self.data.get(subject) {
+			if let Some(Object::Time(v)) = inner.get(&predicate) {
 				Some(*v)
 			} else {
 				None

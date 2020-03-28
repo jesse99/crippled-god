@@ -2,27 +2,17 @@ mod main_branch;
 
 use super::core::*;
 
-// LevelGenerator doesn't have any state but we use a struct anyway to keep it consistent with
-// the other services.
-pub struct LevelGenerator {}
+pub fn level_gen_ready_time(_store: &Store) -> Time {
+	INFINITE_TIME
+}
 
-impl LevelGenerator {
-	pub fn new() -> LevelGenerator {
-		LevelGenerator {}
-	}
-
-	pub fn ready_time(&self) -> Time {
-		INFINITE_TIME
-	}
-
-	pub fn on_event(&mut self, event: &Event, pending: &mut PendingEvents) {
-		if let Event::NewBranch = event {
-			// TODO: probably want some sort of invariant check here
-			// eg: that perimeter is some sort of permanent wall
-			// and open areas exist
-			// and maybe that all open areas are reachable
-			main_branch::new(pending);
-			pending.push_back(Event::NewLevel);
-		}
+pub fn on_level_gen_event(_store: &mut Store, event: &Event, pending: &mut PendingEvents) {
+	if let Event::NewBranch = event {
+		// TODO: probably want some sort of invariant check here
+		// eg: that perimeter is some sort of permanent wall
+		// and open areas exist
+		// and maybe that all open areas are reachable
+		main_branch::new(pending);
+		pending.push_back(Event::NewLevel);
 	}
 }
