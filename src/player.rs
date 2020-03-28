@@ -40,12 +40,12 @@ pub fn on_player_event(
 	store: &mut Store,
 	rng: &mut SmallRng,
 	event: &Event,
-	queued: &mut QueuedEvents,
+	pending: &mut PendingEvents,
 ) {
 	match event {
 		Event::NewLevel => {
 			let loc = find_initial_loc(store, rng).unwrap();
-			queued.push_back(Event::SetPlayer(loc));
+			pending.push_back(Event::SetPlayer(loc));
 		}
 		Event::SetPlayer(loc) => {
 			// TODO: should have an assert here (or maybe in Level) that loc is sane

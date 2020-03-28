@@ -10,8 +10,7 @@ pub mod time;
 pub mod vec2d;
 
 pub use event::Event;
-pub use events::EventStore;
-pub use events::QueuedEvents;
+pub use events::{ExecutedEvents, PendingEvents};
 pub use point::Point;
 pub use pov::POV;
 pub use size::Size;

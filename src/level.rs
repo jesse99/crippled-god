@@ -28,7 +28,7 @@ pub fn get_level_terrain(store: &Store, loc: Point) -> Terrain {
 		.unwrap_or_else(|| panic!("Couldn't find terrain for {:?}", subject))
 }
 
-pub fn on_level_event(store: &mut Store, event: &Event, _queued: &mut QueuedEvents) {
+pub fn on_level_event(store: &mut Store, event: &Event, _pending: &mut PendingEvents) {
 	match event {
 		Event::ResetLevel(name, size, terrain) => {
 			store.insert(&LEVEL, Predicate::Name, Object::Str(name.clone()));

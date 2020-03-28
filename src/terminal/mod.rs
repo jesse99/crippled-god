@@ -47,7 +47,7 @@ impl Terminal {
 	pub fn on_event(
 		&mut self,
 		event: &Event,
-		_queued: &mut QueuedEvents,
+		_queued: &mut PendingEvents,
 		store: &mut Store,
 	) -> TerminalEventResult {
 		// TODO:

@@ -1,16 +1,16 @@
 use super::*;
 
 // Events which have executed.
-pub struct EventStore {}
+pub struct ExecutedEvents {}
 
 // [`Event`]s which are pending execution.
-pub struct QueuedEvents {
+pub struct PendingEvents {
 	events: Vec<Event>, // TODO: use a deque?
 }
 
-impl EventStore {
-	pub fn new() -> EventStore {
-		EventStore {}
+impl ExecutedEvents {
+	pub fn new() -> ExecutedEvents {
+		ExecutedEvents {}
 	}
 
 	pub fn append(&mut self, _event: &Event) {
@@ -18,9 +18,9 @@ impl EventStore {
 	}
 }
 
-impl QueuedEvents {
-	pub fn new() -> QueuedEvents {
-		QueuedEvents { events: Vec::new() }
+impl PendingEvents {
+	pub fn new() -> PendingEvents {
+		PendingEvents { events: Vec::new() }
 	}
 
 	pub fn is_empty(&self) -> bool {

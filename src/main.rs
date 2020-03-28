@@ -57,7 +57,7 @@ fn main() {
 	// very fuzzy, e.g. if a function takes a mut Game reference then
 	// there is no good way to tell what will actually be changed.
 	let mut store = Store::new();
-	let mut events = EventStore::new();
+	let mut executed = ExecutedEvents::new();
 	let mut level_gen = LevelGenerator::new();
 	let mut terminal = Terminal::new(&root_logger);
 
@@ -71,15 +71,15 @@ fn main() {
 	// during replay).
 	let mut rng = SmallRng::seed_from_u64(2); // TODO: get the seed from the command line
 
-	let mut queued = QueuedEvents::new();
-	queued.push_back(Event::NewBranch);
+	let mut pending = PendingEvents::new();
+	pending.push_back(Event::NewBranch);
 
 	loop {
 		// Handle all the events that are queued up.
 		match process_events(
 			&root_logger,
-			&mut queued,
-			&mut events,
+			&mut pending,
+			&mut executed,
 			&mut level_gen,
 			&mut store,
 			&mut terminal,
@@ -92,34 +92,34 @@ fn main() {
 		// Once all the services have processed figure out which service will be
 		// ready next and queue up an event to advance time to that point.
 		let time = find_next_scheduled(&level_gen, &terminal);
-		queued.push_back(Event::AdvanceTime(time));
+		pending.push_back(Event::AdvanceTime(time));
 	}
 }
 
 #[allow(clippy::too_many_arguments)]
 fn process_events(
 	root_logger: &slog::Logger,
-	queued: &mut QueuedEvents,
-	events: &mut EventStore,
+	pending: &mut PendingEvents,
+	executed: &mut ExecutedEvents,
 	level_gen: &mut LevelGenerator,
 	store: &mut Store,
 	terminal: &mut Terminal,
 	rng: &mut SmallRng,
 ) -> TerminalEventResult {
-	while !queued.is_empty() {
+	while !pending.is_empty() {
 		// Grab the next event,
-		let event = queued.pop_front();
+		let event = pending.pop_front();
 		debug!(root_logger, "processing"; "event" => %event);
 
 		// save it into the store (so that if there is a problem we can replay
 		// the event that caused it),
-		events.append(&event);
+		executed.append(&event);
 
 		// and give each service a chance to respond to the event.
-		on_level_event(store, &event, queued);
-		level_gen.on_event(&event, queued);
-		on_player_event(store, rng, &event, queued);
-		match terminal.on_event(&event, queued, store) {
+		on_level_event(store, &event, pending);
+		level_gen.on_event(&event, pending);
+		on_player_event(store, rng, &event, pending);
+		match terminal.on_event(&event, pending, store) {
 			TerminalEventResult::NotRunning => return TerminalEventResult::NotRunning,
 			TerminalEventResult::Running => (),
 		}

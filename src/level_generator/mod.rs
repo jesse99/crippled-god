@@ -15,14 +15,14 @@ impl LevelGenerator {
 		INFINITE_TIME
 	}
 
-	pub fn on_event(&mut self, event: &Event, queued: &mut QueuedEvents) {
+	pub fn on_event(&mut self, event: &Event, pending: &mut PendingEvents) {
 		if let Event::NewBranch = event {
 			// TODO: probably want some sort of invariant check here
 			// eg: that perimeter is some sort of permanent wall
 			// and open areas exist
 			// and maybe that all open areas are reachable
-			main_branch::new(queued);
-			queued.push_back(Event::NewLevel);
+			main_branch::new(pending);
+			pending.push_back(Event::NewLevel);
 		}
 	}
 }
