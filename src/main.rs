@@ -55,7 +55,7 @@ fn main() {
 	// when we call methods). Also using a Game struct makes dependencies
 	// very fuzzy, e.g. if a function takes a mut Game reference then
 	// there is no good way to tell what will actually be changed.
-	let mut store = Store::new();
+	let mut store = Store::new(&root_logger);
 	let mut executed = ExecutedEvents::new();
 	let mut terminal = Terminal::new(&root_logger);
 

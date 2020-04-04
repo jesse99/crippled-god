@@ -7,6 +7,8 @@
 use super::*;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
+use slog::Logger;
+use std::fmt;
 
 /// This is used to identify an object within the game, eg an instance of an
 /// NPC, the player, a location within the map, etc.
@@ -26,6 +28,12 @@ impl Subject {
 	/// iter_by_class.
 	pub fn new_instance(store: &mut Store, class: &str, name: &str) -> Subject {
 		Subject(store.instance_name(class, name))
+	}
+}
+
+impl fmt::Display for Subject {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "\"{}\"", self.0)
 	}
 }
 
@@ -54,6 +62,7 @@ pub enum Predicate {
 }
 
 /// The value associated with a Subject and relation.
+#[derive(Debug)]
 pub enum Object {
 	Bool(bool),
 	Point(Point),
@@ -65,25 +74,71 @@ pub enum Object {
 	Time(Time),
 }
 
+impl fmt::Display for Object {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Object::Bool(true) => write!(f, "true"),
+			Object::Bool(false) => write!(f, "false"),
+			Object::Point(v) => write!(f, "{}", v),
+			Object::Ref(v) => write!(f, "{}", v),
+			Object::Size(v) => write!(f, "{}", v),
+			Object::Str(v) => write!(f, "\"{}\"", v),
+			Object::Terrain(v) => write!(f, "{}", v),
+			Object::Time(v) => write!(f, "{}", v),
+		}
+	}
+}
+
+#[derive(Debug)]
+struct Triplet<'a> {
+	subject: &'a Subject,
+	predicate: &'a Predicate,
+	object: &'a Object,
+}
+
+impl<'a> Triplet<'a> {
+	fn new(subject: &'a Subject, predicate: &'a Predicate, object: &'a Object) -> Triplet<'a> {
+		Triplet {
+			subject,
+			predicate,
+			object,
+		}
+	}
+}
+
+impl<'a> fmt::Display for Triplet<'a> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(
+			f,
+			"({}, {:?}, {})",
+			self.subject, self.predicate, self.object
+		)
+	}
+}
+
 pub struct Store {
 	count: u64,
 	data: FnvHashMap<Subject, FnvHashMap<Predicate, Object>>,
 	classes: FnvHashMap<String, FnvHashSet<Subject>>,
 	empty: FnvHashSet<Subject>,
+	logger: Logger,
 }
 
 impl Store {
 	// TODO: may want to replace this with a function that loads from a trait
-	pub fn new() -> Store {
+	pub fn new(root_logger: &Logger) -> Store {
 		Store {
 			count: 0,
 			data: FnvHashMap::default(),
 			classes: FnvHashMap::default(),
 			empty: FnvHashSet::default(),
+			logger: root_logger.new(o!()),
 		}
 	}
 
 	pub fn insert(&mut self, subject: &Subject, predicate: Predicate, object: Object) {
+		trace!(self.logger, "inserting"; "triplet" => %Triplet::new(subject, &predicate, &object));
+
 		// TODO: May want to do some profiling to see:
 		// 1) If the store methods are a bottle neck.
 		// 2) If a HashMap<Subject, [({Predicate, Object})] would be better.
@@ -98,7 +153,9 @@ impl Store {
 
 	pub fn remove(&mut self, subject: &Subject, predicate: Predicate) {
 		if let Some(inner) = self.data.get_mut(subject) {
-			inner.remove(&predicate);
+			if let Some(object) = inner.remove(&predicate) {
+				trace!(self.logger, "removed"; "triplet" => %Triplet::new(subject, &predicate, &object));
+			}
 		}
 	}
 
