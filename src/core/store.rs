@@ -6,6 +6,7 @@
 //! separate stores for each level.
 use super::*;
 use fnv::FnvHashMap;
+use fnv::FnvHashSet;
 
 /// This is used to identify an object within the game, eg an instance of an
 /// NPC, the player, a location within the map, etc.
@@ -21,9 +22,10 @@ impl Subject {
 		Subject(name.to_string())
 	}
 
-	/// Creates an instance of a subject, e.g. "wolf".
-	pub fn new_instance(store: &mut Store, name: &str) -> Subject {
-		Subject(store.instance_name(name))
+	/// Creates an instance of a subject, e.g. "wolf". Class is used by Store::
+	/// iter_by_class.
+	pub fn new_instance(store: &mut Store, class: &str, name: &str) -> Subject {
+		Subject(store.instance_name(class, name))
 	}
 }
 
@@ -66,6 +68,7 @@ pub enum Object {
 pub struct Store {
 	count: u64,
 	data: FnvHashMap<Subject, FnvHashMap<Predicate, Object>>,
+	classes: FnvHashMap<String, FnvHashSet<Subject>>,
 }
 
 impl Store {
@@ -74,6 +77,7 @@ impl Store {
 		Store {
 			count: 0,
 			data: FnvHashMap::default(),
+			classes: FnvHashMap::default(),
 		}
 	}
 
@@ -96,13 +100,9 @@ impl Store {
 		}
 	}
 
-	// pub fn lookup(&self, subject: &Subject, predicate: Predicate) -> Option<&Object> {
-	// 	if let Some(inner) = self.data.get(subject) {
-	// 		inner.get(&predicate)
-	// 	} else {
-	// 		None
-	// 	}
-	// }
+	pub fn iter_by_class(self: &Store, class: &str) -> std::collections::hash_set::Iter<Subject> {
+		self.classes.entry(class.to_string()).or_default().iter()
+	}
 
 	pub fn lookup_bool(&self, subject: &Subject, predicate: Predicate) -> Option<bool> {
 		if let Some(inner) = self.data.get(subject) {
@@ -176,9 +176,13 @@ impl Store {
 		}
 	}
 
-	fn instance_name(&mut self, base: &str) -> String {
+	fn instance_name(&mut self, class: &str, base: &str) -> String {
 		let name = format!("{}-{}", base, self.count);
 		self.count += 1;
+
+		let inner = self.classes.entry(class.to_string()).or_default();
+		inner.insert(Subject(name.clone()));
+
 		name
 	}
 }

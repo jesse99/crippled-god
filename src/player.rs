@@ -53,7 +53,7 @@ pub fn on_player_event(
 ) {
 	match event {
 		Event::NewLevel => {
-			let loc = find_initial_loc(store, rng).unwrap();
+			let loc = find_char_loc(store, rng).unwrap();
 			pending.push_back(Event::SetPlayer(loc));
 		}
 		Event::SetPlayer(loc) => {
@@ -79,40 +79,9 @@ pub fn on_player_action(store: &mut Store, action: PlayerAction) -> PlayerAction
 }
 
 fn move_player_by(store: &mut Store, dx: i32, dy: i32) -> PlayerActionResult {
-	assert!(dx != 0 || dy != 0);
-
-	let old_loc = store.lookup_pt(&PLAYER, Predicate::Loc).unwrap();
-
-	let new_loc = Point {
-		x: old_loc.x + dx,
-		y: old_loc.y + dy,
-	};
-	if can_move_to(store, new_loc) {
-		store.insert(&PLAYER, Predicate::Loc, Object::Point(new_loc));
-		if dx != 0 && dy != 0 {
-			PlayerActionResult::Acted(Duration::from_secs(1.4 * 2.0))
-		} else {
-			PlayerActionResult::Acted(Duration::from_secs(2.0))
-		}
+	if let Some(duration) = move_char_by(store, &PLAYER, dx, dy) {
+		PlayerActionResult::Acted(duration)
 	} else {
 		PlayerActionResult::Error // TODO: should we include a reason?
 	}
-}
-
-fn find_initial_loc(store: &Store, rng: &mut SmallRng) -> Option<Point> {
-	let size = get_level_size(store);
-	let mut indexes: Vec<i32> = (0..size.width * size.height).collect();
-	indexes.shuffle(rng);
-
-	for i in &indexes {
-		let x = i % size.width;
-		let y = i / size.width;
-		let loc = Point::new(x, y);
-		let cell = get_level_terrain(store, loc);
-		if let Terrain::Ground = cell {
-			// if cell.character.is_none() && predicate(cell) {
-			return Some(loc);
-		}
-	}
-	None
 }
