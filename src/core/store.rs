@@ -69,6 +69,7 @@ pub struct Store {
 	count: u64,
 	data: FnvHashMap<Subject, FnvHashMap<Predicate, Object>>,
 	classes: FnvHashMap<String, FnvHashSet<Subject>>,
+	empty: FnvHashSet<Subject>,
 }
 
 impl Store {
@@ -78,6 +79,7 @@ impl Store {
 			count: 0,
 			data: FnvHashMap::default(),
 			classes: FnvHashMap::default(),
+			empty: FnvHashSet::default(),
 		}
 	}
 
@@ -100,8 +102,15 @@ impl Store {
 		}
 	}
 
-	pub fn iter_by_class(self: &Store, class: &str) -> std::collections::hash_set::Iter<Subject> {
-		self.classes.entry(class.to_string()).or_default().iter()
+	pub fn iter_by_instance_class(
+		self: &Store,
+		class: &str,
+	) -> std::collections::hash_set::Iter<Subject> {
+		if let Some(inner) = self.classes.get(class) {
+			inner.iter()
+		} else {
+			self.empty.iter()
+		}
 	}
 
 	pub fn lookup_bool(&self, subject: &Subject, predicate: Predicate) -> Option<bool> {

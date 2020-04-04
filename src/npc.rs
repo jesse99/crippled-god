@@ -20,7 +20,7 @@ pub fn new_npc(store: &mut Store, prefix: &str, rng: &mut SmallRng, current_time
 pub fn npc_ready_time(store: &Store) -> Time {
 	let mut time = INFINITE_TIME;
 
-	for name in store.iter_by_class("npc") {
+	for name in store.iter_by_instance_class("npc") {
 		let candidate = store.lookup_time(name, Predicate::Ready).unwrap();
 		if candidate < time {
 			time = candidate;
@@ -38,12 +38,17 @@ pub fn on_npc_event(
 ) {
 	match event {
 		Event::AdvanceTime(time) => {
-			for name in store.iter_by_class("npc") {
-				let ready = store.lookup_time(name, Predicate::Ready).unwrap();
-				assert!(*time >= ready);
-				if *time == ready {
-					do_skittish(store, rng, pending, name);
-				}
+			let names: Vec<Subject> = store
+				.iter_by_instance_class("npc")
+				.filter(|name| {
+					let ready = store.lookup_time(name, Predicate::Ready).unwrap();
+					assert!(*time >= ready);
+					*time == ready
+				})
+				.cloned()
+				.collect();
+			for name in names.iter() {
+				do_skittish(store, rng, pending, name);
 			}
 		}
 		_ => (),
@@ -53,10 +58,10 @@ pub fn on_npc_event(
 fn do_skittish(store: &mut Store, rng: &mut SmallRng, pending: &mut PendingEvents, name: &Subject) {
 }
 
-fn move_npc_by(store: &mut Store, dx: i32, dy: i32) -> PlayerActionResult {
+fn move_npc_by(store: &mut Store, dx: i32, dy: i32) -> Option<Duration> {
 	if let Some(duration) = move_char_by(store, &PLAYER, dx, dy) {
-		PlayerActionResult::Acted(duration)
+		Some(duration)
 	} else {
-		PlayerActionResult::Error // TODO: should we include a reason?
+		None
 	}
 }
