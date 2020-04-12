@@ -31,29 +31,38 @@ pub fn get_level_terrain(store: &Store, loc: Point) -> Terrain {
 pub fn on_level_event(store: &mut Store, event: &Event, _pending: &mut PendingEvents) {
 	match event {
 		Event::ResetLevel(name, size, terrain) => {
-			store.insert(&LEVEL, Predicate::Name, Object::Str(name.clone()));
-			store.insert(&LEVEL, Predicate::Size, Object::Size(*size));
+			store.insert(event, &LEVEL, Predicate::Name, Object::Str(name.clone()));
+			store.insert(event, &LEVEL, Predicate::Size, Object::Size(*size));
 
 			let subject = Subject::new_unique("dummy-cell"); // TODO: should probaby handle this with a NewGame event
-			store.insert(&subject, Predicate::Visible, Object::Bool(false));
+			store.insert(event, &subject, Predicate::Visible, Object::Bool(false));
 
 			for y in 0..size.height {
 				for x in 0..size.width {
 					let subject = cell(Point::new(x, y));
-					store.insert(&subject, Predicate::Terrain, Object::Terrain(*terrain));
-					store.insert(&subject, Predicate::Visible, Object::Bool(false));
+					store.insert(
+						event,
+						&subject,
+						Predicate::Terrain,
+						Object::Terrain(*terrain),
+					);
+					store.insert(event, &subject, Predicate::Visible, Object::Bool(false));
 				}
 			}
 		}
 		Event::SetTerrain(loc, terrain) => {
 			let subject = cell(*loc);
-			store.insert(&subject, Predicate::Terrain, Object::Terrain(*terrain));
+			store.insert(
+				event,
+				&subject,
+				Predicate::Terrain,
+				Object::Terrain(*terrain),
+			);
 		}
 		_ => (),
 	}
 }
 
-///
 /// Returns a vector of locations (in screen coordinates) and a subject for the associated
 /// cell.
 ///

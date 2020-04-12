@@ -4,18 +4,19 @@ use super::level::*;
 use rand::rngs::SmallRng;
 // use rand::seq::SliceRandom;
 
-pub fn new_npc(store: &mut Store, prefix: &str, rng: &mut SmallRng, current_time: Time) {
-	if let Some(loc) = find_char_loc(store, rng) {
-		let name = Subject::new_instance(store, "npc", prefix);
-		store.insert(&name, Predicate::Loc, Object::Point(loc));
-		store.insert(
-			&name,
-			Predicate::Ready,
-			Object::Time(current_time + Duration::from_secs(1.1)),
-		);
-	}
-	// TODO: else log?
-}
+// TODO: need to do this via an event
+// pub fn new_npc(store: &mut Store, prefix: &str, rng: &mut SmallRng, current_time: Time) {
+// 	if let Some(loc) = find_char_loc(store, rng) {
+// 		let name = Subject::new_instance(store, "npc", prefix);
+// 		store.insert(&name, Predicate::Loc, Object::Point(loc));
+// 		store.insert(
+// 			&name,
+// 			Predicate::Ready,
+// 			Object::Time(current_time + Duration::from_secs(1.1)),
+// 		);
+// 	}
+// 	// TODO: else log?
+// }
 
 pub fn npc_ready_time(store: &Store) -> Time {
 	let mut time = INFINITE_TIME;
@@ -58,8 +59,9 @@ pub fn on_npc_event(
 fn do_skittish(store: &mut Store, rng: &mut SmallRng, pending: &mut PendingEvents, name: &Subject) {
 }
 
-fn move_npc_by(store: &mut Store, dx: i32, dy: i32) -> Option<Duration> {
-	if let Some(duration) = move_char_by(store, &PLAYER, dx, dy) {
+fn move_npc_by(store: &mut Store, name: &Subject, dx: i32, dy: i32) -> Option<Duration> {
+	if let Some((duration, new_loc)) = move_char_by(store, name, dx, dy) {
+		// pending.push_back(Event::SetNPC(new_loc)); // TODO
 		Some(duration)
 	} else {
 		None

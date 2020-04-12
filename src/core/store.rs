@@ -136,8 +136,17 @@ impl Store {
 		}
 	}
 
-	pub fn insert(&mut self, subject: &Subject, predicate: Predicate, object: Object) {
-		trace!(self.logger, "inserting"; "triplet" => %Triplet::new(subject, &predicate, &object));
+	// In order for replay to be reliable the store cannot be updated as the result
+	// of logic but instead directly from an event. To help enforce this methods
+	// that mutate the store take an Event.
+	pub fn insert(
+		&mut self,
+		event: &Event,
+		subject: &Subject,
+		predicate: Predicate,
+		object: Object,
+	) {
+		trace!(self.logger, "inserting"; "event" => ?event, "triplet" => %Triplet::new(subject, &predicate, &object));
 
 		// TODO: May want to do some profiling to see:
 		// 1) If the store methods are a bottle neck.
@@ -151,10 +160,10 @@ impl Store {
 		}
 	}
 
-	pub fn remove(&mut self, subject: &Subject, predicate: Predicate) {
+	pub fn remove(&mut self, event: &Event, subject: &Subject, predicate: Predicate) {
 		if let Some(inner) = self.data.get_mut(subject) {
 			if let Some(object) = inner.remove(&predicate) {
-				trace!(self.logger, "removed"; "triplet" => %Triplet::new(subject, &predicate, &object));
+				trace!(self.logger, "removed"; "event" => ?event, "triplet" => %Triplet::new(subject, &predicate, &object));
 			}
 		}
 	}

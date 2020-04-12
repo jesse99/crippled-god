@@ -22,7 +22,7 @@ fn compatible_terrain(store: &Store, loc: Point) -> bool {
 	}
 }
 
-pub fn move_char_by(store: &mut Store, name: &Subject, dx: i32, dy: i32) -> Option<Duration> {
+pub fn move_char_by(store: &Store, name: &Subject, dx: i32, dy: i32) -> Option<(Duration, Point)> {
 	assert!(dx != 0 || dy != 0);
 
 	let old_loc = store.lookup_pt(name, Predicate::Loc).unwrap();
@@ -32,11 +32,10 @@ pub fn move_char_by(store: &mut Store, name: &Subject, dx: i32, dy: i32) -> Opti
 		y: old_loc.y + dy,
 	};
 	if can_move_to(store, new_loc) {
-		store.insert(name, Predicate::Loc, Object::Point(new_loc));
 		if dx != 0 && dy != 0 {
-			Some(Duration::from_secs(1.4 * 2.0))
+			Some((Duration::from_secs(1.4 * 2.0), new_loc))
 		} else {
-			Some(Duration::from_secs(2.0))
+			Some((Duration::from_secs(2.0), new_loc))
 		}
 	} else {
 		None

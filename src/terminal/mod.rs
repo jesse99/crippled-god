@@ -41,7 +41,7 @@ impl Terminal {
 	pub fn on_event(
 		&mut self,
 		event: &Event,
-		_queued: &mut PendingEvents,
+		pending: &mut PendingEvents,
 		store: &mut Store,
 	) -> TerminalEventResult {
 		// TODO:
@@ -62,8 +62,9 @@ impl Terminal {
 					let cc = c.unwrap();
 					debug!(self.logger, "handling"; "key" => ?cc);
 					if let Some(action) = key_to_action(cc) {
-						match on_player_action(store, action) {
+						match on_player_action(store, pending, action) {
 							PlayerActionResult::Acted(duration) => store.insert(
+								event,
 								&PLAYER,
 								Predicate::Ready,
 								Object::Time(ready + duration),
