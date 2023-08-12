@@ -9,9 +9,16 @@ edition = "2018"
 [dependencies]
 chrono = "0.4.11"		# datetime library
 fnv = "1.0.3"			# custom hasher that is much more performant for small keys
+file_scanner = "0.2.0"  # Java-like text scanner
 lazy_static = "1.4.0"	# lazily defined static variables
 rand = { version = "0.7.3", features = ["small_rng"] }	# random numbers
 slog = "2.5.2"			# structured logging
 sloggers = "0.3.5"		# sloc convenience functions
 slog-term = "2.5.0"		# logging to a terminal/console/shell or other text based dest
 termion = "1.5.5"		# terminal support
+
+# TODO: This prevents names from being stripped so we can profile. But at
+# some point we should disable this.
+[profile.release]
+debug = true
+

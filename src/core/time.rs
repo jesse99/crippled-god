@@ -1,5 +1,8 @@
+use file_scanner::Scanner;
 use std::fmt;
+use std::fs::File;
 use std::i32; // for MAX
+use std::io::{BufWriter, Result, Write};
 use std::ops::{Add, AddAssign};
 
 /// Time at which a character (or item) will do something.
@@ -22,49 +25,61 @@ pub const INFINITE_TIME: Time = Time(i32::MAX);
 // pub const TICK: Duration = Duration(1);
 
 impl Time {
-	// pub fn zero() -> Time {
-	// 	Time(0)
-	// }
+    // pub fn zero() -> Time {
+    // 	Time(0)
+    // }
 
-	pub fn from_secs(secs: f32) -> Time {
-		Time((secs * 10.0) as i32)
-	}
+    pub fn from_secs(secs: f32) -> Time {
+        Time((secs * 10.0) as i32)
+    }
+
+    pub fn from_saved(scanner: &mut Scanner<File>) -> Option<Time> {
+        if let Some(raw) = scanner.next_int() {
+            Some(Time(raw))
+        } else {
+            None
+        }
+    }
+
+    pub fn write(&self, w: &mut BufWriter<File>) -> Result<()> {
+        write!(w, "{}", self.0)
+    }
 }
 
 impl Add<Duration> for Time {
-	type Output = Time;
+    type Output = Time;
 
-	fn add(self, rhs: Duration) -> Time {
-		Time(self.0 + rhs.0)
-	}
+    fn add(self, rhs: Duration) -> Time {
+        Time(self.0 + rhs.0)
+    }
 }
 
 impl AddAssign<Duration> for Time {
-	fn add_assign(&mut self, other: Duration) {
-		*self = Time(self.0 + other.0);
-	}
+    fn add_assign(&mut self, other: Duration) {
+        *self = Time(self.0 + other.0);
+    }
 }
 
 impl Duration {
-	pub fn from_secs(secs: f32) -> Duration {
-		Duration((secs * 10.0) as i32)
-	}
+    pub fn from_secs(secs: f32) -> Duration {
+        Duration((secs * 10.0) as i32)
+    }
 
-	// 	pub fn percent(self, p: f64) -> Duration {
-	// 		let x = (self.0 as f64) / 10.0 * p;
-	// 		let x = (x * 10.0) as i32;
-	// 		Duration(x)
-	// 	}
+    // 	pub fn percent(self, p: f64) -> Duration {
+    // 		let x = (self.0 as f64) / 10.0 * p;
+    // 		let x = (x * 10.0) as i32;
+    // 		Duration(x)
+    // 	}
 }
 
 impl fmt::Display for Time {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{:.1}s", (self.0 as f32) / 10.0)
-	}
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.1}s", (self.0 as f32) / 10.0)
+    }
 }
 
 impl fmt::Display for Duration {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{:.1}s", (self.0 as f32) / 10.0)
-	}
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.1}s", (self.0 as f32) / 10.0)
+    }
 }
